@@ -53,3 +53,41 @@ export const portfolioImportAPI = {
     confirm: (importId: string) => api.post(`/portfolio-import/${importId}/confirm`),
     getHistory: (accountId: string) => api.get(`/portfolio-import/history/${accountId}`),
 };
+
+// Portfolio Chat API
+export interface ChatMessage {
+    role: 'user' | 'assistant';
+    content: string;
+}
+
+export interface PortfolioPosition {
+    symbol: string;
+    name: string;
+    quantity: number;
+    avgPrice: number;
+    currentPrice: number;
+    assetClass: string;
+    positionType?: string;
+    pnl: number;
+    pnlPercent: number;
+    notional: number;
+}
+
+export interface PortfolioSummary {
+    totalValue: number;
+    totalInvested: number;
+    totalPnL: number;
+    pnlPercent: number;
+    positions: PortfolioPosition[];
+    byAssetClass: Record<string, { value: number; pnl: number; count: number }>;
+}
+
+export const portfolioChatAPI = {
+    chat: (message: string, portfolioData: PortfolioSummary, conversationHistory: ChatMessage[] = []) =>
+        api.post<{ response: string }>('/portfolio-chat', {
+            message,
+            portfolioData,
+            conversationHistory
+        }),
+};
+

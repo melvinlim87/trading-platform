@@ -4,11 +4,12 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { accountsAPI, portfolioImportAPI } from '@/lib/api';
+import { accountsAPI, portfolioImportAPI, PortfolioSummary, PortfolioPosition } from '@/lib/api';
 import { fetchAllPrices } from '@/lib/priceService';
 import { classifySymbol, assetClassOptions, AssetClass } from '@/lib/symbolClassifier';
 import { searchAssets, getAssetBySymbol, AssetInfo } from '@/lib/assetLibrary';
 import { PortfolioPerformanceChart, AnimatedValue, Sparkline, generateSparklineData } from '@/components/PortfolioCharts';
+import { PortfolioChatbox } from '@/components/PortfolioChatbox';
 import Link from 'next/link';
 
 interface Position {
@@ -369,6 +370,7 @@ export default function PortfolioPage() {
 
     const totalNotional = positions.reduce((sum, p) => sum + calculateNotional(p), 0);
     const totalPnL = positions.reduce((sum, p) => sum + calculatePnL(p), 0);
+    const totalInvested = positions.reduce((sum, p) => sum + (p.avgPrice * p.quantity), 0);
 
     const exposure = Object.entries(groupedPositions).map(([assetClass, classPositions]) => {
         const value = classPositions.reduce((sum, p) => sum + calculateNotional(p), 0);
@@ -575,6 +577,39 @@ export default function PortfolioPage() {
                                 color: config?.text || '#3b82f6'
                             };
                         }).filter(item => Math.abs(item.pnl) > 0)}
+                    />
+                </div>
+
+                {/* AI Portfolio Chatbox */}
+                <div style={{ marginBottom: '24px' }}>
+                    <PortfolioChatbox
+                        portfolioData={{
+                            totalValue: totalNotional,
+                            totalInvested: totalInvested,
+                            totalPnL: totalPnL,
+                            pnlPercent: totalInvested > 0 ? (totalPnL / totalInvested) * 100 : 0,
+                            positions: positions.map(p => ({
+                                symbol: p.symbol,
+                                name: p.name || p.symbol,
+                                quantity: p.quantity,
+                                avgPrice: p.avgPrice,
+                                currentPrice: p.currentPrice || p.avgPrice,
+                                assetClass: p.assetClass || 'other',
+                                positionType: p.positionType,
+                                pnl: calculatePnL(p),
+                                pnlPercent: p.avgPrice > 0 ? ((((p.currentPrice || p.avgPrice) - p.avgPrice) / p.avgPrice) * 100) : 0,
+                                notional: calculateNotional(p)
+                            })),
+                            byAssetClass: Object.entries(groupedPositions).reduce((acc, [assetClass, classPositions]) => {
+                                const config = assetClassConfig[assetClass];
+                                acc[config?.label || assetClass] = {
+                                    value: classPositions.reduce((sum, p) => sum + calculateNotional(p), 0),
+                                    pnl: classPositions.reduce((sum, p) => sum + calculatePnL(p), 0),
+                                    count: classPositions.length
+                                };
+                                return acc;
+                            }, {} as Record<string, { value: number; pnl: number; count: number }>)
+                        }}
                     />
                 </div>
 
