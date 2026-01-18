@@ -242,7 +242,7 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                                 tick={{ fill: '#94a3b8', fontSize: 11 }}
                                 axisLine={false}
                                 tickLine={false}
-                                width={85}
+                                width={105}
                             />
                             <Tooltip content={<BarTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                             <Bar
