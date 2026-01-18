@@ -88,6 +88,21 @@ export default function PortfolioPage() {
     const [uploadError, setUploadError] = useState('');
     const [isDragging, setIsDragging] = useState(false);
 
+    // Manual position entry state
+    const [showManualModal, setShowManualModal] = useState(false);
+    const [manualPosition, setManualPosition] = useState({
+        symbol: '',
+        name: '',
+        quantity: '',
+        avgPrice: '',
+        currentPrice: '',
+        assetClass: 'stock',
+        positionType: 'long',
+        broker: '',
+        platform: '',
+        expiry: ''
+    });
+
     const [priceSource, setPriceSource] = useState<string>('loading...');
 
     // Fetch real prices on mount and every 30 seconds
@@ -223,6 +238,61 @@ export default function PortfolioPage() {
         setUploadError('');
     };
 
+    // Manual position entry handlers
+    const updateManualPosition = (field: string, value: string) => {
+        if (field === 'symbol') {
+            const classified = classifySymbol(value);
+            setManualPosition(prev => ({
+                ...prev,
+                symbol: value.toUpperCase(),
+                assetClass: classified,
+                name: value.toUpperCase()
+            }));
+        } else {
+            setManualPosition(prev => ({ ...prev, [field]: value }));
+        }
+    };
+
+    const handleManualSubmit = () => {
+        if (!manualPosition.symbol || !manualPosition.quantity || !manualPosition.avgPrice) {
+            alert('Please fill in Symbol, Quantity, and Entry Price');
+            return;
+        }
+
+        const newPosition: Position = {
+            id: `manual-${Date.now()}`,
+            symbol: manualPosition.symbol.toUpperCase(),
+            name: manualPosition.name || manualPosition.symbol.toUpperCase(),
+            quantity: parseFloat(manualPosition.quantity) || 0,
+            avgPrice: parseFloat(manualPosition.avgPrice) || 0,
+            currentPrice: parseFloat(manualPosition.currentPrice) || parseFloat(manualPosition.avgPrice) || 0,
+            assetClass: manualPosition.assetClass,
+            positionType: manualPosition.positionType as Position['positionType'],
+            broker: manualPosition.broker || undefined,
+            platform: manualPosition.platform || undefined,
+            expiry: manualPosition.expiry || undefined
+        };
+
+        setPositions(prev => [...prev, newPosition]);
+        resetManualPosition();
+    };
+
+    const resetManualPosition = () => {
+        setShowManualModal(false);
+        setManualPosition({
+            symbol: '',
+            name: '',
+            quantity: '',
+            avgPrice: '',
+            currentPrice: '',
+            assetClass: 'stock',
+            positionType: 'long',
+            broker: '',
+            platform: '',
+            expiry: ''
+        });
+    };
+
     const updateExtractedPosition = (idx: number, field: string, value: string) => {
         const updated = [...extractedPositions];
         if (field === 'symbol') {
@@ -325,6 +395,12 @@ export default function PortfolioPage() {
                         <Link href="/ai-mentor" style={{ fontWeight: '500', color: '#64748b', textDecoration: 'none' }}>AI Mentor</Link>
                     </nav>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <button
+                            onClick={() => setShowManualModal(true)}
+                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', backgroundColor: '#1e3a5f', color: '#fff', border: '1px solid #3f4f66', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        >
+                            ➕ Add Position
+                        </button>
                         <button
                             onClick={() => setShowUploadModal(true)}
                             style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', backgroundColor: '#00d4ff', color: '#0a1628', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
@@ -783,6 +859,187 @@ export default function PortfolioPage() {
                                     </div>
                                 </>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Manual Position Entry Modal */}
+            {showManualModal && (
+                <div className="modal-overlay">
+                    <div className="ai-import-modal" style={{ backgroundColor: '#0d1f3c', borderRadius: '16px' }}>
+                        <div style={{ padding: '24px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>➕ Add New Position</h3>
+                                <button onClick={resetManualPosition} style={{ fontSize: '24px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                            </div>
+
+                            <p style={{ fontSize: '14px', marginBottom: '20px', color: '#64748b' }}>
+                                Manually add a position to your portfolio. Symbol will auto-classify the asset type.
+                            </p>
+
+                            {/* Row 1: Symbol, Name */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Symbol *</label>
+                                    <input
+                                        value={manualPosition.symbol}
+                                        onChange={e => updateManualPosition('symbol', e.target.value)}
+                                        placeholder="AAPL, BTCUSD, EURUSD..."
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', fontWeight: '600' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Name</label>
+                                    <input
+                                        value={manualPosition.name}
+                                        onChange={e => updateManualPosition('name', e.target.value)}
+                                        placeholder="Apple Inc, Bitcoin..."
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%' }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Row 2: Quantity, Entry Price, Current Price */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Quantity *</label>
+                                    <input
+                                        type="number"
+                                        value={manualPosition.quantity}
+                                        onChange={e => updateManualPosition('quantity', e.target.value)}
+                                        placeholder="10"
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Entry Price *</label>
+                                    <input
+                                        type="number"
+                                        value={manualPosition.avgPrice}
+                                        onChange={e => updateManualPosition('avgPrice', e.target.value)}
+                                        placeholder="150.00"
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Current Price</label>
+                                    <input
+                                        type="number"
+                                        value={manualPosition.currentPrice}
+                                        onChange={e => updateManualPosition('currentPrice', e.target.value)}
+                                        placeholder="Auto-fetch"
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Row 3: Category, Position Type */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Category</label>
+                                    <select
+                                        value={manualPosition.assetClass}
+                                        onChange={e => updateManualPosition('assetClass', e.target.value)}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                    >
+                                        {assetClassOptions.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Position Type</label>
+                                    <select
+                                        value={manualPosition.positionType}
+                                        onChange={e => updateManualPosition('positionType', e.target.value)}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                    >
+                                        <option value="long">📈 Long</option>
+                                        <option value="short">📉 Short</option>
+                                        <option value="spot">💰 Spot</option>
+                                        <option value="perpetual">♾️ Perpetual</option>
+                                        <option value="option">📋 Option</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Row 4: Broker, Platform */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Broker</label>
+                                    <select
+                                        value={manualPosition.broker}
+                                        onChange={e => updateManualPosition('broker', e.target.value)}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                    >
+                                        <option value="">Select Broker</option>
+                                        <option value="ibkr">IBKR</option>
+                                        <option value="td_ameritrade">TD Ameritrade</option>
+                                        <option value="fidelity">Fidelity</option>
+                                        <option value="schwab">Schwab</option>
+                                        <option value="etrade">E*TRADE</option>
+                                        <option value="robinhood">Robinhood</option>
+                                        <option value="webull">Webull</option>
+                                        <option value="binance">Binance</option>
+                                        <option value="coinbase">Coinbase</option>
+                                        <option value="kraken">Kraken</option>
+                                        <option value="oanda">OANDA</option>
+                                        <option value="ig">IG</option>
+                                        <option value="saxo">Saxo</option>
+                                        <option value="tiger">Tiger</option>
+                                        <option value="moomoo">Moomoo</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Platform</label>
+                                    <select
+                                        value={manualPosition.platform}
+                                        onChange={e => updateManualPosition('platform', e.target.value)}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                    >
+                                        <option value="">Select Platform</option>
+                                        <option value="tws">TWS</option>
+                                        <option value="thinkorswim">thinkorSwim</option>
+                                        <option value="mt4">MT4</option>
+                                        <option value="mt5">MT5</option>
+                                        <option value="tradingview">TradingView</option>
+                                        <option value="mobile">Mobile App</option>
+                                        <option value="web">Web</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Row 5: Expiry (for options) */}
+                            {manualPosition.positionType === 'option' && (
+                                <div style={{ marginBottom: '16px' }}>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Expiry Date</label>
+                                    <input
+                                        type="date"
+                                        value={manualPosition.expiry}
+                                        onChange={e => updateManualPosition('expiry', e.target.value)}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%' }}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Buttons */}
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                                <button
+                                    onClick={resetManualPosition}
+                                    style={{ flex: 1, padding: '12px', borderRadius: '8px', fontSize: '14px', backgroundColor: '#1e3a5f', color: '#fff', border: 'none', cursor: 'pointer' }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleManualSubmit}
+                                    style={{ flex: 1, padding: '12px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', backgroundColor: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer' }}
+                                >
+                                    ✓ Add Position
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
