@@ -472,6 +472,11 @@ export default function PortfolioPage() {
                     const dailyChange = unrealizedPnL * 0.15; // ~15% of total unrealized for demo
                     const dailyChangePercent = totalCurrentValue > 0 ? ((dailyChange / totalCurrentValue) * 100) : 0;
 
+                    // Cash reserves - uninvested money (demo value, would come from account in production)
+                    const cashReserves = 5000.00; // Demo: $5,000 cash on standby
+                    const totalAssets = totalNotional + cashReserves;
+                    const cashPercentage = totalAssets > 0 ? (cashReserves / totalAssets) * 100 : 0;
+
                     const dashboardCards: CardData[] = [
                         {
                             id: 'portfolio-value',
@@ -480,6 +485,14 @@ export default function PortfolioPage() {
                             subValue: `${positions.length} active positions`,
                             icon: '💎',
                             color: '#00d4ff'
+                        },
+                        {
+                            id: 'cash-reserves',
+                            label: 'Cash Reserves',
+                            value: `$${cashReserves.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                            subValue: `${cashPercentage.toFixed(1)}% of total assets`,
+                            icon: '🏦',
+                            color: '#06b6d4'
                         },
                         {
                             id: 'capital-invested',
