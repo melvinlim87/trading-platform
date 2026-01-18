@@ -14,6 +14,20 @@
   --text-secondary: #a0aec0;
 }
 
+/* Ensure all elements use border-box */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Modal input styling for proper spacing */
+.ai-import-modal input,
+.ai-import-modal select {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 @layer base {
   body {
     background-color: var(--bg-primary);
