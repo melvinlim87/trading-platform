@@ -1058,8 +1058,8 @@ export default function PortfolioPage() {
                                 </div>
                             </div>
 
-                            {/* Row 3: Quantity, Entry Price, Current Price */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                            {/* Row 3: Quantity, Entry Price */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                                 <div>
                                     <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Quantity *</label>
                                     <input
@@ -1080,16 +1080,18 @@ export default function PortfolioPage() {
                                         style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
                                     />
                                 </div>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Current Price</label>
-                                    <input
-                                        type="number"
-                                        value={manualPosition.currentPrice}
-                                        onChange={e => updateManualPosition('currentPrice', e.target.value)}
-                                        placeholder="Auto-fetch"
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
-                                    />
-                                </div>
+                            </div>
+
+                            {/* Row 4: Current Price (optional) */}
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Current Price (optional - leave blank to auto-fetch)</label>
+                                <input
+                                    type="number"
+                                    value={manualPosition.currentPrice}
+                                    onChange={e => updateManualPosition('currentPrice', e.target.value)}
+                                    placeholder="Auto-fetch from market"
+                                    style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
+                                />
                             </div>
 
                             {/* Row 4: Broker, Platform */}
