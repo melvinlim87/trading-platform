@@ -100,7 +100,11 @@ export default function PortfolioPage() {
         positionType: 'long',
         broker: '',
         platform: '',
-        expiry: ''
+        expiry: '',
+        customAssetClass: '',
+        customPositionType: '',
+        customBroker: '',
+        customPlatform: ''
     });
 
     const [priceSource, setPriceSource] = useState<string>('loading...');
@@ -289,7 +293,11 @@ export default function PortfolioPage() {
             positionType: 'long',
             broker: '',
             platform: '',
-            expiry: ''
+            expiry: '',
+            customAssetClass: '',
+            customPositionType: '',
+            customBroker: '',
+            customPlatform: ''
         });
     };
 
@@ -875,10 +883,58 @@ export default function PortfolioPage() {
                             </div>
 
                             <p style={{ fontSize: '14px', marginBottom: '20px', color: '#64748b' }}>
-                                Manually add a position to your portfolio. Symbol will auto-classify the asset type.
+                                Manually add a position to your portfolio.
                             </p>
 
-                            {/* Row 1: Symbol, Name */}
+                            {/* Row 1: Category, Position Type */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Category *</label>
+                                    <select
+                                        value={manualPosition.assetClass}
+                                        onChange={e => updateManualPosition('assetClass', e.target.value)}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                    >
+                                        {assetClassOptions.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
+                                        ))}
+                                        <option value="other">📝 Other</option>
+                                    </select>
+                                    {manualPosition.assetClass === 'other' && (
+                                        <input
+                                            value={manualPosition.customAssetClass || ''}
+                                            onChange={e => updateManualPosition('customAssetClass', e.target.value)}
+                                            placeholder="Enter custom category..."
+                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                        />
+                                    )}
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Position Type</label>
+                                    <select
+                                        value={manualPosition.positionType}
+                                        onChange={e => updateManualPosition('positionType', e.target.value)}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                    >
+                                        <option value="long">📈 Long</option>
+                                        <option value="short">📉 Short</option>
+                                        <option value="spot">💰 Spot</option>
+                                        <option value="perpetual">♾️ Perpetual</option>
+                                        <option value="option">📋 Option</option>
+                                        <option value="other">📝 Other</option>
+                                    </select>
+                                    {manualPosition.positionType === 'other' && (
+                                        <input
+                                            value={manualPosition.customPositionType || ''}
+                                            onChange={e => updateManualPosition('customPositionType', e.target.value)}
+                                            placeholder="Enter custom type..."
+                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Row 2: Symbol, Name */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                                 <div>
                                     <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Symbol *</label>
@@ -900,7 +956,7 @@ export default function PortfolioPage() {
                                 </div>
                             </div>
 
-                            {/* Row 2: Quantity, Entry Price, Current Price */}
+                            {/* Row 3: Quantity, Entry Price, Current Price */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                                 <div>
                                     <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Quantity *</label>
@@ -934,36 +990,6 @@ export default function PortfolioPage() {
                                 </div>
                             </div>
 
-                            {/* Row 3: Category, Position Type */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Category</label>
-                                    <select
-                                        value={manualPosition.assetClass}
-                                        onChange={e => updateManualPosition('assetClass', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
-                                    >
-                                        {assetClassOptions.map(opt => (
-                                            <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Position Type</label>
-                                    <select
-                                        value={manualPosition.positionType}
-                                        onChange={e => updateManualPosition('positionType', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
-                                    >
-                                        <option value="long">📈 Long</option>
-                                        <option value="short">📉 Short</option>
-                                        <option value="spot">💰 Spot</option>
-                                        <option value="perpetual">♾️ Perpetual</option>
-                                        <option value="option">📋 Option</option>
-                                    </select>
-                                </div>
-                            </div>
-
                             {/* Row 4: Broker, Platform */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                                 <div>
@@ -989,8 +1015,16 @@ export default function PortfolioPage() {
                                         <option value="saxo">Saxo</option>
                                         <option value="tiger">Tiger</option>
                                         <option value="moomoo">Moomoo</option>
-                                        <option value="other">Other</option>
+                                        <option value="other">📝 Other</option>
                                     </select>
+                                    {manualPosition.broker === 'other' && (
+                                        <input
+                                            value={manualPosition.customBroker || ''}
+                                            onChange={e => updateManualPosition('customBroker', e.target.value)}
+                                            placeholder="Enter broker name..."
+                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                        />
+                                    )}
                                 </div>
                                 <div>
                                     <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Platform</label>
@@ -1007,8 +1041,16 @@ export default function PortfolioPage() {
                                         <option value="tradingview">TradingView</option>
                                         <option value="mobile">Mobile App</option>
                                         <option value="web">Web</option>
-                                        <option value="other">Other</option>
+                                        <option value="other">📝 Other</option>
                                     </select>
+                                    {manualPosition.platform === 'other' && (
+                                        <input
+                                            value={manualPosition.customPlatform || ''}
+                                            onChange={e => updateManualPosition('customPlatform', e.target.value)}
+                                            placeholder="Enter platform name..."
+                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                        />
+                                    )}
                                 </div>
                             </div>
 
@@ -1051,6 +1093,6 @@ export default function PortfolioPage() {
                     to { transform: rotate(360deg); }
                 }
             `}</style>
-        </div>
+        </div >
     );
 }
