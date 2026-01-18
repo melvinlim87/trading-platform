@@ -8,6 +8,7 @@ import { accountsAPI, portfolioImportAPI } from '@/lib/api';
 import { fetchAllPrices } from '@/lib/priceService';
 import { classifySymbol, assetClassOptions, AssetClass } from '@/lib/symbolClassifier';
 import { searchAssets, getAssetBySymbol, AssetInfo } from '@/lib/assetLibrary';
+import { PortfolioPerformanceChart, AnimatedValue, Sparkline, generateSparklineData } from '@/components/PortfolioCharts';
 import Link from 'next/link';
 
 interface Position {
@@ -730,6 +731,22 @@ export default function PortfolioPage() {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Performance Charts Section */}
+                <div style={{ marginTop: '24px' }}>
+                    <PortfolioPerformanceChart
+                        totalValue={totalNotional}
+                        assetClassPnL={Object.entries(groupedPositions).map(([assetClass, classPositions]) => {
+                            const config = assetClassConfig[assetClass];
+                            const sectionPnL = classPositions.reduce((sum, p) => sum + calculatePnL(p), 0);
+                            return {
+                                name: config?.label || assetClass,
+                                pnl: sectionPnL,
+                                color: config?.text || '#3b82f6'
+                            };
+                        }).filter(item => Math.abs(item.pnl) > 0)}
+                    />
                 </div>
             </main>
 
