@@ -1,9 +1,13 @@
 import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
-import { PortfolioChatService, PortfolioSummary, ChatMessage } from './portfolio-chat.service';
+import { PortfolioChatService, ChatRequest, ChatMessage } from './portfolio-chat.service';
+import { RawPosition } from './portfolio-aggregator.service';
 
 interface ChatRequestDto {
     message: string;
-    portfolioData: PortfolioSummary;
+    positions: RawPosition[];
+    userName?: string;
+    riskProfile?: 'Conservative' | 'Moderate' | 'Aggressive';
+    cashBalance?: number;
     conversationHistory?: ChatMessage[];
 }
 
@@ -18,15 +22,18 @@ export class PortfolioChatController {
                 throw new HttpException('Message is required', HttpStatus.BAD_REQUEST);
             }
 
-            if (!body.portfolioData) {
-                throw new HttpException('Portfolio data is required', HttpStatus.BAD_REQUEST);
+            if (!body.positions || !Array.isArray(body.positions)) {
+                throw new HttpException('Positions array is required', HttpStatus.BAD_REQUEST);
             }
 
-            const response = await this.chatService.chat(
-                body.message,
-                body.portfolioData,
-                body.conversationHistory || []
-            );
+            const response = await this.chatService.chat({
+                message: body.message,
+                positions: body.positions,
+                userName: body.userName,
+                riskProfile: body.riskProfile,
+                cashBalance: body.cashBalance,
+                conversationHistory: body.conversationHistory || []
+            });
 
             return { response };
         } catch (error: any) {

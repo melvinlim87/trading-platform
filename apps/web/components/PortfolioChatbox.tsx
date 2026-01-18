@@ -1,13 +1,21 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { portfolioChatAPI, ChatMessage, PortfolioSummary } from '@/lib/api';
+import { portfolioChatAPI, ChatMessage, RawPosition } from '@/lib/api';
 
 interface PortfolioChatboxProps {
-    portfolioData: PortfolioSummary;
+    positions: RawPosition[];
+    userName?: string;
+    riskProfile?: 'Conservative' | 'Moderate' | 'Aggressive';
+    cashBalance?: number;
 }
 
-export function PortfolioChatbox({ portfolioData }: PortfolioChatboxProps) {
+export function PortfolioChatbox({
+    positions,
+    userName = 'Trader',
+    riskProfile = 'Moderate',
+    cashBalance = 0
+}: PortfolioChatboxProps) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -35,13 +43,20 @@ export function PortfolioChatbox({ portfolioData }: PortfolioChatboxProps) {
         setIsLoading(true);
 
         try {
-            const response = await portfolioChatAPI.chat(userMessage, portfolioData, messages);
+            const response = await portfolioChatAPI.chat({
+                message: userMessage,
+                positions,
+                userName,
+                riskProfile,
+                cashBalance,
+                conversationHistory: messages
+            });
             setMessages([...newMessages, { role: 'assistant', content: response.data.response }]);
         } catch (error: any) {
             console.error('Chat error:', error);
             setMessages([...newMessages, {
                 role: 'assistant',
-                content: '❌ Sorry, I encountered an error. Please try again.'
+                content: '❌ Sorry, I encountered an error connecting to the AI. Please try again.'
             }]);
         } finally {
             setIsLoading(false);
@@ -56,11 +71,12 @@ export function PortfolioChatbox({ portfolioData }: PortfolioChatboxProps) {
         }
     };
 
+    // Better suggested questions based on CTO spec
     const suggestedQuestions = [
+        "Why am I up/down today?",
         "What's my best performing position?",
         "How diversified is my portfolio?",
-        "Which asset class has the highest P/L?",
-        "Summarize my portfolio for me",
+        "Can I buy more crypto?",
     ];
 
     return (
@@ -87,10 +103,10 @@ export function PortfolioChatbox({ portfolioData }: PortfolioChatboxProps) {
                     <span style={{ fontSize: '24px' }}>🤖</span>
                     <div>
                         <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', margin: 0 }}>
-                            AI Portfolio Assistant
+                            AI Portfolio Mentor
                         </h3>
                         <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
-                            Ask questions about your portfolio
+                            Ask about your positions, P&L, or allocation
                         </p>
                     </div>
                 </div>
@@ -110,7 +126,7 @@ export function PortfolioChatbox({ portfolioData }: PortfolioChatboxProps) {
                         backgroundColor: '#22c55e',
                         animation: 'pulse 2s infinite'
                     }}></div>
-                    <span style={{ fontSize: '11px', color: '#22c55e', fontWeight: '500' }}>Powered by Qwen AI</span>
+                    <span style={{ fontSize: '11px', color: '#22c55e', fontWeight: '500' }}>Qwen AI</span>
                 </div>
                 <span style={{
                     fontSize: '20px',
@@ -142,7 +158,7 @@ export function PortfolioChatbox({ portfolioData }: PortfolioChatboxProps) {
                             }}>
                                 <span style={{ fontSize: '40px', marginBottom: '12px' }}>💬</span>
                                 <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>
-                                    Ask me anything about your portfolio!
+                                    Ask me anything about your {positions.length} positions!
                                 </p>
                                 <div style={{
                                     display: 'flex',
@@ -192,7 +208,7 @@ export function PortfolioChatbox({ portfolioData }: PortfolioChatboxProps) {
                                         }}
                                     >
                                         <div style={{
-                                            maxWidth: '80%',
+                                            maxWidth: '85%',
                                             padding: '10px 14px',
                                             borderRadius: msg.role === 'user'
                                                 ? '16px 16px 4px 16px'

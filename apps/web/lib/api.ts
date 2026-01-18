@@ -60,7 +60,8 @@ export interface ChatMessage {
     content: string;
 }
 
-export interface PortfolioPosition {
+// Raw position data - the aggregator does all the math
+export interface RawPosition {
     symbol: string;
     name: string;
     quantity: number;
@@ -68,26 +69,20 @@ export interface PortfolioPosition {
     currentPrice: number;
     assetClass: string;
     positionType?: string;
-    pnl: number;
-    pnlPercent: number;
-    notional: number;
+    leverage?: number;
 }
 
-export interface PortfolioSummary {
-    totalValue: number;
-    totalInvested: number;
-    totalPnL: number;
-    pnlPercent: number;
-    positions: PortfolioPosition[];
-    byAssetClass: Record<string, { value: number; pnl: number; count: number }>;
+export interface ChatRequest {
+    message: string;
+    positions: RawPosition[];
+    userName?: string;
+    riskProfile?: 'Conservative' | 'Moderate' | 'Aggressive';
+    cashBalance?: number;
+    conversationHistory?: ChatMessage[];
 }
 
 export const portfolioChatAPI = {
-    chat: (message: string, portfolioData: PortfolioSummary, conversationHistory: ChatMessage[] = []) =>
-        api.post<{ response: string }>('/portfolio-chat', {
-            message,
-            portfolioData,
-            conversationHistory
-        }),
+    chat: (request: ChatRequest) =>
+        api.post<{ response: string }>('/portfolio-chat', request),
 };
 
