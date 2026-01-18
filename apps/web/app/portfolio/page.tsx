@@ -10,6 +10,7 @@ import { classifySymbol, assetClassOptions, AssetClass } from '@/lib/symbolClass
 import { searchAssets, getAssetBySymbol, AssetInfo } from '@/lib/assetLibrary';
 import { PortfolioPerformanceChart, AnimatedValue, Sparkline, generateSparklineData } from '@/components/PortfolioCharts';
 import { PortfolioChatbox } from '@/components/PortfolioChatbox';
+import { DraggableDashboard, CardData } from '@/components/DraggableDashboard';
 import Link from 'next/link';
 
 interface Position {
@@ -461,7 +462,7 @@ export default function PortfolioPage() {
             </header>
 
             <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
-                {/* Portfolio Summary Cards */}
+                {/* Portfolio Summary Cards - Draggable Dashboard */}
                 {(() => {
                     const totalInitialValue = positions.reduce((sum, p) => sum + (p.avgPrice * p.quantity), 0);
                     const totalCurrentValue = positions.reduce((sum, p) => sum + (p.currentPrice * p.quantity), 0);
@@ -471,8 +472,9 @@ export default function PortfolioPage() {
                     const dailyChange = unrealizedPnL * 0.15; // ~15% of total unrealized for demo
                     const dailyChangePercent = totalCurrentValue > 0 ? ((dailyChange / totalCurrentValue) * 100) : 0;
 
-                    const cards = [
+                    const dashboardCards: CardData[] = [
                         {
+                            id: 'portfolio-value',
                             label: 'Portfolio Value',
                             value: `$${totalNotional.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                             subValue: `${positions.length} active positions`,
@@ -480,6 +482,7 @@ export default function PortfolioPage() {
                             color: '#00d4ff'
                         },
                         {
+                            id: 'capital-invested',
                             label: 'Capital Invested',
                             value: `$${totalInitialValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                             subValue: 'Total capital deployed',
@@ -487,79 +490,26 @@ export default function PortfolioPage() {
                             color: '#8b5cf6'
                         },
                         {
+                            id: 'total-returns',
                             label: 'Total Returns',
                             value: `${unrealizedPnL >= 0 ? '+' : ''}$${unrealizedPnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                             subValue: `${totalReturnPercent >= 0 ? '↑' : '↓'} ${Math.abs(totalReturnPercent).toFixed(2)}% all-time`,
                             icon: unrealizedPnL >= 0 ? '🚀' : '📉',
-                            color: unrealizedPnL >= 0 ? '#10b981' : '#ef4444',
-                            isPositive: unrealizedPnL >= 0
+                            color: unrealizedPnL >= 0 ? '#10b981' : '#ef4444'
                         },
                         {
+                            id: 'daily-gain',
                             label: "Today's Gain",
                             value: `${dailyChange >= 0 ? '+' : ''}$${dailyChange.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                             subValue: `${dailyChangePercent >= 0 ? '↑' : '↓'} ${Math.abs(dailyChangePercent).toFixed(2)}% today`,
                             icon: dailyChange >= 0 ? '🔥' : '❄️',
-                            color: dailyChange >= 0 ? '#10b981' : '#ef4444',
-                            isPositive: dailyChange >= 0
+                            color: dailyChange >= 0 ? '#10b981' : '#ef4444'
                         },
                     ];
 
                     return (
-                        <div className="header-cards-grid" style={{ marginBottom: '32px' }}>
-                            {cards.map((card, idx) => (
-                                <div
-                                    key={idx}
-                                    className="info-card"
-                                    style={{ position: 'relative', zIndex: 1 }}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                        <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '500', letterSpacing: '0.5px', textTransform: 'uppercase' }}>{card.label}</span>
-                                        <span className="float-icon" style={{ fontSize: '24px' }}>{card.icon}</span>
-                                    </div>
-                                    <div style={{
-                                        fontSize: '28px',
-                                        fontWeight: '700',
-                                        color: card.color,
-                                        marginBottom: '8px',
-                                        letterSpacing: '-0.5px'
-                                    }}>
-                                        {card.value}
-                                    </div>
-                                    <div style={{
-                                        fontSize: '13px',
-                                        color: card.isPositive !== undefined ? card.color : '#64748b',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px'
-                                    }}>
-                                        {card.isPositive !== undefined && (
-                                            <span style={{
-                                                display: 'inline-flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                width: '20px',
-                                                height: '20px',
-                                                borderRadius: '50%',
-                                                backgroundColor: card.isPositive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                                                fontSize: '10px'
-                                            }}>
-                                                {card.isPositive ? '▲' : '▼'}
-                                            </span>
-                                        )}
-                                        {card.subValue}
-                                    </div>
-                                    {/* Animated bottom accent line */}
-                                    <div style={{
-                                        position: 'absolute',
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        height: '2px',
-                                        background: `linear-gradient(90deg, ${card.color}, ${card.color}66, transparent)`,
-                                        opacity: 0.8
-                                    }}></div>
-                                </div>
-                            ))}
+                        <div style={{ marginBottom: '32px' }}>
+                            <DraggableDashboard cards={dashboardCards} />
                         </div>
                     );
                 })()}
