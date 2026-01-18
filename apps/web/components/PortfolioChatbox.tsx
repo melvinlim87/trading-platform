@@ -71,13 +71,36 @@ export function PortfolioChatbox({
         }
     };
 
-    // Better suggested questions based on CTO spec
-    const suggestedQuestions = [
-        "Why am I up/down today?",
-        "What's my best performing position?",
-        "How diversified is my portfolio?",
-        "Can I buy more crypto?",
-    ];
+    // Direct send for quick action buttons
+    const sendMessageDirect = async (message: string) => {
+        if (isLoading) return;
+
+        // Add user message
+        const newMessages: ChatMessage[] = [...messages, { role: 'user', content: message }];
+        setMessages(newMessages);
+        setIsLoading(true);
+
+        try {
+            const response = await portfolioChatAPI.chat({
+                message,
+                positions,
+                userName,
+                riskProfile,
+                cashBalance,
+                conversationHistory: messages
+            });
+            setMessages([...newMessages, { role: 'assistant', content: response.data.response }]);
+        } catch (error: any) {
+            console.error('Chat error:', error);
+            setMessages([...newMessages, {
+                role: 'assistant',
+                content: '❌ Sorry, I encountered an error connecting to the AI. Please try again.'
+            }]);
+        } finally {
+            setIsLoading(false);
+            setInputValue('');
+        }
+    };
 
     return (
         <div className="section-card" style={{
@@ -151,50 +174,194 @@ export function PortfolioChatbox({
                             <div style={{
                                 display: 'flex',
                                 flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                padding: '8px 0',
                                 height: '100%',
-                                textAlign: 'center'
+                                overflowY: 'auto'
                             }}>
-                                <span style={{ fontSize: '40px', marginBottom: '12px' }}>💬</span>
-                                <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '16px' }}>
-                                    Ask me anything about your {positions.length} positions!
+                                <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '12px', textAlign: 'center' }}>
+                                    💬 Quick questions about your {positions.length} positions:
                                 </p>
-                                <div style={{
-                                    display: 'flex',
-                                    flexWrap: 'wrap',
-                                    gap: '8px',
-                                    justifyContent: 'center'
-                                }}>
-                                    {suggestedQuestions.map((q, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => {
-                                                setInputValue(q);
-                                                inputRef.current?.focus();
-                                            }}
-                                            style={{
-                                                padding: '8px 12px',
-                                                borderRadius: '20px',
-                                                fontSize: '12px',
-                                                backgroundColor: '#1e3a5f',
-                                                color: '#e2e8f0',
-                                                border: '1px solid #3f4f66',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#3b82f6';
-                                                e.currentTarget.style.borderColor = '#3b82f6';
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = '#1e3a5f';
-                                                e.currentTarget.style.borderColor = '#3f4f66';
-                                            }}
-                                        >
-                                            {q}
-                                        </button>
-                                    ))}
+
+                                {/* Performance Questions */}
+                                <div style={{ marginBottom: '12px' }}>
+                                    <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px', fontWeight: '600' }}>
+                                        📈 PERFORMANCE
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                        {[
+                                            { icon: '📊', text: "Why am I up/down today?" },
+                                            { icon: '🏆', text: "What's my best performing position?" },
+                                            { icon: '📉', text: "Which position is losing the most?" },
+                                            { icon: '💵', text: "What's my total P&L?" },
+                                        ].map((q, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => {
+                                                    setInputValue(q.text);
+                                                    sendMessageDirect(q.text);
+                                                }}
+                                                style={{
+                                                    padding: '6px 10px',
+                                                    borderRadius: '16px',
+                                                    fontSize: '11px',
+                                                    backgroundColor: '#1e3a5f',
+                                                    color: '#e2e8f0',
+                                                    border: '1px solid #3f4f66',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#10b981';
+                                                    e.currentTarget.style.borderColor = '#10b981';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#1e3a5f';
+                                                    e.currentTarget.style.borderColor = '#3f4f66';
+                                                }}
+                                            >
+                                                <span>{q.icon}</span> {q.text}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Risk & Allocation */}
+                                <div style={{ marginBottom: '12px' }}>
+                                    <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px', fontWeight: '600' }}>
+                                        ⚖️ RISK & ALLOCATION
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                        {[
+                                            { icon: '🎯', text: "How diversified is my portfolio?" },
+                                            { icon: '⚠️', text: "Am I taking too much risk?" },
+                                            { icon: '🔄', text: "Should I rebalance?" },
+                                            { icon: '📊', text: "What's my asset allocation?" },
+                                        ].map((q, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => {
+                                                    setInputValue(q.text);
+                                                    sendMessageDirect(q.text);
+                                                }}
+                                                style={{
+                                                    padding: '6px 10px',
+                                                    borderRadius: '16px',
+                                                    fontSize: '11px',
+                                                    backgroundColor: '#1e3a5f',
+                                                    color: '#e2e8f0',
+                                                    border: '1px solid #3f4f66',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#f59e0b';
+                                                    e.currentTarget.style.borderColor = '#f59e0b';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#1e3a5f';
+                                                    e.currentTarget.style.borderColor = '#3f4f66';
+                                                }}
+                                            >
+                                                <span>{q.icon}</span> {q.text}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Trading Decisions */}
+                                <div style={{ marginBottom: '12px' }}>
+                                    <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px', fontWeight: '600' }}>
+                                        💡 TRADING DECISIONS
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                        {[
+                                            { icon: '🛒', text: "Can I buy more crypto?" },
+                                            { icon: '💰', text: "Do I have enough cash to invest?" },
+                                            { icon: '📈', text: "What should I buy next?" },
+                                            { icon: '🚨', text: "Should I take profits on any position?" },
+                                        ].map((q, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => {
+                                                    setInputValue(q.text);
+                                                    sendMessageDirect(q.text);
+                                                }}
+                                                style={{
+                                                    padding: '6px 10px',
+                                                    borderRadius: '16px',
+                                                    fontSize: '11px',
+                                                    backgroundColor: '#1e3a5f',
+                                                    color: '#e2e8f0',
+                                                    border: '1px solid #3f4f66',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#3b82f6';
+                                                    e.currentTarget.style.borderColor = '#3b82f6';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#1e3a5f';
+                                                    e.currentTarget.style.borderColor = '#3f4f66';
+                                                }}
+                                            >
+                                                <span>{q.icon}</span> {q.text}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Summary */}
+                                <div>
+                                    <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px', fontWeight: '600' }}>
+                                        📋 SUMMARY
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                        {[
+                                            { icon: '📝', text: "Give me a portfolio summary" },
+                                            { icon: '🎯', text: "Am I on track with my goals?" },
+                                        ].map((q, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => {
+                                                    setInputValue(q.text);
+                                                    sendMessageDirect(q.text);
+                                                }}
+                                                style={{
+                                                    padding: '6px 10px',
+                                                    borderRadius: '16px',
+                                                    fontSize: '11px',
+                                                    backgroundColor: '#1e3a5f',
+                                                    color: '#e2e8f0',
+                                                    border: '1px solid #3f4f66',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#8b5cf6';
+                                                    e.currentTarget.style.borderColor = '#8b5cf6';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.backgroundColor = '#1e3a5f';
+                                                    e.currentTarget.style.borderColor = '#3f4f66';
+                                                }}
+                                            >
+                                                <span>{q.icon}</span> {q.text}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         ) : (
