@@ -133,27 +133,27 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
     const maxValue = Math.max(...performanceData.map(d => d.value)) * 1.02;
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             {/* Portfolio Performance Area Chart */}
-            <div className="section-card" style={{ padding: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="section-card" style={{ padding: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                     <div>
-                        <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
                             📈 Portfolio Performance
                         </h3>
-                        <p style={{ fontSize: '12px', color: '#64748b' }}>
+                        <p style={{ fontSize: '11px', color: '#64748b' }}>
                             Track your portfolio value over time
                         </p>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '6px' }}>
                         {(['1W', '1M', '3M', '1Y'] as const).map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 style={{
-                                    padding: '6px 12px',
+                                    padding: '4px 10px',
                                     borderRadius: '6px',
-                                    fontSize: '12px',
+                                    fontSize: '11px',
                                     fontWeight: '500',
                                     border: 'none',
                                     cursor: 'pointer',
@@ -168,7 +168,7 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                     </div>
                 </div>
 
-                <div style={{ height: '280px', marginTop: '16px' }}>
+                <div style={{ height: '220px' }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
@@ -186,18 +186,18 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                             <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" vertical={false} />
                             <XAxis
                                 dataKey="date"
-                                tick={{ fill: '#64748b', fontSize: 11 }}
+                                tick={{ fill: '#64748b', fontSize: 10 }}
                                 axisLine={{ stroke: '#1e3a5f' }}
                                 tickLine={false}
                                 interval="preserveStartEnd"
                             />
                             <YAxis
                                 domain={[minValue, maxValue]}
-                                tick={{ fill: '#64748b', fontSize: 11 }}
+                                tick={{ fill: '#64748b', fontSize: 10 }}
                                 axisLine={false}
                                 tickLine={false}
                                 tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                                width={50}
+                                width={45}
                             />
                             <Tooltip content={<CustomTooltip />} />
                             <Area
@@ -215,23 +215,23 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
             </div>
 
             {/* P/L by Asset Class Bar Chart */}
-            <div className="section-card" style={{ padding: '24px' }}>
-                <div style={{ marginBottom: '20px' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
+            <div className="section-card" style={{ padding: '20px' }}>
+                <div style={{ marginBottom: '16px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
                         📊 Profit/Loss by Asset Class
                     </h3>
-                    <p style={{ fontSize: '12px', color: '#64748b' }}>
+                    <p style={{ fontSize: '11px', color: '#64748b' }}>
                         See which asset classes are performing best
                     </p>
                 </div>
 
-                <div style={{ height: '200px' }}>
+                <div style={{ height: '220px' }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={assetClassPnL} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} layout="vertical">
                             <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" horizontal={false} />
                             <XAxis
                                 type="number"
-                                tick={{ fill: '#64748b', fontSize: 11 }}
+                                tick={{ fill: '#64748b', fontSize: 10 }}
                                 axisLine={{ stroke: '#1e3a5f' }}
                                 tickLine={false}
                                 tickFormatter={(value) => `$${(value / 1000).toFixed(1)}k`}
@@ -239,10 +239,10 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                             <YAxis
                                 type="category"
                                 dataKey="name"
-                                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                                tick={{ fill: '#94a3b8', fontSize: 11 }}
                                 axisLine={false}
                                 tickLine={false}
-                                width={90}
+                                width={85}
                             />
                             <Tooltip content={<BarTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                             <Bar

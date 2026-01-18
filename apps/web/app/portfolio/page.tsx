@@ -562,6 +562,22 @@ export default function PortfolioPage() {
                     );
                 })()}
 
+                {/* Performance Charts Section - 2 Column Layout */}
+                <div style={{ marginBottom: '24px' }}>
+                    <PortfolioPerformanceChart
+                        totalValue={totalNotional}
+                        assetClassPnL={Object.entries(groupedPositions).map(([assetClass, classPositions]) => {
+                            const config = assetClassConfig[assetClass];
+                            const sectionPnL = classPositions.reduce((sum, p) => sum + calculatePnL(p), 0);
+                            return {
+                                name: config?.label || assetClass,
+                                pnl: sectionPnL,
+                                color: config?.text || '#3b82f6'
+                            };
+                        }).filter(item => Math.abs(item.pnl) > 0)}
+                    />
+                </div>
+
                 <div className="portfolio-main-grid">
                     {/* Holdings - Left Side */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -731,22 +747,6 @@ export default function PortfolioPage() {
                             </div>
                         </div>
                     </div>
-                </div>
-
-                {/* Performance Charts Section */}
-                <div style={{ marginTop: '24px' }}>
-                    <PortfolioPerformanceChart
-                        totalValue={totalNotional}
-                        assetClassPnL={Object.entries(groupedPositions).map(([assetClass, classPositions]) => {
-                            const config = assetClassConfig[assetClass];
-                            const sectionPnL = classPositions.reduce((sum, p) => sum + calculatePnL(p), 0);
-                            return {
-                                name: config?.label || assetClass,
-                                pnl: sectionPnL,
-                                color: config?.text || '#3b82f6'
-                            };
-                        }).filter(item => Math.abs(item.pnl) > 0)}
-                    />
                 </div>
             </main>
 
