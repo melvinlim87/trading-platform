@@ -476,13 +476,14 @@ export default function PortfolioPage() {
                     const cashReserves = 5000.00; // Demo: $5,000 cash on standby
                     const totalAssets = totalNotional + cashReserves;
                     const cashPercentage = totalAssets > 0 ? (cashReserves / totalAssets) * 100 : 0;
+                    const investedPercentage = totalAssets > 0 ? (totalNotional / totalAssets) * 100 : 0;
 
                     const dashboardCards: CardData[] = [
                         {
                             id: 'portfolio-value',
                             label: 'Portfolio Value',
                             value: `$${totalNotional.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                            subValue: `${positions.length} active positions`,
+                            subValue: `${investedPercentage.toFixed(1)}% invested • ${positions.length} positions`,
                             icon: '💎',
                             color: '#00d4ff'
                         },
@@ -498,7 +499,7 @@ export default function PortfolioPage() {
                             id: 'capital-invested',
                             label: 'Capital Invested',
                             value: `$${totalInitialValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                            subValue: 'Total capital deployed',
+                            subValue: `Cost basis • ${((totalInitialValue / totalAssets) * 100).toFixed(1)}% of assets`,
                             icon: '💰',
                             color: '#8b5cf6'
                         },
@@ -506,7 +507,7 @@ export default function PortfolioPage() {
                             id: 'total-returns',
                             label: 'Total Returns',
                             value: `${unrealizedPnL >= 0 ? '+' : ''}$${unrealizedPnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                            subValue: `${totalReturnPercent >= 0 ? '↑' : '↓'} ${Math.abs(totalReturnPercent).toFixed(2)}% all-time`,
+                            subValue: `${totalReturnPercent >= 0 ? '↑' : '↓'} ${Math.abs(totalReturnPercent).toFixed(2)}% all-time ROI`,
                             icon: unrealizedPnL >= 0 ? '🚀' : '📉',
                             color: unrealizedPnL >= 0 ? '#10b981' : '#ef4444'
                         },
