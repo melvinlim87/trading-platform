@@ -3,10 +3,11 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { accountsAPI, portfolioImportAPI } from '@/lib/api';
 import { fetchAllPrices } from '@/lib/priceService';
 import { classifySymbol, assetClassOptions, AssetClass } from '@/lib/symbolClassifier';
+import { searchAssets, getAssetBySymbol, AssetInfo } from '@/lib/assetLibrary';
 import Link from 'next/link';
 
 interface Position {
@@ -106,6 +107,11 @@ export default function PortfolioPage() {
         customBroker: '',
         customPlatform: ''
     });
+
+    // Symbol search autocomplete state
+    const [symbolSuggestions, setSymbolSuggestions] = useState<AssetInfo[]>([]);
+    const [showSymbolSuggestions, setShowSymbolSuggestions] = useState(false);
+    const symbolInputRef = useRef<HTMLInputElement>(null);
 
     const [priceSource, setPriceSource] = useState<string>('loading...');
 
@@ -245,16 +251,45 @@ export default function PortfolioPage() {
     // Manual position entry handlers
     const updateManualPosition = (field: string, value: string) => {
         if (field === 'symbol') {
-            const classified = classifySymbol(value);
-            setManualPosition(prev => ({
-                ...prev,
-                symbol: value.toUpperCase(),
-                assetClass: classified,
-                name: value.toUpperCase()
-            }));
+            const upperValue = value.toUpperCase();
+            // Search the asset library for suggestions
+            const suggestions = searchAssets(value, manualPosition.assetClass !== 'other' ? manualPosition.assetClass : undefined);
+            setSymbolSuggestions(suggestions);
+            setShowSymbolSuggestions(suggestions.length > 0 && value.length > 0);
+
+            // Try to find exact match and auto-fill
+            const exactMatch = getAssetBySymbol(value);
+            if (exactMatch) {
+                setManualPosition(prev => ({
+                    ...prev,
+                    symbol: exactMatch.symbol,
+                    name: exactMatch.name,
+                    assetClass: exactMatch.assetClass
+                }));
+            } else {
+                const classified = classifySymbol(value);
+                setManualPosition(prev => ({
+                    ...prev,
+                    symbol: upperValue,
+                    assetClass: prev.assetClass === 'other' ? prev.assetClass : classified,
+                    name: prev.name || upperValue
+                }));
+            }
         } else {
             setManualPosition(prev => ({ ...prev, [field]: value }));
         }
+    };
+
+    // Handle selecting an asset from suggestions
+    const selectAssetSuggestion = (asset: AssetInfo) => {
+        setManualPosition(prev => ({
+            ...prev,
+            symbol: asset.symbol,
+            name: asset.name,
+            assetClass: asset.assetClass
+        }));
+        setShowSymbolSuggestions(false);
+        setSymbolSuggestions([]);
     };
 
     const handleManualSubmit = () => {
@@ -936,14 +971,81 @@ export default function PortfolioPage() {
 
                             {/* Row 2: Symbol, Name */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Symbol *</label>
+                                <div style={{ position: 'relative' }}>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Symbol * (Search or type)</label>
                                     <input
+                                        ref={symbolInputRef}
                                         value={manualPosition.symbol}
                                         onChange={e => updateManualPosition('symbol', e.target.value)}
-                                        placeholder="AAPL, BTCUSD, EURUSD..."
+                                        onFocus={() => {
+                                            if (manualPosition.symbol.length > 0) {
+                                                const suggestions = searchAssets(manualPosition.symbol, manualPosition.assetClass !== 'other' ? manualPosition.assetClass : undefined);
+                                                setSymbolSuggestions(suggestions);
+                                                setShowSymbolSuggestions(suggestions.length > 0);
+                                            }
+                                        }}
+                                        onBlur={() => {
+                                            // Delay to allow click on suggestion
+                                            setTimeout(() => setShowSymbolSuggestions(false), 200);
+                                        }}
+                                        placeholder="Type to search AAPL, BTC, EUR..."
+                                        autoComplete="off"
                                         style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', fontWeight: '600' }}
                                     />
+                                    {/* Autocomplete Suggestions Dropdown */}
+                                    {showSymbolSuggestions && symbolSuggestions.length > 0 && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '100%',
+                                            left: 0,
+                                            right: 0,
+                                            backgroundColor: '#0d1f3c',
+                                            border: '1px solid #3f4f66',
+                                            borderRadius: '6px',
+                                            marginTop: '4px',
+                                            maxHeight: '200px',
+                                            overflowY: 'auto',
+                                            zIndex: 100,
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                                        }}>
+                                            {symbolSuggestions.map((asset, idx) => (
+                                                <div
+                                                    key={`${asset.symbol}-${idx}`}
+                                                    onClick={() => selectAssetSuggestion(asset)}
+                                                    style={{
+                                                        padding: '10px 12px',
+                                                        cursor: 'pointer',
+                                                        borderBottom: idx < symbolSuggestions.length - 1 ? '1px solid #1e3a5f' : 'none',
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                        alignItems: 'center'
+                                                    }}
+                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
+                                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                >
+                                                    <div>
+                                                        <span style={{ fontWeight: '600', color: '#fff' }}>{asset.symbol}</span>
+                                                        <span style={{ marginLeft: '8px', color: '#94a3b8', fontSize: '12px' }}>{asset.name}</span>
+                                                    </div>
+                                                    <span style={{
+                                                        fontSize: '10px',
+                                                        padding: '2px 6px',
+                                                        borderRadius: '4px',
+                                                        backgroundColor: asset.assetClass === 'stock' ? '#3b82f622' :
+                                                            asset.assetClass === 'crypto' ? '#f59e0b22' :
+                                                                asset.assetClass === 'forex' ? '#10b98122' :
+                                                                    asset.assetClass === 'etf' ? '#ec489922' : '#a855f722',
+                                                        color: asset.assetClass === 'stock' ? '#3b82f6' :
+                                                            asset.assetClass === 'crypto' ? '#f59e0b' :
+                                                                asset.assetClass === 'forex' ? '#10b981' :
+                                                                    asset.assetClass === 'etf' ? '#ec4899' : '#a855f7'
+                                                    }}>
+                                                        {asset.assetClass}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Name</label>
