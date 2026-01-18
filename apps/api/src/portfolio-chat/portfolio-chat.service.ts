@@ -119,31 +119,55 @@ Guidelines:
     private buildPortfolioContext(data: PortfolioSummary): string {
         const lines: string[] = [];
 
+        // Helper function for safe number formatting
+        const formatCurrency = (value: number): string => {
+            if (value === undefined || value === null || isNaN(value)) return '$0.00';
+            return '$' + value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        };
+
+        const formatPercent = (value: number): string => {
+            if (value === undefined || value === null || isNaN(value)) return '0.00%';
+            return (value >= 0 ? '+' : '') + value.toFixed(2) + '%';
+        };
+
+        // Log incoming data for debugging
+        this.logger.log(`Building context for ${data.positions?.length || 0} positions`);
+        this.logger.log(`Total Value: ${data.totalValue}, Total Invested: ${data.totalInvested}, Total P&L: ${data.totalPnL}`);
+
         // Summary section
         lines.push('📊 PORTFOLIO SUMMARY');
-        lines.push(`Total Portfolio Value: $${data.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-        lines.push(`Total Invested: $${data.totalInvested.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
-        lines.push(`Total P&L: ${data.totalPnL >= 0 ? '+' : ''}$${data.totalPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${data.pnlPercent >= 0 ? '+' : ''}${data.pnlPercent.toFixed(2)}%)`);
-        lines.push(`Number of Positions: ${data.positions.length}`);
+        lines.push(`Total Portfolio Value: ${formatCurrency(data.totalValue)}`);
+        lines.push(`Total Invested: ${formatCurrency(data.totalInvested)}`);
+        lines.push(`Total P&L: ${formatCurrency(data.totalPnL)} (${formatPercent(data.pnlPercent)})`);
+        lines.push(`Number of Positions: ${data.positions?.length || 0}`);
         lines.push('');
 
         // Asset class breakdown
         lines.push('📈 BY ASSET CLASS');
-        for (const [assetClass, info] of Object.entries(data.byAssetClass)) {
-            lines.push(`- ${assetClass}: $${info.value.toLocaleString(undefined, { minimumFractionDigits: 2 })} | P&L: ${info.pnl >= 0 ? '+' : ''}$${info.pnl.toLocaleString(undefined, { minimumFractionDigits: 2 })} | ${info.count} position(s)`);
+        if (data.byAssetClass) {
+            for (const [assetClass, info] of Object.entries(data.byAssetClass)) {
+                lines.push(`- ${assetClass}: ${formatCurrency(info.value)} | P&L: ${formatCurrency(info.pnl)} | ${info.count} position(s)`);
+            }
         }
         lines.push('');
 
         // Individual positions
-        lines.push('📋 POSITIONS');
-        for (const pos of data.positions) {
-            const pnlSign = pos.pnl >= 0 ? '+' : '';
-            lines.push(`- ${pos.symbol} (${pos.name})`);
-            lines.push(`  Asset Class: ${pos.assetClass} | Type: ${pos.positionType || 'Long'}`);
-            lines.push(`  Qty: ${pos.quantity} | Entry: $${pos.avgPrice.toFixed(2)} | Current: $${pos.currentPrice.toFixed(2)}`);
-            lines.push(`  Notional: $${pos.notional.toLocaleString(undefined, { minimumFractionDigits: 2 })} | P&L: ${pnlSign}$${pos.pnl.toLocaleString(undefined, { minimumFractionDigits: 2 })} (${pnlSign}${pos.pnlPercent.toFixed(2)}%)`);
+        lines.push('📋 POSITIONS (All values shown)');
+        if (data.positions && Array.isArray(data.positions)) {
+            for (const pos of data.positions) {
+                this.logger.debug(`Position ${pos.symbol}: qty=${pos.quantity}, entry=${pos.avgPrice}, current=${pos.currentPrice}, notional=${pos.notional}, pnl=${pos.pnl}`);
+                lines.push(`- ${pos.symbol} (${pos.name || pos.symbol})`);
+                lines.push(`  Asset Class: ${pos.assetClass || 'Unknown'} | Type: ${pos.positionType || 'Long'}`);
+                lines.push(`  Quantity: ${pos.quantity || 0}`);
+                lines.push(`  Entry Price: ${formatCurrency(pos.avgPrice)}`);
+                lines.push(`  Current Price: ${formatCurrency(pos.currentPrice)}`);
+                lines.push(`  Notional Value: ${formatCurrency(pos.notional)}`);
+                lines.push(`  P&L: ${formatCurrency(pos.pnl)} (${formatPercent(pos.pnlPercent)})`);
+            }
         }
 
-        return lines.join('\n');
+        const context = lines.join('\n');
+        this.logger.log(`Portfolio context built (${context.length} chars)`);
+        return context;
     }
 }
