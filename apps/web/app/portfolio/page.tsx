@@ -603,18 +603,19 @@ export default function PortfolioPage() {
 
                                     {/* Position Table */}
                                     {isExpanded && (
-                                        <div style={{ padding: '0 16px 16px' }}>
-                                            <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                                        <div style={{ padding: '0 12px 12px', overflowX: 'auto' }}>
+                                            <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse', minWidth: '900px' }}>
                                                 <thead>
-                                                    <tr style={{ color: '#64748b' }}>
-                                                        <th style={{ textAlign: 'left', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
-                                                        <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
-                                                        <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
-                                                        <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
-                                                        <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>INITIAL VALUE</th>
-                                                        <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>CURRENT VALUE</th>
-                                                        <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
-                                                        <th style={{ textAlign: 'center', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
+                                                    <tr style={{ color: '#64748b', fontSize: '10px' }}>
+                                                        <th style={{ textAlign: 'left', padding: '8px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
+                                                        <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
+                                                        <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
+                                                        <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
+                                                        <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
+                                                        <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
+                                                        <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
+                                                        <th style={{ textAlign: 'center', padding: '8px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
+                                                        <th style={{ textAlign: 'center', padding: '8px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -627,55 +628,60 @@ export default function PortfolioPage() {
 
                                                         return (
                                                             <tr key={pos.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
-                                                                <td style={{ padding: '14px 0' }}>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                <td style={{ padding: '10px 4px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                         <div style={{
-                                                                            width: '32px', height: '32px', borderRadius: '50%',
+                                                                            width: '28px', height: '28px', borderRadius: '50%',
                                                                             backgroundColor: badge.bg, color: '#000',
                                                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                            fontSize: '14px', fontWeight: 'bold'
+                                                                            fontSize: '12px', fontWeight: 'bold', flexShrink: 0
                                                                         }}>
                                                                             {badge.letter}
                                                                         </div>
-                                                                        <div>
-                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                                <span style={{ fontWeight: '600', color: '#fff' }}>{pos.symbol}</span>
+                                                                        <div style={{ minWidth: 0 }}>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                                                                                <span style={{ fontWeight: '600', color: '#fff', fontSize: '12px' }}>{pos.symbol}</span>
                                                                                 {pos.positionType === 'perpetual' && (
-                                                                                    <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#00d4ff22', color: '#00d4ff' }}>PERP</span>
+                                                                                    <span style={{ padding: '1px 4px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#00d4ff22', color: '#00d4ff' }}>PERP</span>
                                                                                 )}
                                                                                 {pos.positionType === 'option' && (
-                                                                                    <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#22c55e22', color: '#22c55e' }}>OPT</span>
+                                                                                    <span style={{ padding: '1px 4px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#22c55e22', color: '#22c55e' }}>OPT</span>
                                                                                 )}
                                                                             </div>
-                                                                            <span style={{ fontSize: '11px', color: '#64748b' }}>{pos.name}</span>
+                                                                            <span style={{ fontSize: '10px', color: '#64748b', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }}>{pos.name}</span>
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td style={{ textAlign: 'right', padding: '14px 0' }}>
-                                                                    <span style={{ color: '#e2e8f0' }}>{pos.quantity}</span>
+                                                                <td style={{ textAlign: 'right', padding: '10px 4px' }}>
+                                                                    <span style={{ color: '#e2e8f0', fontSize: '11px' }}>{pos.quantity}</span>
                                                                     {pos.leverage && pos.leverage > 1 && (
-                                                                        <span style={{ marginLeft: '4px', padding: '2px 4px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#3b82f622', color: '#3b82f6' }}>{pos.leverage}x</span>
+                                                                        <span style={{ marginLeft: '2px', padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#3b82f622', color: '#3b82f6' }}>{pos.leverage}x</span>
                                                                     )}
                                                                 </td>
-                                                                <td style={{ textAlign: 'right', padding: '14px 0', color: '#94a3b8', fontSize: '12px' }}>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                                <td style={{ textAlign: 'right', padding: '14px 0', fontWeight: '600', color: '#fff', fontSize: '12px' }}>${pos.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                                <td style={{ textAlign: 'right', padding: '14px 0', color: '#94a3b8' }}>
-                                                                    ${initialValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                <td style={{ textAlign: 'right', padding: '10px 4px', color: '#94a3b8', fontSize: '11px' }}>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                <td style={{ textAlign: 'right', padding: '10px 4px', fontWeight: '600', color: '#fff', fontSize: '11px' }}>${pos.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                <td style={{ textAlign: 'right', padding: '10px 4px', color: '#94a3b8', fontSize: '11px' }}>
+                                                                    ${initialValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                                 </td>
-                                                                <td style={{ textAlign: 'right', padding: '14px 0', fontWeight: '600', color: '#fff' }}>
-                                                                    ${notional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                <td style={{ textAlign: 'right', padding: '10px 4px', fontWeight: '600', color: '#fff', fontSize: '11px' }}>
+                                                                    ${notional.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                                 </td>
-                                                                <td style={{ textAlign: 'right', padding: '14px 0' }}>
-                                                                    <div style={{ color: pnl >= 0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>
-                                                                        {pnl >= 0 ? '+' : ''}${pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                <td style={{ textAlign: 'right', padding: '10px 4px' }}>
+                                                                    <div style={{ color: pnl >= 0 ? '#22c55e' : '#ef4444', fontWeight: '600', fontSize: '11px' }}>
+                                                                        {pnl >= 0 ? '+' : ''}${pnl.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                                     </div>
-                                                                    <div style={{ fontSize: '10px', color: pnl >= 0 ? '#22c55e88' : '#ef444488' }}>
-                                                                        {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%
+                                                                    <div style={{ fontSize: '9px', color: pnl >= 0 ? '#22c55e88' : '#ef444488' }}>
+                                                                        {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(1)}%
                                                                     </div>
                                                                 </td>
-                                                                <td style={{ textAlign: 'center', padding: '14px 0' }}>
-                                                                    <span style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '500', backgroundColor: '#3b82f622', color: '#3b82f6' }}>
+                                                                <td style={{ textAlign: 'center', padding: '10px 4px' }}>
+                                                                    <span style={{ padding: '2px 4px', borderRadius: '3px', fontSize: '9px', fontWeight: '500', backgroundColor: '#3b82f622', color: '#3b82f6' }}>
                                                                         {pos.broker || '—'}
+                                                                    </span>
+                                                                </td>
+                                                                <td style={{ textAlign: 'center', padding: '10px 4px' }}>
+                                                                    <span style={{ padding: '2px 4px', borderRadius: '3px', fontSize: '9px', fontWeight: '500', backgroundColor: '#a855f722', color: '#a855f7' }}>
+                                                                        {pos.platform || '—'}
                                                                     </span>
                                                                 </td>
                                                             </tr>
