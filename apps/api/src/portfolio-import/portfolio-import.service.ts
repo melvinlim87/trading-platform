@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { PortfolioImport, ImportStatus } from './portfolio-import.entity';
 import { OpenRouterService, ExtractedPosition } from './openrouter.service';
-import { Position } from '../positions/position.entity';
+import { Position, VerificationSource } from '../positions/position.entity';
 import { Account } from '../accounts/account.entity';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -131,6 +131,7 @@ export class PortfolioImportService {
 
         try {
             let positionsCreated = 0;
+            const verifiedAt = new Date();
 
             for (const pos of record.extractedData.positions) {
                 // Check if position already exists
@@ -144,14 +145,23 @@ export class PortfolioImportService {
                     const totalCost = (existing.quantity * existing.avgPrice) + (pos.quantity * pos.avgPrice);
                     existing.quantity = totalQty;
                     existing.avgPrice = totalCost / totalQty;
+                    // Update verification status to AI since we're importing from screenshot
+                    existing.verificationSource = VerificationSource.AI_IMPORT;
+                    existing.importId = importId;
+                    existing.verificationConfidence = 0.95; // High confidence for AI extraction
+                    existing.verifiedAt = verifiedAt;
                     await queryRunner.manager.save(Position, existing);
                 } else {
-                    // Create new position
+                    // Create new position with AI verification
                     const newPosition = queryRunner.manager.create(Position, {
                         accountId: record.accountId,
                         symbol: pos.symbol,
                         quantity: pos.quantity,
                         avgPrice: pos.avgPrice,
+                        verificationSource: VerificationSource.AI_IMPORT,
+                        importId: importId,
+                        verificationConfidence: 0.95,
+                        verifiedAt: verifiedAt,
                     });
                     await queryRunner.manager.save(Position, newPosition);
                     positionsCreated++;

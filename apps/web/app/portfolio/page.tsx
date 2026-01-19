@@ -28,6 +28,10 @@ interface Position {
     optionDetails?: string;
     broker?: string;
     platform?: string;
+    // Verification fields
+    verificationSource?: 'ai_import' | 'api_linked' | 'manual';
+    verificationConfidence?: number;
+    verifiedAt?: string;
 }
 
 interface Account {
@@ -641,6 +645,47 @@ export default function PortfolioPage() {
                                                                         <div style={{ minWidth: 0 }}>
                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                                                                                 <span style={{ fontWeight: '600', color: '#fff', fontSize: '13px' }}>{pos.symbol}</span>
+                                                                                {/* Verification Badge */}
+                                                                                {pos.verificationSource === 'ai_import' ? (
+                                                                                    <span
+                                                                                        title={`AI Verified${pos.verifiedAt ? ' • ' + new Date(pos.verifiedAt).toLocaleDateString() : ''}`}
+                                                                                        style={{
+                                                                                            padding: '1px 4px',
+                                                                                            borderRadius: '3px',
+                                                                                            fontSize: '9px',
+                                                                                            fontWeight: '600',
+                                                                                            backgroundColor: '#22c55e22',
+                                                                                            color: '#22c55e',
+                                                                                            cursor: 'help'
+                                                                                        }}
+                                                                                    >✓ AI</span>
+                                                                                ) : pos.verificationSource === 'api_linked' ? (
+                                                                                    <span
+                                                                                        title="Connected via broker API"
+                                                                                        style={{
+                                                                                            padding: '1px 4px',
+                                                                                            borderRadius: '3px',
+                                                                                            fontSize: '9px',
+                                                                                            fontWeight: '600',
+                                                                                            backgroundColor: '#3b82f622',
+                                                                                            color: '#3b82f6',
+                                                                                            cursor: 'help'
+                                                                                        }}
+                                                                                    >🔗 API</span>
+                                                                                ) : (
+                                                                                    <span
+                                                                                        title="Self-reported position (not verified)"
+                                                                                        style={{
+                                                                                            padding: '1px 4px',
+                                                                                            borderRadius: '3px',
+                                                                                            fontSize: '9px',
+                                                                                            fontWeight: '600',
+                                                                                            backgroundColor: '#64748b22',
+                                                                                            color: '#64748b',
+                                                                                            cursor: 'help'
+                                                                                        }}
+                                                                                    >⚠</span>
+                                                                                )}
                                                                                 {pos.positionType === 'perpetual' && (
                                                                                     <span style={{ padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#00d4ff22', color: '#00d4ff' }}>PERP</span>
                                                                                 )}
