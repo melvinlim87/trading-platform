@@ -122,7 +122,7 @@ export function PortfolioChatbox({
                     background: 'linear-gradient(135deg, #1e3a5f22, #3b82f622)'
                 }}
             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
                     <span style={{ fontSize: '24px' }}>🤖</span>
                     <div>
                         <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#fff', margin: 0 }}>
@@ -133,30 +133,32 @@ export function PortfolioChatbox({
                         </p>
                     </div>
                 </div>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '4px 12px',
-                    borderRadius: '20px',
-                    backgroundColor: '#22c55e22',
-                    border: '1px solid #22c55e44'
-                }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        backgroundColor: '#22c55e',
-                        animation: 'pulse 2s infinite'
-                    }}></div>
-                    <span style={{ fontSize: '11px', color: '#22c55e', fontWeight: '500' }}>Qwen AI</span>
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        backgroundColor: '#22c55e22',
+                        border: '1px solid #22c55e44'
+                    }}>
+                        <div style={{
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            backgroundColor: '#22c55e',
+                            animation: 'pulse 2s infinite'
+                        }}></div>
+                        <span style={{ fontSize: '10px', color: '#22c55e', fontWeight: '500' }}>Qwen AI</span>
+                    </div>
+                    <span style={{
+                        fontSize: '20px',
+                        color: '#64748b',
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s'
+                    }}>▼</span>
                 </div>
-                <span style={{
-                    fontSize: '20px',
-                    color: '#64748b',
-                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s'
-                }}>▼</span>
             </div>
 
             {isExpanded && (

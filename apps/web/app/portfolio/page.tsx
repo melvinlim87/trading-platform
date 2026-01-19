@@ -608,12 +608,13 @@ export default function PortfolioPage() {
                                                 <thead>
                                                     <tr style={{ color: '#64748b' }}>
                                                         <th style={{ textAlign: 'left', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
-                                                        <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>QUANTITY</th>
+                                                        <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
                                                         <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
                                                         <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
+                                                        <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>INITIAL VALUE</th>
+                                                        <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>CURRENT VALUE</th>
                                                         <th style={{ textAlign: 'right', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
                                                         <th style={{ textAlign: 'center', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
-                                                        <th style={{ textAlign: 'center', padding: '12px 0', fontWeight: '500', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -621,6 +622,7 @@ export default function PortfolioPage() {
                                                         const pnl = calculatePnL(pos);
                                                         const pnlPct = calculatePnLPercent(pos);
                                                         const notional = calculateNotional(pos);
+                                                        const initialValue = pos.avgPrice * pos.quantity * (pos.leverage || 1);
                                                         const badge = getPositionBadge(pos, config);
 
                                                         return (
@@ -639,40 +641,41 @@ export default function PortfolioPage() {
                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                                 <span style={{ fontWeight: '600', color: '#fff' }}>{pos.symbol}</span>
                                                                                 {pos.positionType === 'perpetual' && (
-                                                                                    <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', backgroundColor: '#00d4ff22', color: '#00d4ff' }}>PERPETUAL</span>
+                                                                                    <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#00d4ff22', color: '#00d4ff' }}>PERP</span>
                                                                                 )}
                                                                                 {pos.positionType === 'option' && (
-                                                                                    <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', backgroundColor: '#22c55e22', color: '#22c55e' }}>OPTION</span>
+                                                                                    <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#22c55e22', color: '#22c55e' }}>OPT</span>
                                                                                 )}
                                                                             </div>
-                                                                            <span style={{ fontSize: '12px', color: '#64748b' }}>{pos.name}</span>
+                                                                            <span style={{ fontSize: '11px', color: '#64748b' }}>{pos.name}</span>
                                                                         </div>
                                                                     </div>
                                                                 </td>
                                                                 <td style={{ textAlign: 'right', padding: '14px 0' }}>
                                                                     <span style={{ color: '#e2e8f0' }}>{pos.quantity}</span>
                                                                     {pos.leverage && pos.leverage > 1 && (
-                                                                        <span style={{ marginLeft: '6px', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', backgroundColor: '#3b82f622', color: '#3b82f6' }}>{pos.leverage}x</span>
+                                                                        <span style={{ marginLeft: '4px', padding: '2px 4px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#3b82f622', color: '#3b82f6' }}>{pos.leverage}x</span>
                                                                     )}
                                                                 </td>
-                                                                <td style={{ textAlign: 'right', padding: '14px 0', color: '#e2e8f0' }}>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                                <td style={{ textAlign: 'right', padding: '14px 0', fontWeight: '600', color: '#fff' }}>${pos.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                <td style={{ textAlign: 'right', padding: '14px 0', color: '#94a3b8', fontSize: '12px' }}>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                <td style={{ textAlign: 'right', padding: '14px 0', fontWeight: '600', color: '#fff', fontSize: '12px' }}>${pos.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                <td style={{ textAlign: 'right', padding: '14px 0', color: '#94a3b8' }}>
+                                                                    ${initialValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                </td>
+                                                                <td style={{ textAlign: 'right', padding: '14px 0', fontWeight: '600', color: '#fff' }}>
+                                                                    ${notional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                </td>
                                                                 <td style={{ textAlign: 'right', padding: '14px 0' }}>
-                                                                    <div style={{ color: pnl >= 0 ? '#22c55e' : '#ef4444', fontWeight: '500' }}>
-                                                                        {pnl >= 0 ? '↗' : '↘'} ${Math.abs(pnl).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                    <div style={{ color: pnl >= 0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>
+                                                                        {pnl >= 0 ? '+' : ''}${pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                     </div>
-                                                                    <div style={{ fontSize: '11px', color: pnl >= 0 ? '#22c55e' : '#ef4444' }}>
+                                                                    <div style={{ fontSize: '10px', color: pnl >= 0 ? '#22c55e88' : '#ef444488' }}>
                                                                         {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%
                                                                     </div>
                                                                 </td>
                                                                 <td style={{ textAlign: 'center', padding: '14px 0' }}>
-                                                                    <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '500', backgroundColor: '#3b82f622', color: '#3b82f6' }}>
+                                                                    <span style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '500', backgroundColor: '#3b82f622', color: '#3b82f6' }}>
                                                                         {pos.broker || '—'}
-                                                                    </span>
-                                                                </td>
-                                                                <td style={{ textAlign: 'center', padding: '14px 0' }}>
-                                                                    <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '500', backgroundColor: '#a855f722', color: '#a855f7' }}>
-                                                                        {pos.platform || '—'}
                                                                     </span>
                                                                 </td>
                                                             </tr>
