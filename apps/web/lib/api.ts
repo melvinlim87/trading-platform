@@ -32,11 +32,6 @@ export const accountsAPI = {
     getAccounts: () => api.get('/accounts'),
 };
 
-// Orders API
-export const ordersAPI = {
-    placeOrder: (orderData: any) => api.post('/orders', orderData),
-    getOrders: (accountId: string) => api.get(`/orders/${accountId}`),
-};
 
 // Portfolio Import API
 export const portfolioImportAPI = {

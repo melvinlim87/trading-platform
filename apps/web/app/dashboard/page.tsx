@@ -118,30 +118,24 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="grid md:grid-cols-4 gap-6">
-                    <Link href="/portfolio-import" className="card hover:shadow-accentPrimary/20 transition-all cursor-pointer">
-                        <div className="text-4xl mb-3">📸</div>
-                        <h3 className="text-xl font-semibold mb-2">Import Portfolio</h3>
-                        <p className="text-textSecondary">AI-powered screenshot import</p>
-                    </Link>
-
-                    <Link href="/markets" className="card hover:shadow-accentPrimary/20 transition-all cursor-pointer">
-                        <div className="text-4xl mb-3">📊</div>
-                        <h3 className="text-xl font-semibold mb-2">Markets</h3>
-                        <p className="text-textSecondary">Explore stocks and options</p>
-                    </Link>
-
+                <div className="grid md:grid-cols-3 gap-6">
                     <Link href="/portfolio" className="card hover:shadow-accentPrimary/20 transition-all cursor-pointer">
                         <div className="text-4xl mb-3">💼</div>
                         <h3 className="text-xl font-semibold mb-2">Portfolio</h3>
-                        <p className="text-textSecondary">View your positions and P&L</p>
+                        <p className="text-textSecondary">View your positions, P&L & AI Mentor</p>
                     </Link>
 
-                    <Link href="/community" className="card hover:shadow-accentPrimary/20 transition-all cursor-pointer">
+                    <div className="card opacity-60 cursor-not-allowed">
+                        <div className="text-4xl mb-3">📊</div>
+                        <h3 className="text-xl font-semibold mb-2">Markets</h3>
+                        <p className="text-textSecondary">Coming soon</p>
+                    </div>
+
+                    <div className="card opacity-60 cursor-not-allowed">
                         <div className="text-4xl mb-3">👥</div>
                         <h3 className="text-xl font-semibold mb-2">Community</h3>
-                        <p className="text-textSecondary">Connect with traders</p>
-                    </Link>
+                        <p className="text-textSecondary">Coming soon</p>
+                    </div>
                 </div>
             </main>
         </div>
