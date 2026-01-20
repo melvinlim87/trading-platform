@@ -45,24 +45,24 @@ interface Account {
 // Extended mock positions with BALANCED notional values (~$15-20k each asset class for clear pie chart)
 const mockPositions: Position[] = [
     // Cryptocurrency (~$20k notional)
-    { id: '1', symbol: 'BTCUSD', name: 'Bitcoin', quantity: 0.25, avgPrice: 42500.00, currentPrice: 68000.00, assetClass: 'crypto', positionType: 'long', broker: 'Binance', platform: 'Binance App' },
-    { id: '2', symbol: 'ETHUSDT', name: 'Ethereum', quantity: 1.5, avgPrice: 2200.00, currentPrice: 3500.00, assetClass: 'crypto', positionType: 'long', broker: 'Coinbase', platform: 'Coinbase Pro' },
+    { id: '1', symbol: 'BTCUSD', name: 'Bitcoin', quantity: 0.25, avgPrice: 42500.00, currentPrice: 68000.00, assetClass: 'crypto', positionType: 'long', broker: 'Binance', platform: 'Binance App', verificationSource: 'api_linked', verifiedAt: '2026-01-15T10:30:00Z' },
+    { id: '2', symbol: 'ETHUSDT', name: 'Ethereum', quantity: 1.5, avgPrice: 2200.00, currentPrice: 3500.00, assetClass: 'crypto', positionType: 'long', broker: 'Coinbase', platform: 'Coinbase Pro', verificationSource: 'ai_import', verifiedAt: '2026-01-18T14:20:00Z' },
     // Forex (~$18k notional)
-    { id: '3', symbol: 'EURUSD', name: 'Euro / US Dollar', quantity: 15000, avgPrice: 1.09, currentPrice: 1.10, assetClass: 'forex', positionType: 'long', broker: 'OANDA', platform: 'MT5' },
-    { id: '9', symbol: 'GBPJPY', name: 'GBP/JPY', quantity: 100, avgPrice: 185.50, currentPrice: 188.20, assetClass: 'forex', positionType: 'long', broker: 'IG', platform: 'MT4' },
+    { id: '3', symbol: 'EURUSD', name: 'Euro / US Dollar', quantity: 15000, avgPrice: 1.09, currentPrice: 1.10, assetClass: 'forex', positionType: 'long', broker: 'OANDA', platform: 'MT5', verificationSource: 'ai_import', verifiedAt: '2026-01-17T09:15:00Z' },
+    { id: '9', symbol: 'GBPJPY', name: 'GBP/JPY', quantity: 100, avgPrice: 185.50, currentPrice: 188.20, assetClass: 'forex', positionType: 'long', broker: 'IG', platform: 'MT4', verificationSource: 'manual' },
     // Stocks (~$20k notional)
-    { id: '4', symbol: 'TSLA', name: 'Tesla Inc', quantity: 15, avgPrice: 250.00, currentPrice: 438.50, assetClass: 'stock', positionType: 'long', broker: 'IBKR', platform: 'TWS' },
-    { id: '5', symbol: 'AAPL', name: 'Apple Inc', quantity: 40, avgPrice: 150.00, currentPrice: 185.20, assetClass: 'stock', positionType: 'long', broker: 'Fidelity', platform: 'Web' },
-    { id: '10', symbol: 'NVDA', name: 'NVIDIA Corp', quantity: 8, avgPrice: 450.00, currentPrice: 875.50, assetClass: 'stock', positionType: 'long', broker: 'TD Ameritrade', platform: 'thinkorSwim' },
+    { id: '4', symbol: 'TSLA', name: 'Tesla Inc', quantity: 15, avgPrice: 250.00, currentPrice: 438.50, assetClass: 'stock', positionType: 'long', broker: 'IBKR', platform: 'TWS', verificationSource: 'api_linked', verifiedAt: '2026-01-19T08:00:00Z' },
+    { id: '5', symbol: 'AAPL', name: 'Apple Inc', quantity: 40, avgPrice: 150.00, currentPrice: 185.20, assetClass: 'stock', positionType: 'long', broker: 'Fidelity', platform: 'Web', verificationSource: 'ai_import', verifiedAt: '2026-01-16T11:45:00Z' },
+    { id: '10', symbol: 'NVDA', name: 'NVIDIA Corp', quantity: 8, avgPrice: 450.00, currentPrice: 875.50, assetClass: 'stock', positionType: 'long', broker: 'TD Ameritrade', platform: 'thinkorSwim', verificationSource: 'manual' },
     // Unit Trusts (~$18k notional)
-    { id: '6', symbol: 'VWRA', name: 'Vanguard FTSE All-World', quantity: 90, avgPrice: 98.50, currentPrice: 105.60, assetClass: 'unit_trust', positionType: 'long', broker: 'IBKR', platform: 'TWS' },
-    { id: '11', symbol: 'SWDA', name: 'iShares MSCI World', quantity: 80, avgPrice: 75.00, currentPrice: 82.50, assetClass: 'unit_trust', positionType: 'long', broker: 'Saxo', platform: 'SaxoTraderGO' },
+    { id: '6', symbol: 'VWRA', name: 'Vanguard FTSE All-World', quantity: 90, avgPrice: 98.50, currentPrice: 105.60, assetClass: 'unit_trust', positionType: 'long', broker: 'IBKR', platform: 'TWS', verificationSource: 'api_linked', verifiedAt: '2026-01-19T08:00:00Z' },
+    { id: '11', symbol: 'SWDA', name: 'iShares MSCI World', quantity: 80, avgPrice: 75.00, currentPrice: 82.50, assetClass: 'unit_trust', positionType: 'long', broker: 'Saxo', platform: 'SaxoTraderGO', verificationSource: 'ai_import', verifiedAt: '2026-01-14T16:30:00Z' },
     // ETFs (~$20k notional)
-    { id: '7', symbol: 'SPY', name: 'S&P 500 ETF', quantity: 25, avgPrice: 450.00, currentPrice: 505.80, assetClass: 'etf', positionType: 'long', broker: 'Schwab', platform: 'Web' },
-    { id: '12', symbol: 'QQQ', name: 'Invesco QQQ', quantity: 20, avgPrice: 380.00, currentPrice: 445.20, assetClass: 'etf', positionType: 'long', broker: 'Robinhood', platform: 'Mobile App' },
+    { id: '7', symbol: 'SPY', name: 'S&P 500 ETF', quantity: 25, avgPrice: 450.00, currentPrice: 505.80, assetClass: 'etf', positionType: 'long', broker: 'Schwab', platform: 'Web', verificationSource: 'ai_import', verifiedAt: '2026-01-18T10:00:00Z' },
+    { id: '12', symbol: 'QQQ', name: 'Invesco QQQ', quantity: 20, avgPrice: 380.00, currentPrice: 445.20, assetClass: 'etf', positionType: 'long', broker: 'Robinhood', platform: 'Mobile App', verificationSource: 'manual' },
     // Commodities (~$18k notional)
-    { id: '8', symbol: 'XAUUSD', name: 'Gold', quantity: 6, avgPrice: 1950.00, currentPrice: 2350.50, assetClass: 'commodity', positionType: 'long', broker: 'IG', platform: 'MT5' },
-    { id: '13', symbol: 'XAGUSD', name: 'Silver', quantity: 150, avgPrice: 23.50, currentPrice: 28.75, assetClass: 'commodity', positionType: 'long', broker: 'OANDA', platform: 'TradingView' },
+    { id: '8', symbol: 'XAUUSD', name: 'Gold', quantity: 6, avgPrice: 1950.00, currentPrice: 2350.50, assetClass: 'commodity', positionType: 'long', broker: 'IG', platform: 'MT5', verificationSource: 'api_linked', verifiedAt: '2026-01-20T07:00:00Z' },
+    { id: '13', symbol: 'XAGUSD', name: 'Silver', quantity: 150, avgPrice: 23.50, currentPrice: 28.75, assetClass: 'commodity', positionType: 'long', broker: 'OANDA', platform: 'TradingView', verificationSource: 'manual' },
 ];
 
 // Use distinct colors for each asset class - ensure high contrast between all
