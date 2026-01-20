@@ -720,12 +720,12 @@ export default function PortfolioPage() {
                                                                     </div>
                                                                 </td>
                                                                 <td style={{ textAlign: 'center', padding: '8px 2px' }}>
-                                                                    <span style={{ padding: '2px 4px', borderRadius: '3px', fontSize: '10px', fontWeight: '500', backgroundColor: '#3b82f622', color: '#3b82f6' }}>
+                                                                    <span style={{ padding: '2px 4px', borderRadius: '3px', fontSize: '10px', fontWeight: '500', backgroundColor: '#3b82f633', color: '#fff' }}>
                                                                         {pos.broker || '—'}
                                                                     </span>
                                                                 </td>
                                                                 <td style={{ textAlign: 'center', padding: '8px 2px' }}>
-                                                                    <span style={{ padding: '2px 4px', borderRadius: '3px', fontSize: '10px', fontWeight: '500', backgroundColor: '#a855f722', color: '#a855f7' }}>
+                                                                    <span style={{ padding: '2px 4px', borderRadius: '3px', fontSize: '10px', fontWeight: '500', backgroundColor: '#a855f733', color: '#fff' }}>
                                                                         {pos.platform || '—'}
                                                                     </span>
                                                                 </td>
