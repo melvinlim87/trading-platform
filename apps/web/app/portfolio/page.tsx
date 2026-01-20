@@ -608,18 +608,18 @@ export default function PortfolioPage() {
                                     {/* Position Table */}
                                     {isExpanded && (
                                         <div style={{ padding: '0 8px 12px', overflowX: 'auto' }}>
-                                            <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', tableLayout: 'auto' }}>
+                                            <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                                                 <thead>
                                                     <tr style={{ color: '#64748b', fontSize: '11px' }}>
-                                                        <th style={{ textAlign: 'left', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
-                                                        <th style={{ textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
-                                                        <th style={{ textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
-                                                        <th style={{ textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
-                                                        <th style={{ textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
-                                                        <th style={{ textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
-                                                        <th style={{ textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
-                                                        <th style={{ textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
-                                                        <th style={{ textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
+                                                        <th style={{ width: '22%', textAlign: 'left', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
+                                                        <th style={{ width: '8%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
+                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
+                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
+                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
+                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
+                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
+                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
+                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
