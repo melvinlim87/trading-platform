@@ -118,15 +118,21 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid md:grid-cols-4 gap-6">
                     <Link href="/portfolio" className="card hover:shadow-accentPrimary/20 transition-all cursor-pointer">
                         <div className="text-4xl mb-3">💼</div>
                         <h3 className="text-xl font-semibold mb-2">Portfolio</h3>
                         <p className="text-textSecondary">View your positions, P&L & AI Mentor</p>
                     </Link>
 
-                    <div className="card opacity-60 cursor-not-allowed">
+                    <Link href="/watchlist" className="card hover:shadow-accentPrimary/20 transition-all cursor-pointer">
                         <div className="text-4xl mb-3">📊</div>
+                        <h3 className="text-xl font-semibold mb-2">Watchlist</h3>
+                        <p className="text-textSecondary">Track your favorite assets</p>
+                    </Link>
+
+                    <div className="card opacity-60 cursor-not-allowed">
+                        <div className="text-4xl mb-3">🏪</div>
                         <h3 className="text-xl font-semibold mb-2">Markets</h3>
                         <p className="text-textSecondary">Coming soon</p>
                     </div>
