@@ -263,12 +263,6 @@ export default function WatchlistPage() {
         }
     }, [savedSymbols, fetchPrices]);
 
-    useEffect(() => {
-        if (!authLoading && !user) {
-            router.push('/auth/login');
-        }
-    }, [user, authLoading, router]);
-
     // Search assets
     useEffect(() => {
         if (searchQuery.length >= 1) {
@@ -297,7 +291,7 @@ export default function WatchlistPage() {
         setWatchlist(watchlist.filter(w => w.symbol !== symbol));
     };
 
-    if (authLoading || isLoading) {
+    if (isLoading) {
         return (
             <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0a1628' }}>
                 <div style={{ fontSize: '24px', color: '#fff' }}>Loading watchlist...</div>
