@@ -13,16 +13,9 @@ export default function DashboardPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!authLoading && !user) {
-            router.push('/auth/login');
-        }
-    }, [user, authLoading, router]);
-
-    useEffect(() => {
-        if (user) {
-            loadAccounts();
-        }
-    }, [user]);
+        // Demo mode - load accounts even without login
+        loadAccounts();
+    }, []);
 
     const loadAccounts = async () => {
         try {
@@ -30,12 +23,17 @@ export default function DashboardPage() {
             setAccounts(response.data);
         } catch (error) {
             console.error('Failed to load accounts', error);
+            // Set demo accounts for preview
+            setAccounts([
+                { id: 'demo-1', type: 'Trading', currency: 'USD', balance: 50000 },
+                { id: 'demo-2', type: 'Investment', currency: 'USD', balance: 25000 }
+            ]);
         } finally {
             setIsLoading(false);
         }
     };
 
-    if (authLoading || isLoading) {
+    if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-2xl">Loading...</div>
@@ -43,9 +41,7 @@ export default function DashboardPage() {
         );
     }
 
-    if (!user) {
-        return null;
-    }
+    const displayUser = user || { email: 'demo@preview.com' };
 
     return (
         <div className="min-h-screen">
@@ -57,7 +53,7 @@ export default function DashboardPage() {
                             Trading Platform
                         </h1>
                         <div className="flex items-center gap-4">
-                            <span className="text-textSecondary">{user.email}</span>
+                            <span className="text-textSecondary">{displayUser.email}</span>
                             <button onClick={logout} className="btn-secondary">
                                 Logout
                             </button>

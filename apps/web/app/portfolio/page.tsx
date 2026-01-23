@@ -403,13 +403,7 @@ export default function PortfolioPage() {
 
     const displayUser = user || { email: 'demo@preview.com' };
 
-    if (authLoading) {
-        return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0a1628' }}>
-                <div style={{ fontSize: '1.5rem', color: '#fff' }}>Loading...</div>
-            </div>
-        );
-    }
+    // Loading state removed - proceed directly to render
 
     // Get position badge color and letter
     const getPositionBadge = (pos: Position, config: typeof assetClassConfig[string]) => {
