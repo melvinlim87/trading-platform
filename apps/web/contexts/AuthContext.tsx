@@ -30,6 +30,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedToken = localStorage.getItem('token');
         if (storedToken) {
             setToken(storedToken);
+
+            // Mock auth bypass
+            if (storedToken.startsWith('mock_')) {
+                setUser({
+                    id: 'mock-user-id',
+                    email: localStorage.getItem('user_email') || 'demo@example.com',
+                    role: 'user'
+                });
+                setIsLoading(false);
+                return;
+            }
+
             // Fetch user profile
             authAPI.getProfile()
                 .then((res) => setUser(res.data))
@@ -44,19 +56,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const login = async (email: string, password: string) => {
-        const response = await authAPI.login(email, password);
-        const { access_token, user: userData } = response.data;
+        // Mock login
+        const access_token = 'mock_token_' + Date.now();
+        const userData = {
+            id: 'mock-user-id',
+            email,
+            role: 'user',
+        };
+        
         localStorage.setItem('token', access_token);
+        localStorage.setItem('user_email', email);
         setToken(access_token);
         setUser(userData);
+        
+        // const response = await authAPI.login(email, password);
+        // const { access_token, user: userData } = response.data;
+        // localStorage.setItem('token', access_token);
+        // setToken(access_token);
+        // setUser(userData);
     };
 
     const register = async (email: string, password: string) => {
-        const response = await authAPI.register(email, password);
-        const { access_token, user: userData } = response.data;
+        // Mock register
+        const access_token = 'mock_token_' + Date.now();
+        const userData = {
+            id: 'mock-user-id',
+            email,
+            role: 'user',
+        };
+        
         localStorage.setItem('token', access_token);
+        localStorage.setItem('user_email', email);
         setToken(access_token);
         setUser(userData);
+
+        // const response = await authAPI.register(email, password);
+        // const { access_token, user: userData } = response.data;
+        // localStorage.setItem('token', access_token);
+        // setToken(access_token);
+        // setUser(userData);
     };
 
     const logout = () => {

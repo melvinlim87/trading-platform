@@ -21,6 +21,16 @@ import { PortfolioChatModule } from './portfolio-chat/portfolio-chat.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    TypeOrmModule.forRoot({
+      type: 'postgres', // Change this from 'sqlite' or 'better-sqlite3'
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      username: process.env.DB_USERNAME || 'postgres',
+      password: process.env.DB_PASSWORD || 'Admin123456!',
+      database: process.env.DB_DATABASE || 'trading_platform',
+      entities: [User, Account, Order, Position, PortfolioImport],
+      synchronize: true, // Auto-creates tables in your new Postgres database
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {

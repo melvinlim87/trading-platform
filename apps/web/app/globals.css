@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --bg-primary: #0a0e27;
@@ -32,7 +30,7 @@
   body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -166,7 +164,6 @@
 
 /* Gold glow animation keyframes */
 @keyframes goldPulse {
-
   0%,
   100% {
     box-shadow:
@@ -209,7 +206,6 @@
 }
 
 @keyframes subtleFloat {
-
   0%,
   100% {
     transform: translateY(0px);
@@ -233,15 +229,24 @@
 
 /* Thin border initially */
 .info-card::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: 16px;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.05), rgba(255, 215, 0, 0.2));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.2),
+    rgba(255, 215, 0, 0.05),
+    rgba(255, 215, 0, 0.2)
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
   mask-composite: exclude;
   transition: all 0.4s ease;
 }
@@ -249,7 +254,14 @@
 /* Thick glowing border on hover */
 .info-card:hover::before {
   padding: 2px;
-  background: linear-gradient(135deg, #ffd700, #ffaa00, #ffd700, #fff5cc, #ffd700);
+  background: linear-gradient(
+    135deg,
+    #ffd700,
+    #ffaa00,
+    #ffd700,
+    #fff5cc,
+    #ffd700
+  );
   background-size: 300% 300%;
   animation: borderFlow 3s ease infinite;
 }
@@ -261,13 +273,17 @@
 
 /* Inner glow effect */
 .info-card::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 50%;
-  background: linear-gradient(180deg, rgba(255, 215, 0, 0.03) 0%, transparent 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 215, 0, 0.03) 0%,
+    transparent 100%
+  );
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.4s ease;
@@ -304,10 +320,12 @@
 
 /* Shimmer effect for values */
 .shimmer-text {
-  background: linear-gradient(90deg,
-      currentColor 0%,
-      rgba(255, 215, 0, 0.8) 50%,
-      currentColor 100%);
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    rgba(255, 215, 0, 0.8) 50%,
+    currentColor 100%
+  );
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -351,7 +369,7 @@
 }
 
 .live-pulse::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   right: -8px;
@@ -364,7 +382,6 @@
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;
@@ -387,11 +404,16 @@
 }
 
 .chart-container::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -1px;
   border-radius: 17px;
-  background: conic-gradient(from 0deg, transparent, rgba(255, 215, 0, 0.1), transparent 30%);
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(255, 215, 0, 0.1),
+    transparent 30%
+  );
   z-index: -1;
 }
 
@@ -488,7 +510,6 @@
 }
 
 @media (max-width: 768px) {
-
   .position-table th,
   .position-table td {
     padding: 8px 4px;
@@ -561,7 +582,6 @@
 
 /* Pulse animation for indicators */
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;
