@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 import { User } from '../users/user.entity';
 import { Order } from '../orders/order.entity';
 import { Position } from '../positions/position.entity';
@@ -28,6 +28,9 @@ export class Account {
     @Column('decimal', { precision: 18, scale: 2, default: 0 })
     balance: number;
 
+    @Column('decimal', { precision: 18, scale: 2, default: 0 })
+    lockedBalance: number;
+
     @OneToMany(() => Order, (order) => order.account)
     orders: Order[];
 
@@ -39,4 +42,7 @@ export class Account {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @DeleteDateColumn()
+    deletedAt: Date;
 }

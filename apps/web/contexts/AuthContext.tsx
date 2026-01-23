@@ -57,44 +57,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string) => {
         // Mock login
-        const access_token = 'mock_token_' + Date.now();
-        const userData = {
-            id: 'mock-user-id',
-            email,
-            role: 'user',
-        };
+        // const access_token = 'mock_token_' + Date.now();
+        // const userData = {
+        //     id: 'mock-user-id',
+        //     email,
+        //     role: 'user',
+        // };
         
-        localStorage.setItem('token', access_token);
-        localStorage.setItem('user_email', email);
-        setToken(access_token);
-        setUser(userData);
-        
-        // const response = await authAPI.login(email, password);
-        // const { access_token, user: userData } = response.data;
         // localStorage.setItem('token', access_token);
+        // localStorage.setItem('user_email', email);
         // setToken(access_token);
         // setUser(userData);
+        
+        const response = await authAPI.login(email, password);
+        const { access_token, user: userData } = response.data;
+        localStorage.setItem('token', access_token);
+        setToken(access_token);
+        setUser(userData);
     };
 
     const register = async (email: string, password: string) => {
         // Mock register
-        const access_token = 'mock_token_' + Date.now();
-        const userData = {
-            id: 'mock-user-id',
-            email,
-            role: 'user',
-        };
+        // const access_token = 'mock_token_' + Date.now();
+        // const userData = {
+        //     id: 'mock-user-id',
+        //     email,
+        //     role: 'user',
+        // };
         
-        localStorage.setItem('token', access_token);
-        localStorage.setItem('user_email', email);
-        setToken(access_token);
-        setUser(userData);
-
-        // const response = await authAPI.register(email, password);
-        // const { access_token, user: userData } = response.data;
         // localStorage.setItem('token', access_token);
+        // localStorage.setItem('user_email', email);
         // setToken(access_token);
         // setUser(userData);
+
+        const response = await authAPI.register(email, password);
+        const { access_token, user: userData } = response.data;
+        localStorage.setItem('token', access_token);
+        setToken(access_token);
+        setUser(userData);
     };
 
     const logout = () => {

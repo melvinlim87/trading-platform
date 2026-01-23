@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    ManyToOne,
+    CreateDateColumn,
+    UpdateDateColumn,
+    Index,
+    DeleteDateColumn
+} from 'typeorm';
 import { Account } from '../accounts/account.entity';
 
 export enum OrderSide {
@@ -18,7 +27,16 @@ export enum OrderStatus {
     REJECTED = 'rejected',
 }
 
+export enum OrderTimeInForce {
+    GTC = 'GTC', // Good Till Cancelled
+    IOC = 'IOC', // Immediate or Cancel
+    FOK = 'FOK', // Fill or Kill
+}
+
 @Entity()
+@Index(['symbol'])
+@Index(['status'])
+@Index(['createdAt'])
 export class Order {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -38,11 +56,20 @@ export class Order {
     @Column({ type: 'varchar' })
     type: OrderType;
 
+    @Column({ type: 'varchar', default: OrderTimeInForce.GTC })
+    timeInForce: OrderTimeInForce;
+
     @Column('int')
     quantity: number;
 
+    @Column('int', { default: 0 })
+    filledQuantity: number;
+
     @Column('decimal', { precision: 18, scale: 2, nullable: true })
     price: number; // Limit price, null for market
+
+    @Column('decimal', { precision: 18, scale: 2, nullable: true })
+    stopPrice: number; // Stop price for Stop-Loss/Take-Profit
 
     @Column({ type: 'varchar', default: OrderStatus.PENDING })
     status: OrderStatus;
@@ -55,4 +82,7 @@ export class Order {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @DeleteDateColumn()
+    deletedAt: Date;
 }

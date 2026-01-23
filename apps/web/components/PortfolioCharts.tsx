@@ -61,8 +61,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         const isPositive = payload[0].payload.pnl >= 0;
         return (
             <div style={{
-                backgroundColor: '#0d1f3c',
-                border: '1px solid #3f4f66',
+                backgroundColor: '#0A0A0A',
+                border: '1px solid #333',
                 borderRadius: '8px',
                 padding: '12px 16px',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -91,8 +91,8 @@ const BarTooltip = ({ active, payload, label }: any) => {
         const isPositive = value >= 0;
         return (
             <div style={{
-                backgroundColor: '#0d1f3c',
-                border: '1px solid #3f4f66',
+                backgroundColor: '#0A0A0A',
+                border: '1px solid #333',
                 borderRadius: '8px',
                 padding: '12px 16px',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
@@ -157,8 +157,8 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                                     fontWeight: '500',
                                     border: 'none',
                                     cursor: 'pointer',
-                                    backgroundColor: timeRange === range ? '#3b82f6' : '#1e3a5f',
-                                    color: timeRange === range ? '#fff' : '#94a3b8',
+                                    backgroundColor: timeRange === range ? '#D4AF37' : '#171717',
+                                    color: timeRange === range ? '#000000' : '#9ca3af',
                                     transition: 'all 0.2s',
                                 }}
                             >
@@ -173,21 +173,21 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                         <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
-                                    <stop offset="50%" stopColor="#3b82f6" stopOpacity={0.15} />
-                                    <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                                    <stop offset="0%" stopColor="#D4AF37" stopOpacity={0.4} />
+                                    <stop offset="50%" stopColor="#D4AF37" stopOpacity={0.15} />
+                                    <stop offset="100%" stopColor="#D4AF37" stopOpacity={0} />
                                 </linearGradient>
                                 <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-                                    <stop offset="0%" stopColor="#3b82f6" />
-                                    <stop offset="50%" stopColor="#8b5cf6" />
-                                    <stop offset="100%" stopColor="#ec4899" />
+                                    <stop offset="0%" stopColor="#D4AF37" />
+                                    <stop offset="50%" stopColor="#F59E0B" />
+                                    <stop offset="100%" stopColor="#D4AF37" />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" vertical={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                             <XAxis
                                 dataKey="date"
-                                tick={{ fill: '#64748b', fontSize: 10 }}
-                                axisLine={{ stroke: '#1e3a5f' }}
+                                tick={{ fill: '#9ca3af', fontSize: 10 }}
+                                axisLine={{ stroke: '#333' }}
                                 tickLine={false}
                                 interval="preserveStartEnd"
                             />
@@ -228,11 +228,11 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                 <div style={{ height: '220px' }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={assetClassPnL} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" stroke="#1e3a5f" horizontal={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={false} />
                             <XAxis
                                 type="number"
-                                tick={{ fill: '#64748b', fontSize: 10 }}
-                                axisLine={{ stroke: '#1e3a5f' }}
+                                tick={{ fill: '#9ca3af', fontSize: 10 }}
+                                axisLine={{ stroke: '#333' }}
                                 tickLine={false}
                                 tickFormatter={(value) => `$${(value / 1000).toFixed(1)}k`}
                             />

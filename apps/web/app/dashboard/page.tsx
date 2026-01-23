@@ -50,10 +50,10 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen">
             {/* Header */}
-            <header className="bg-bgSecondary border-b border-gray-800">
+            <header className="bg-black border-b border-yellow-900/30">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex justify-between items-center">
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-accentPrimary to-accentSecondary bg-clip-text text-transparent">
+                        <h1 className="text-2xl font-bold bg-gradient-to-r from-accentPrimary via-yellow-100 to-accentSecondary bg-clip-text text-transparent">
                             Trading Platform
                         </h1>
                         <div className="flex items-center gap-4">

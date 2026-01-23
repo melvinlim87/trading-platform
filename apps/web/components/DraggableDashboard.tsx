@@ -75,8 +75,8 @@ function DraggableCard({
                 position: 'relative',
                 padding: isMinimized ? '12px 16px' : '20px 24px',
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, #0d1f3c 0%, #1e3a5f 100%)',
-                border: `1px solid ${isDropTarget ? card.color : '#3f4f66'}`,
+                background: 'linear-gradient(135deg, #0A0A0A 0%, #171717 100%)',
+                border: `1px solid ${isDropTarget ? card.color : 'gold'}`,
                 cursor: 'grab',
                 transition: 'all 0.2s ease',
                 transform: isDropTarget ? 'scale(1.02)' : 'scale(1)',
@@ -93,7 +93,7 @@ function DraggableCard({
                 }
             }}
             onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = isDropTarget ? card.color : '#3f4f66';
+                e.currentTarget.style.borderColor = isDropTarget ? card.color : '#333';
                 e.currentTarget.style.boxShadow = `0 0 20px ${glowColor}22, inset 0 1px 0 ${glowColor}11`;
                 e.currentTarget.style.transform = 'scale(1)';
             }}
@@ -108,7 +108,7 @@ function DraggableCard({
                     width: '30px',
                     height: '4px',
                     borderRadius: '2px',
-                    backgroundColor: '#3f4f66',
+                    backgroundColor: '#333',
                     cursor: 'grab'
                 }}
             />
@@ -127,8 +127,8 @@ function DraggableCard({
                     height: '24px',
                     borderRadius: '6px',
                     border: 'none',
-                    backgroundColor: '#1e3a5f',
-                    color: '#94a3b8',
+                    backgroundColor: '#171717',
+                    color: '#9ca3af',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -141,8 +141,8 @@ function DraggableCard({
                     e.currentTarget.style.color = '#fff';
                 }}
                 onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#1e3a5f';
-                    e.currentTarget.style.color = '#94a3b8';
+                    e.currentTarget.style.backgroundColor = '#171717';
+                    e.currentTarget.style.color = '#9ca3af';
                 }}
             >
                 {isMinimized ? '↗' : '−'}
@@ -165,7 +165,7 @@ function DraggableCard({
                             alignItems: 'center',
                             gap: '8px',
                             fontSize: '13px',
-                            color: '#94a3b8',
+                            color: '#9ca3af',
                             fontWeight: '500'
                         }}>
                             <span style={{ fontSize: '20px' }}>{card.icon}</span>
@@ -303,8 +303,8 @@ export function DraggableDashboard({ cards: initialCards }: DraggableDashboardPr
                         padding: '6px 12px',
                         borderRadius: '6px',
                         fontSize: '11px',
-                        backgroundColor: '#1e3a5f',
-                        color: '#94a3b8',
+                        backgroundColor: '#171717',
+                        color: '#9ca3af',
                         border: 'none',
                         cursor: 'pointer',
                         display: 'flex',

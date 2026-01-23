@@ -104,11 +104,11 @@ export function PortfolioChatbox({
 
     return (
         <div className="section-card" style={{
-            backgroundColor: '#0d1f3c',
+            backgroundColor: '#0A0A0A',
             borderRadius: '12px',
-            border: '1px solid #1e3a5f',
+            border: '1px solid #333',
             overflow: 'hidden',
-            boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11'
+            boxShadow: '0 0 20px #D4AF3722, inset 0 1px 0 #D4AF3711'
         }}>
             {/* Header */}
             <div
@@ -119,8 +119,8 @@ export function PortfolioChatbox({
                     alignItems: 'center',
                     padding: '16px 20px',
                     cursor: 'pointer',
-                    borderBottom: isExpanded ? '1px solid #1e3a5f' : 'none',
-                    background: 'linear-gradient(135deg, #1e3a5f22, #3b82f622)'
+                    borderBottom: isExpanded ? '1px solid #333' : 'none',
+                    background: 'linear-gradient(135deg, #171717, #0A0A0A)'
                 }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
@@ -207,8 +207,8 @@ export function PortfolioChatbox({
                                             borderRadius: msg.role === 'user'
                                                 ? '16px 16px 4px 16px'
                                                 : '16px 16px 16px 4px',
-                                            backgroundColor: msg.role === 'user' ? '#3b82f6' : '#1e3a5f',
-                                            color: '#fff',
+                                            backgroundColor: msg.role === 'user' ? '#D4AF37' : '#171717',
+                                            color: msg.role === 'user' ? '#000' : '#fff',
                                             fontSize: '14px',
                                             lineHeight: '1.5',
                                             whiteSpace: 'pre-wrap'
@@ -222,7 +222,7 @@ export function PortfolioChatbox({
                                         <div style={{
                                             padding: '10px 14px',
                                             borderRadius: '16px 16px 16px 4px',
-                                            backgroundColor: '#1e3a5f',
+                                            backgroundColor: '#171717',
                                             color: '#94a3b8',
                                             fontSize: '14px',
                                         }}>
@@ -240,8 +240,8 @@ export function PortfolioChatbox({
                     {/* Quick Buttons Area - Always visible */}
                     <div style={{
                         padding: '8px 16px',
-                        borderTop: '1px solid #1e3a5f33',
-                        backgroundColor: '#0a1628',
+                        borderTop: '1px solid #333',
+                        backgroundColor: '#0A0A0A',
                         overflowX: 'auto'
                     }}>
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -262,9 +262,9 @@ export function PortfolioChatbox({
                                         padding: '5px 10px',
                                         borderRadius: '14px',
                                         fontSize: '11px',
-                                        backgroundColor: '#1e3a5f',
-                                        color: '#e2e8f0',
-                                        border: '1px solid #3f4f66',
+                                        backgroundColor: '#171717',
+                                        color: '#9ca3af',
+                                        border: '1px solid #333',
                                         cursor: isLoading ? 'not-allowed' : 'pointer',
                                         transition: 'all 0.2s',
                                         display: 'flex',
@@ -293,7 +293,7 @@ export function PortfolioChatbox({
                     {/* Input Area */}
                     <div style={{
                         padding: '12px 16px',
-                        borderTop: '1px solid #1e3a5f',
+                        borderTop: '1px solid #333',
                         display: 'flex',
                         gap: '10px'
                     }}>
@@ -309,9 +309,9 @@ export function PortfolioChatbox({
                                 padding: '10px 14px',
                                 borderRadius: '20px',
                                 fontSize: '14px',
-                                backgroundColor: '#0a1628',
+                                backgroundColor: '#000000',
                                 color: '#fff',
-                                border: '1px solid #3f4f66',
+                                border: '1px solid #333',
                                 outline: 'none',
                             }}
                         />
@@ -323,8 +323,8 @@ export function PortfolioChatbox({
                                 borderRadius: '20px',
                                 fontSize: '14px',
                                 fontWeight: '600',
-                                backgroundColor: inputValue.trim() && !isLoading ? '#3b82f6' : '#1e3a5f',
-                                color: inputValue.trim() && !isLoading ? '#fff' : '#64748b',
+                                backgroundColor: inputValue.trim() && !isLoading ? '#D4AF37' : '#171717',
+                                color: inputValue.trim() && !isLoading ? '#000' : '#64748b',
                                 border: 'none',
                                 cursor: inputValue.trim() && !isLoading ? 'pointer' : 'not-allowed',
                                 transition: 'all 0.2s',

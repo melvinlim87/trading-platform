@@ -10,16 +10,16 @@ export default {
     theme: {
         extend: {
             colors: {
-                // Dark theme colors
-                bgPrimary: '#0a0e27',
-                bgSecondary: '#141b2d',
-                bgTertiary: '#1f2937',
-                accentPrimary: '#00d4ff',
-                accentSecondary: '#ff006e',
+                // Gold & Black theme colors
+                bgPrimary: '#000000',
+                bgSecondary: '#0a0a0a',
+                bgTertiary: '#171717',
+                accentPrimary: '#D4AF37', // Metallic Gold
+                accentSecondary: '#FFD700', // Bright Gold
                 positive: '#00ff88',
                 negative: '#ff3366',
                 textPrimary: '#ffffff',
-                textSecondary: '#a0aec0',
+                textSecondary: '#a3a3a3',
             },
             fontFamily: {
                 sans: ['Inter', 'system-ui', 'sans-serif'],

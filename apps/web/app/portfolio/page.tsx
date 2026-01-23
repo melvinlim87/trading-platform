@@ -69,9 +69,9 @@ const mockPositions: Position[] = [
 const assetClassConfig: Record<string, { bg: string; text: string; label: string; icon: string; borderColor: string }> = {
     'crypto': { bg: '#f59e0b', text: '#000', label: 'Cryptocurrency', icon: '₿', borderColor: '#f59e0b' },  // Orange/Amber
     'forex': { bg: '#10b981', text: '#fff', label: 'Forex', icon: '💱', borderColor: '#10b981' },           // Emerald Green
-    'stock': { bg: '#3b82f6', text: '#fff', label: 'Stocks', icon: '📈', borderColor: '#3b82f6' },          // Blue
+    'stock': { bg: '#F59E0B', text: '#000', label: 'Stocks', icon: '📈', borderColor: '#F59E0B' },          // Amber/Gold
     'unit_trust': { bg: '#a855f7', text: '#fff', label: 'Unit Trusts', icon: '🏦', borderColor: '#a855f7' },// Purple
-    'etf': { bg: '#ec4899', text: '#fff', label: 'ETFs', icon: '📊', borderColor: '#ec4899' },              // Pink (was orange, now distinct)
+    'etf': { bg: '#ec4899', text: '#fff', label: 'ETFs', icon: '📊', borderColor: '#ec4899' },              // Pink
     'commodity': { bg: '#eab308', text: '#000', label: 'Commodities', icon: '🥇', borderColor: '#eab308' }, // Yellow/Gold
 };
 
@@ -218,6 +218,7 @@ export default function PortfolioPage() {
             setExtractedPositions(positionsWithClass);
             setUploadStatus('extracted');
         } catch (err: any) {
+            console.log(err)
             setUploadError(err.response?.data?.message || 'Failed to process image. Make sure the API server is running.');
             setUploadStatus('error');
         }
@@ -405,7 +406,7 @@ export default function PortfolioPage() {
 
     if (authLoading) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0a1628' }}>
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' }}>
                 <div style={{ fontSize: '1.5rem', color: '#fff' }}>Loading...</div>
             </div>
         );
@@ -426,35 +427,35 @@ export default function PortfolioPage() {
     };
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#0a1628', color: '#e2e8f0', fontFamily: 'Inter, system-ui, sans-serif' }}>
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#e2e8f0', fontFamily: 'Inter, system-ui, sans-serif' }}>
             {/* Header */}
-            <header style={{ backgroundColor: '#0d1f3c', borderBottom: '1px solid #1e3a5f', padding: '12px 0' }}>
+            <header style={{ backgroundColor: '#000000', borderBottom: '1px solid rgba(212, 175, 55, 0.3)', padding: '12px 0' }}>
                 <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#00d4ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#0a1628' }}>D</span>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#000000' }}>D</span>
                         </div>
                         <div>
                             <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>Decyphers</h1>
-                            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>AI Trading Mentor</p>
+                            <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>AI Trading Mentor</p>
                         </div>
                     </div>
                     <nav style={{ display: 'flex', gap: '32px' }}>
-                        <Link href="/portfolio" style={{ fontWeight: '500', color: '#00d4ff', textDecoration: 'none' }}>Portfolio</Link>
-                        <Link href="/watchlist" style={{ fontWeight: '500', color: '#64748b', textDecoration: 'none' }}>Watchlist</Link>
-                        <Link href="/analysis" style={{ fontWeight: '500', color: '#64748b', textDecoration: 'none' }}>Analysis</Link>
-                        <Link href="/ai-mentor" style={{ fontWeight: '500', color: '#64748b', textDecoration: 'none' }}>AI Mentor</Link>
+                        <Link href="/portfolio" style={{ fontWeight: '500', color: '#D4AF37', textDecoration: 'none' }}>Portfolio</Link>
+                        <Link href="/watchlist" style={{ fontWeight: '500', color: '#9ca3af', textDecoration: 'none' }}>Watchlist</Link>
+                        <Link href="/analysis" style={{ fontWeight: '500', color: '#9ca3af', textDecoration: 'none' }}>Analysis</Link>
+                        <Link href="/ai-mentor" style={{ fontWeight: '500', color: '#9ca3af', textDecoration: 'none' }}>AI Mentor</Link>
                     </nav>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <button
                             onClick={() => setShowManualModal(true)}
-                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', backgroundColor: '#1e3a5f', color: '#fff', border: '1px solid #3f4f66', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', backgroundColor: '#171717', color: '#fff', border: '1px solid #333', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                         >
                             ➕ Add Position
                         </button>
                         <button
                             onClick={() => setShowUploadModal(true)}
-                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', backgroundColor: '#00d4ff', color: '#0a1628', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', backgroundColor: '#D4AF37', color: '#000000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                         >
                             📸 AI Import
                         </button>
@@ -489,7 +490,7 @@ export default function PortfolioPage() {
                             value: `$${totalNotional.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                             subValue: `${investedPercentage.toFixed(1)}% invested • ${positions.length} positions`,
                             icon: '💎',
-                            color: '#00d4ff'
+                            color: '#D4AF37'
                         },
                         {
                             id: 'cash-reserves',
@@ -497,7 +498,7 @@ export default function PortfolioPage() {
                             value: `$${cashReserves.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                             subValue: `${cashPercentage.toFixed(1)}% of total assets`,
                             icon: '🏦',
-                            color: '#06b6d4'
+                            color: '#FFD700'
                         },
                         {
                             id: 'capital-invested',
@@ -577,14 +578,14 @@ export default function PortfolioPage() {
                             const isExpanded = expandedSections[assetClass];
 
                             return (
-                                <div key={assetClass} className="section-card" style={{ backgroundColor: '#0d1f3c' }}>
+                                <div key={assetClass} className="section-card" style={{ backgroundColor: '#0A0A0A' }}>
                                     {/* Section Header */}
                                     <div
                                         onClick={() => toggleSection(assetClass)}
                                         style={{
                                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                             padding: '12px 16px', cursor: 'pointer',
-                                            borderBottom: isExpanded ? '1px solid #1e3a5f' : 'none'
+                                            borderBottom: isExpanded ? '1px solid #333' : 'none'
                                         }}
                                     >
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -595,7 +596,7 @@ export default function PortfolioPage() {
                                             }}>
                                                 {config.icon} {config.label}
                                             </span>
-                                            <span style={{ fontSize: '13px', color: '#64748b' }}>{classPositions.length} position{classPositions.length > 1 ? 's' : ''}</span>
+                                            <span style={{ fontSize: '13px', color: '#9ca3af' }}>{classPositions.length} position{classPositions.length > 1 ? 's' : ''}</span>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '24px', fontSize: '13px' }}>
                                             <span>Notional: <span style={{ fontWeight: '600', color: '#fff' }}>${sectionNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></span>
@@ -610,16 +611,16 @@ export default function PortfolioPage() {
                                         <div style={{ padding: '0 8px 12px', overflowX: 'auto' }}>
                                             <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                                                 <thead>
-                                                    <tr style={{ color: '#64748b', fontSize: '11px' }}>
-                                                        <th style={{ width: '22%', textAlign: 'left', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
-                                                        <th style={{ width: '8%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
-                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
-                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
-                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
-                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
-                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
-                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
-                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
+                                                    <tr style={{ color: '#9ca3af', fontSize: '11px' }}>
+                                                        <th style={{ width: '22%', textAlign: 'left', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #333' }}>POSITION</th>
+                                                        <th style={{ width: '8%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #333' }}>QTY</th>
+                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #333' }}>ENTRY</th>
+                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #333' }}>CURRENT</th>
+                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #333' }}>COST</th>
+                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #333' }}>VALUE</th>
+                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #333' }}>P&L</th>
+                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #333' }}>BROKER</th>
+                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #333' }}>PLATFORM</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -631,7 +632,7 @@ export default function PortfolioPage() {
                                                         const badge = getPositionBadge(pos, config);
 
                                                         return (
-                                                            <tr key={pos.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
+                                                            <tr key={pos.id} style={{ borderBottom: '1px solid #333' }}>
                                                                 <td style={{ padding: '8px 2px' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                                         <div style={{
@@ -696,7 +697,7 @@ export default function PortfolioPage() {
                                                                                     >✎ Manual</span>
                                                                                 )}
                                                                                 {pos.positionType === 'perpetual' && (
-                                                                                    <span style={{ padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#00d4ff22', color: '#00d4ff' }}>PERP</span>
+                                                                                    <span style={{ padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#D4AF3722', color: '#D4AF37' }}>PERP</span>
                                                                                 )}
                                                                                 {pos.positionType === 'option' && (
                                                                                     <span style={{ padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#22c55e22', color: '#22c55e' }}>OPT</span>
@@ -709,7 +710,7 @@ export default function PortfolioPage() {
                                                                 <td style={{ textAlign: 'right', padding: '8px 2px' }}>
                                                                     <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{pos.quantity}</span>
                                                                     {pos.leverage && pos.leverage > 1 && (
-                                                                        <span style={{ marginLeft: '2px', padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#3b82f622', color: '#3b82f6' }}>{pos.leverage}x</span>
+                                                                        <span style={{ marginLeft: '2px', padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#D4AF3722', color: '#D4AF37' }}>{pos.leverage}x</span>
                                                                     )}
                                                                 </td>
                                                                 <td style={{ textAlign: 'right', padding: '8px 2px', color: '#94a3b8', fontSize: '13px' }}>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -753,7 +754,7 @@ export default function PortfolioPage() {
                     {/* Right Sidebar */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {/* Donut Chart */}
-                        <div style={{ backgroundColor: '#0d1f3c', borderRadius: '12px', border: '1px solid #1e3a5f', padding: '24px' }}>
+                        <div style={{ backgroundColor: '#0A0A0A', borderRadius: '12px', border: '1px solid #333', padding: '24px' }}>
                             <div style={{ position: 'relative', width: '200px', height: '200px', margin: '0 auto 24px' }}>
                                 {/* Donut chart using conic-gradient for smooth segments */}
                                 <div style={{
@@ -767,9 +768,9 @@ export default function PortfolioPage() {
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', fontSize: '11px' }}>
                                 {exposure.map((item, idx) => (
-                                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '4px', backgroundColor: '#1e3a5f33' }}>
+                                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '4px', backgroundColor: '#171717' }}>
                                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: item.bg }}></div>
-                                        <span style={{ color: '#94a3b8' }}>{item.label}</span>
+                                        <span style={{ color: '#9ca3af' }}>{item.label}</span>
                                         <span style={{ fontWeight: '600', color: '#fff' }}>{item.percentage.toFixed(1)}%</span>
                                     </div>
                                 ))}
@@ -777,7 +778,7 @@ export default function PortfolioPage() {
                         </div>
 
                         {/* Exposure Breakdown */}
-                        <div style={{ backgroundColor: '#0d1f3c', borderRadius: '12px', border: '1px solid #1e3a5f', padding: '24px' }}>
+                        <div style={{ backgroundColor: '#0A0A0A', borderRadius: '12px', border: '1px solid #333', padding: '24px' }}>
                             <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '20px', color: '#fff' }}>Exposure Breakdown</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 {exposure.map((item, idx) => (
@@ -801,16 +802,16 @@ export default function PortfolioPage() {
             {/* AI Import Modal */}
             {showUploadModal && (
                 <div className="modal-overlay">
-                    <div className="ai-import-modal" style={{ backgroundColor: '#0d1f3c', borderRadius: '16px' }}>
+                    <div className="ai-import-modal" style={{ backgroundColor: '#0A0A0A', borderRadius: '16px', border: '1px solid #333' }}>
                         <div style={{ padding: '24px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                                 <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>📸 AI Portfolio Import</h3>
-                                <button onClick={resetUpload} style={{ fontSize: '24px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                                <button onClick={resetUpload} style={{ fontSize: '24px', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
                             </div>
 
                             {uploadStatus === 'idle' && (
                                 <>
-                                    <p style={{ fontSize: '14px', marginBottom: '16px', color: '#64748b' }}>
+                                    <p style={{ fontSize: '14px', marginBottom: '16px', color: '#9ca3af' }}>
                                         Upload a screenshot of your portfolio from another broker. Our AI (Qwen 2.5 VL via OpenRouter) will extract the positions automatically.
                                     </p>
                                     <div
@@ -818,11 +819,11 @@ export default function PortfolioPage() {
                                         onDragLeave={handleDragLeave}
                                         onDrop={handleDrop}
                                         style={{
-                                            border: `2px dashed ${isDragging ? '#00d4ff' : '#3f4f66'}`,
+                                            border: `2px dashed ${isDragging ? '#D4AF37' : '#333'}`,
                                             borderRadius: '12px',
                                             padding: '32px',
                                             textAlign: 'center',
-                                            backgroundColor: isDragging ? 'rgba(0,212,255,0.1)' : 'transparent',
+                                            backgroundColor: isDragging ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
                                             transition: 'all 0.2s'
                                         }}
                                     >
@@ -835,7 +836,7 @@ export default function PortfolioPage() {
                                             <div>
                                                 <p style={{ fontSize: '32px', marginBottom: '8px' }}>📤</p>
                                                 <p style={{ marginBottom: '12px', color: '#e2e8f0' }}>Drag and drop screenshot</p>
-                                                <label style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'inline-block', backgroundColor: '#1e3a5f', color: '#fff' }}>
+                                                <label style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'inline-block', backgroundColor: '#171717', color: '#fff', border: '1px solid #333' }}>
                                                     Browse
                                                     <input type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
                                                 </label>
@@ -843,7 +844,7 @@ export default function PortfolioPage() {
                                         )}
                                     </div>
                                     {uploadFile && (
-                                        <button onClick={handleUpload} style={{ width: '100%', marginTop: '16px', padding: '12px', borderRadius: '8px', fontWeight: '500', backgroundColor: '#00d4ff', color: '#0a1628', border: 'none', cursor: 'pointer' }}>
+                                        <button onClick={handleUpload} style={{ width: '100%', marginTop: '16px', padding: '12px', borderRadius: '8px', fontWeight: '500', backgroundColor: '#D4AF37', color: '#000000', border: 'none', cursor: 'pointer' }}>
                                             🤖 Extract with AI
                                         </button>
                                     )}
@@ -873,28 +874,28 @@ export default function PortfolioPage() {
                                             const selectedClass = assetClassOptions.find(o => o.value === pos.assetClass) || assetClassOptions[2];
                                             const isOption = pos.positionType === 'option';
                                             return (
-                                                <div key={idx} style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f', borderLeft: `3px solid ${selectedClass.color}` }}>
+                                                <div key={idx} style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#171717', borderLeft: `3px solid ${selectedClass.color}` }}>
                                                     {/* Row 1: Symbol, Qty, Entry Price, Category */}
                                                     <div className="position-grid-row1" style={{ marginBottom: '8px' }}>
                                                         <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Symbol</label>
+                                                            <label style={{ fontSize: '9px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Symbol</label>
                                                             <input value={pos.symbol} onChange={e => updateExtractedPosition(idx, 'symbol', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', fontWeight: '600', width: '100%' }} />
+                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#000000', color: '#fff', border: '1px solid #333', fontWeight: '600', width: '100%' }} />
                                                         </div>
                                                         <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Qty</label>
+                                                            <label style={{ fontSize: '9px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Qty</label>
                                                             <input type="number" value={pos.quantity} onChange={e => updateExtractedPosition(idx, 'quantity', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', textAlign: 'right', width: '100%' }} />
+                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#000000', color: '#fff', border: '1px solid #333', textAlign: 'right', width: '100%' }} />
                                                         </div>
                                                         <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Entry $</label>
+                                                            <label style={{ fontSize: '9px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Entry $</label>
                                                             <input type="number" value={pos.avgPrice} onChange={e => updateExtractedPosition(idx, 'avgPrice', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', textAlign: 'right', width: '100%' }} />
+                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#000000', color: '#fff', border: '1px solid #333', textAlign: 'right', width: '100%' }} />
                                                         </div>
                                                         <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Category</label>
+                                                            <label style={{ fontSize: '9px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Category</label>
                                                             <select value={pos.assetClass || 'stock'} onChange={e => updateExtractedPosition(idx, 'assetClass', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: selectedClass.color, border: `1px solid ${selectedClass.color}40`, cursor: 'pointer', width: '100%' }}>
+                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#000000', color: selectedClass.color, border: `1px solid ${selectedClass.color}40`, cursor: 'pointer', width: '100%' }}>
                                                                 {assetClassOptions.map(opt => (<option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>))}
                                                             </select>
                                                         </div>
@@ -902,9 +903,9 @@ export default function PortfolioPage() {
                                                     {/* Row 2: Broker, Platform, Expiry (if option) */}
                                                     <div className={`position-grid-row2 ${isOption ? 'with-expiry' : ''}`}>
                                                         <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Broker</label>
+                                                            <label style={{ fontSize: '9px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Broker</label>
                                                             <select value={pos.broker || ''} onChange={e => updateExtractedPosition(idx, 'broker', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', cursor: 'pointer', width: '100%' }}>
+                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#000000', color: '#9ca3af', border: '1px solid #333', cursor: 'pointer', width: '100%' }}>
                                                                 <option value="">Select Broker</option>
                                                                 <option value="ibkr">IBKR</option>
                                                                 <option value="td_ameritrade">TD Ameritrade</option>
@@ -925,9 +926,9 @@ export default function PortfolioPage() {
                                                             </select>
                                                         </div>
                                                         <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Platform</label>
+                                                            <label style={{ fontSize: '9px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Platform</label>
                                                             <select value={pos.platform || ''} onChange={e => updateExtractedPosition(idx, 'platform', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', cursor: 'pointer', width: '100%' }}>
+                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#000000', color: '#9ca3af', border: '1px solid #333', cursor: 'pointer', width: '100%' }}>
                                                                 <option value="">Select Platform</option>
                                                                 <option value="tws">TWS</option>
                                                                 <option value="thinkorswim">thinkorSwim</option>
@@ -941,15 +942,15 @@ export default function PortfolioPage() {
                                                         </div>
                                                         {isOption && (
                                                             <div>
-                                                                <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Expiry</label>
+                                                                <label style={{ fontSize: '9px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Expiry</label>
                                                                 <input type="date" value={pos.expiry || ''} onChange={e => updateExtractedPosition(idx, 'expiry', e.target.value)}
-                                                                    style={{ padding: '5px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%' }} />
+                                                                    style={{ padding: '5px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#000000', color: '#fff', border: '1px solid #333', width: '100%' }} />
                                                             </div>
                                                         )}
                                                     </div>
                                                     {/* Option toggle */}
                                                     <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <label style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                                                        <label style={{ fontSize: '10px', color: '#9ca3af', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                                                             <input type="checkbox" checked={pos.positionType === 'option'} onChange={e => updateExtractedPosition(idx, 'positionType', e.target.checked ? 'option' : 'long')}
                                                                 style={{ accentColor: '#22c55e' }} />
                                                             <span>This is an Option</span>
@@ -960,8 +961,8 @@ export default function PortfolioPage() {
                                         })}
                                     </div>
                                     <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
-                                        <button onClick={resetUpload} style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#1e3a5f', color: '#fff', border: 'none', cursor: 'pointer' }}>Cancel</button>
-                                        <button onClick={handleConfirmImport} style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', backgroundColor: '#00d4ff', color: '#0a1628', border: 'none', cursor: 'pointer' }}>
+                                        <button onClick={resetUpload} style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#171717', color: '#fff', border: 'none', cursor: 'pointer' }}>Cancel</button>
+                                        <button onClick={handleConfirmImport} style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', backgroundColor: '#D4AF37', color: '#000000', border: 'none', cursor: 'pointer' }}>
                                             Import {extractedPositions.length} Positions
                                         </button>
                                     </div>
@@ -975,25 +976,25 @@ export default function PortfolioPage() {
             {/* Manual Position Entry Modal */}
             {showManualModal && (
                 <div className="modal-overlay">
-                    <div className="ai-import-modal" style={{ backgroundColor: '#0d1f3c', borderRadius: '16px' }}>
+                    <div className="ai-import-modal" style={{ backgroundColor: '#0A0A0A', borderRadius: '16px', border: '1px solid #333' }}>
                         <div style={{ padding: '24px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                                 <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>➕ Add New Position</h3>
-                                <button onClick={resetManualPosition} style={{ fontSize: '24px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                                <button onClick={resetManualPosition} style={{ fontSize: '24px', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
                             </div>
 
-                            <p style={{ fontSize: '14px', marginBottom: '20px', color: '#64748b' }}>
+                            <p style={{ fontSize: '14px', marginBottom: '20px', color: '#9ca3af' }}>
                                 Manually add a position to your portfolio.
                             </p>
 
                             {/* Row 1: Category, Position Type */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                                 <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Category *</label>
+                                    <label style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Category *</label>
                                     <select
                                         value={manualPosition.assetClass}
                                         onChange={e => updateManualPosition('assetClass', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#000000', color: '#fff', border: '1px solid #333', width: '100%', cursor: 'pointer' }}
                                     >
                                         {assetClassOptions.map(opt => (
                                             <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
@@ -1064,7 +1065,7 @@ export default function PortfolioPage() {
                                             top: '100%',
                                             left: 0,
                                             right: 0,
-                                            backgroundColor: '#0d1f3c',
+                                            backgroundColor: '#171717',
                                             border: '1px solid #3f4f66',
                                             borderRadius: '6px',
                                             marginTop: '4px',
@@ -1080,12 +1081,12 @@ export default function PortfolioPage() {
                                                     style={{
                                                         padding: '10px 12px',
                                                         cursor: 'pointer',
-                                                        borderBottom: idx < symbolSuggestions.length - 1 ? '1px solid #1e3a5f' : 'none',
+                                                        borderBottom: idx < symbolSuggestions.length - 1 ? '1px solid #333' : 'none',
                                                         display: 'flex',
                                                         justifyContent: 'space-between',
                                                         alignItems: 'center'
                                                     }}
-                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
+                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#333'}
                                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                                 >
                                                     <div>
@@ -1096,7 +1097,7 @@ export default function PortfolioPage() {
                                                         fontSize: '10px',
                                                         padding: '2px 6px',
                                                         borderRadius: '4px',
-                                                        backgroundColor: asset.assetClass === 'stock' ? '#3b82f622' :
+                                                        backgroundColor: asset.assetClass === 'stock' ? '#F59E0B22' :
                                                             asset.assetClass === 'crypto' ? '#f59e0b22' :
                                                                 asset.assetClass === 'forex' ? '#10b98122' :
                                                                     asset.assetClass === 'etf' ? '#ec489922' : '#a855f722',
@@ -1162,11 +1163,11 @@ export default function PortfolioPage() {
                             {/* Row 4: Broker, Platform */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                                 <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Broker</label>
+                                    <label style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Broker</label>
                                     <select
                                         value={manualPosition.broker}
                                         onChange={e => updateManualPosition('broker', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#000000', color: '#9ca3af', border: '1px solid #333', width: '100%', cursor: 'pointer' }}
                                     >
                                         <option value="">Select Broker</option>
                                         <option value="ibkr">IBKR</option>
@@ -1191,16 +1192,16 @@ export default function PortfolioPage() {
                                             value={manualPosition.customBroker || ''}
                                             onChange={e => updateManualPosition('customBroker', e.target.value)}
                                             placeholder="Enter broker name..."
-                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#000000', color: '#fff', border: '1px solid #333', width: '100%', marginTop: '6px' }}
                                         />
                                     )}
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Platform</label>
+                                    <label style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Platform</label>
                                     <select
                                         value={manualPosition.platform}
                                         onChange={e => updateManualPosition('platform', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#000000', color: '#9ca3af', border: '1px solid #333', width: '100%', cursor: 'pointer' }}
                                     >
                                         <option value="">Select Platform</option>
                                         <option value="tws">TWS</option>
@@ -1217,7 +1218,7 @@ export default function PortfolioPage() {
                                             value={manualPosition.customPlatform || ''}
                                             onChange={e => updateManualPosition('customPlatform', e.target.value)}
                                             placeholder="Enter platform name..."
-                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#000000', color: '#fff', border: '1px solid #333', width: '100%', marginTop: '6px' }}
                                         />
                                     )}
                                 </div>
@@ -1226,12 +1227,12 @@ export default function PortfolioPage() {
                             {/* Row 5: Expiry (for options) */}
                             {manualPosition.positionType === 'option' && (
                                 <div style={{ marginBottom: '16px' }}>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Expiry Date</label>
+                                    <label style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Expiry Date</label>
                                     <input
                                         type="date"
                                         value={manualPosition.expiry}
                                         onChange={e => updateManualPosition('expiry', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%' }}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#000000', color: '#fff', border: '1px solid #333', width: '100%' }}
                                     />
                                 </div>
                             )}
@@ -1240,13 +1241,13 @@ export default function PortfolioPage() {
                             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                                 <button
                                     onClick={resetManualPosition}
-                                    style={{ flex: 1, padding: '12px', borderRadius: '8px', fontSize: '14px', backgroundColor: '#1e3a5f', color: '#fff', border: 'none', cursor: 'pointer' }}
+                                    style={{ flex: 1, padding: '12px', borderRadius: '8px', fontSize: '14px', backgroundColor: '#171717', color: '#fff', border: 'none', cursor: 'pointer' }}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleManualSubmit}
-                                    style={{ flex: 1, padding: '12px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', backgroundColor: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer' }}
+                                    style={{ flex: 1, padding: '12px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', backgroundColor: '#D4AF37', color: '#000000', border: 'none', cursor: 'pointer' }}
                                 >
                                     ✓ Add Position
                                 </button>

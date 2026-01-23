@@ -44,6 +44,17 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Database
+
+```bash
+# add migration and ready tables
+$ npm run migration:generate
+
+# do migration
+$ npm run migration:run
+
+```
+
 ## Run tests
 
 ```bash

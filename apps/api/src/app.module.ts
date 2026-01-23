@@ -22,41 +22,14 @@ import { PortfolioChatModule } from './portfolio-chat/portfolio-chat.module';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot({
-      type: 'postgres', // Change this from 'sqlite' or 'better-sqlite3'
+      type: 'mysql',
       host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'Admin123456!',
+      port: parseInt(process.env.DB_PORT || '3306'),
+      username: process.env.DB_USERNAME || 'root',
+      password: process.env.DB_PASSWORD ?? 'password',
       database: process.env.DB_DATABASE || 'trading_platform',
       entities: [User, Account, Order, Position, PortfolioImport],
-      synchronize: true, // Auto-creates tables in your new Postgres database
-    }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
-        const useSqlite = configService.get<string>('USE_SQLITE') === 'true';
-
-        if (useSqlite) {
-          return {
-            type: 'better-sqlite3',
-            database: 'trading_platform.db',
-            entities: [User, Account, Order, Position, PortfolioImport],
-            synchronize: true,
-          };
-        }
-
-        return {
-          type: 'postgres',
-          host: configService.get<string>('DB_HOST', 'localhost'),
-          port: configService.get<number>('DB_PORT', 5432),
-          username: configService.get<string>('DB_USERNAME', 'postgres'),
-          password: configService.get<string>('DB_PASSWORD', 'postgres'),
-          database: configService.get<string>('DB_DATABASE', 'trading_platform'),
-          entities: [User, Account, Order, Position, PortfolioImport],
-          synchronize: true, // Set to false in production
-        };
-      },
-      inject: [ConfigService],
+      synchronize: false, // We use migrations now
     }),
     UsersModule,
     AuthModule,

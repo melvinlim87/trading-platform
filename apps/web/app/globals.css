@@ -1,15 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0a0e27;
-  --bg-secondary: #141b2d;
-  --bg-tertiary: #1f2937;
-  --accent-primary: #00d4ff;
-  --accent-secondary: #ff006e;
+  --bg-primary: #050505;
+  --bg-secondary: #0A0A0A;
+  --bg-tertiary: #121212;
+  --accent-primary: #D4AF37;
+  --accent-secondary: #FFD700;
   --positive: #00ff88;
   --negative: #ff3366;
   --text-primary: #ffffff;
-  --text-secondary: #a0aec0;
+  --text-secondary: #a3a3a3;
 }
 
 /* Ensure all elements use border-box */
@@ -28,7 +28,7 @@
 
 @layer base {
   body {
-    background-color: var(--bg-primary);
+    background-color: var(--bg-primary); /* #050505 */
     color: var(--text-primary);
     font-family: "Inter", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -295,7 +295,7 @@
 
 /* Premium section card styling */
 .section-card {
-  background: linear-gradient(145deg, #0d1f3c, #0a1628);
+  background: #171717;
   border-radius: 16px;
   border: 1px solid rgba(30, 58, 95, 0.5);
   overflow: hidden;
@@ -342,10 +342,10 @@
 
 /* Glass morphism effect */
 .glass-effect {
-  background: rgba(13, 31, 60, 0.8);
+  background: rgba(10, 10, 10, 0.8);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.8);
 }
 
 /* Gradient text */

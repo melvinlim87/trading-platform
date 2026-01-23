@@ -28,7 +28,7 @@ export default function RegisterPage() {
 
         const levels = [
             { score: 1, label: 'Weak', color: 'bg-negative' },
-            { score: 2, label: 'Fair', color: 'bg-yellow-500' },
+            { score: 2, label: 'Fair', color: 'bg-orange-500' },
             { score: 3, label: 'Good', color: 'bg-accentPrimary' },
             { score: 4, label: 'Strong', color: 'bg-positive' },
             { score: 5, label: 'Very Strong', color: 'bg-positive' },
@@ -73,7 +73,7 @@ export default function RegisterPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                             </svg>
                         </div>
-                        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-accentPrimary via-white to-accentSecondary bg-clip-text text-transparent">
+                        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-accentPrimary via-yellow-100 to-accentSecondary bg-clip-text text-transparent">
                             Create Account
                         </h1>
                         <p className="text-textSecondary text-base">Start trading with $100K virtual funds</p>
@@ -277,7 +277,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="relative z-10 flex flex-col justify-center px-16 text-center">
-                    <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-accentPrimary via-white to-accentSecondary bg-clip-text text-transparent">
+                    <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-accentPrimary via-yellow-100 to-accentSecondary bg-clip-text text-transparent">
                         Begin Your Journey
                     </h2>
                     <p className="text-xl text-textSecondary mb-12 leading-relaxed">

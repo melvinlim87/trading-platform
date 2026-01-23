@@ -39,7 +39,7 @@ export default function LoginPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                             </svg>
                         </div>
-                        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-accentPrimary via-white to-accentSecondary bg-clip-text text-transparent">
+                        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-accentPrimary via-yellow-100 to-accentSecondary bg-clip-text text-transparent">
                             Welcome Back
                         </h1>
                         <p className="text-textSecondary text-base">Sign in to continue trading</p>
@@ -167,7 +167,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="relative z-10 flex flex-col justify-center px-16 text-center">
-                    <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-accentPrimary via-white to-accentSecondary bg-clip-text text-transparent">
+                    <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-accentPrimary via-yellow-100 to-accentSecondary bg-clip-text text-transparent">
                         Start Trading Today
                     </h2>
                     <p className="text-xl text-textSecondary mb-12 leading-relaxed">
