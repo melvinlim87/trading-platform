@@ -1,190 +1,167 @@
-# Multi-Asset Trading Platform
+# Trading Platform
 
-A modern, full-stack trading application for stocks and options with real-time data, paper trading, and AI-powered insights.
+A full-stack portfolio management and market tracking application with AI-powered features.
 
-## 🚀 Features
+## 🎯 What Is This?
 
-- **Multi-Asset Trading**: Trade stocks and stock options
-- **Paper Trading**: Practice with $100K virtual funds
-- **Real-time Market Data**: WebSocket-based price streaming
-- **Modern UI**: Dark-themed, responsive design with Tailwind CSS
-- **Secure Authentication**: JWT-based auth with bcrypt password hashing
-- **RESTful API**: NestJS backend with TypeORM and PostgreSQL
+This is a **personal trading dashboard** that helps traders:
+- Track positions across multiple brokers in one place
+- Monitor real-time prices for crypto, forex, stocks, ETFs, commodities
+- Import positions from broker screenshots using AI
+- Get AI-powered portfolio analysis and advice
+- View watchlists with sentiment analysis (Bullish/Bearish/Ranging)
 
-## 📦 Tech Stack
+---
 
-### Backend
-- **NestJS** - Scalable Node.js framework
-- **TypeORM** - Database ORM
-- **PostgreSQL** - Relational database
-- **Socket.IO** - WebSocket for real-time data
-- **Passport JWT** - Authentication
+## ✨ Key Features
 
-### Frontend
-- **Next.js 15** - React framework
-- **Tailwind CSS** - Utility-first CSS
-- **Axios** - HTTP client
-- **Socket.IO Client** - WebSocket client
+| Feature | Description |
+|---------|-------------|
+| **Portfolio Dashboard** | Track all positions with P&L, allocation charts, draggable cards |
+| **AI Screenshot Import** | Upload broker screenshots → AI extracts positions automatically |
+| **AI Portfolio Mentor** | Chat with AI about your portfolio, ask for advice |
+| **Watchlist** | Live prices, sparklines, AI sentiment badges |
+| **Verification Badges** | Shows if position is API verified, AI verified, or manual entry |
+| **Multi-Asset** | Crypto, Forex, Stocks, ETFs, Commodities, Unit Trusts |
 
-## 🛠️ Setup Instructions
+---
 
-### Prerequisites
-- Node.js 18+ 
-- PostgreSQL 14+
-- npm or yarn
+## 🏗 Architecture
 
-### 1. Clone the Repository
+```
+┌─────────────────────────────────────────────────────────────┐
+│                       FRONTEND                              │
+│              Next.js (React) - Port 3000                    │
+├─────────────────────────────────────────────────────────────┤
+│  Portfolio Page  │  Watchlist Page  │  Dashboard Page       │
+│  - Position table│  - Price cards   │  - Summary cards      │
+│  - P&L charts    │  - Sparklines    │  - Quick actions      │
+│  - AI Chatbox    │  - AI Sentiment  │                       │
+└────────────────────────────┬────────────────────────────────┘
+                             │ REST API
+┌────────────────────────────▼────────────────────────────────┐
+│                       BACKEND                               │
+│              NestJS (Node.js) - Port 3001                   │
+├─────────────────────────────────────────────────────────────┤
+│  Portfolio Import  │  Portfolio Chat  │  Market Data        │
+│  - Screenshot AI   │  - AI Mentor     │  - Price Proxy      │
+│  - Position CRUD   │  - Qwen 2.5 VL   │  - Finnhub/Yahoo    │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+┌────────────────────────────▼────────────────────────────────┐
+│                    EXTERNAL SERVICES                        │
+├─────────────────────────────────────────────────────────────┤
+│  OpenRouter AI    │  Binance API   │  Finnhub   │  Yahoo   │
+│  (Vision + Chat)  │  (Crypto)      │  (Forex)   │  (Stocks)│
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔗 Future Integration: Chart Analyser
+
+This Trading Platform is designed to integrate with the **Chart Analyser** project:
+
+### Integration Points
+
+| Trading Platform | Chart Analyser | Integration |
+|-----------------|----------------|-------------|
+| Watchlist symbols | Chart analysis | Click symbol → Open in Chart Analyser |
+| Position data | Trade signals | Overlay AI signals on positions |
+| Price feeds | Chart data | Share real-time price streams |
+| AI Mentor | Chart AI | Combined AI analysis |
+
+### Planned Integration API
+
+```typescript
+// Trading Platform → Chart Analyser
+POST /api/analyze-chart
+{
+  symbol: "BTCUSD",
+  timeframe: "4h",
+  indicators: ["RSI", "MACD", "BB"]
+}
+
+// Chart Analyser → Trading Platform
+POST /api/signals
+{
+  symbol: "BTCUSD",
+  signal: "BUY",
+  confidence: 0.85,
+  targetPrice: 105000
+}
+```
+
+### Integration Steps (Future)
+
+1. **Shared Authentication** - Single login for both apps
+2. **Unified Watchlist** - Same watchlist across both apps
+3. **Click-to-Analyze** - Click position → See chart analysis
+4. **Signal Overlay** - Show buy/sell signals on portfolio
+5. **Combined Dashboard** - Embed chart widgets in portfolio
+
+---
+
+## 🚀 Quick Start
+
 ```bash
+# Clone
+git clone https://github.com/melvinl07/trading-platform.git
 cd trading-platform
-```
 
-### 2. Backend Setup
-
-```bash
-cd apps/api
-
-# Install dependencies
+# Install
 npm install
 
-# Create .env file
-cp .env.example .env
+# Setup API keys (create apps/api/.env)
+OPENROUTER_API_KEY=your-key
+FINNHUB_API_KEY=your-key
 
-# Update .env with your PostgreSQL credentials:
-# DB_HOST=localhost
-# DB_PORT=5432
-# DB_USERNAME=postgres
-# DB_PASSWORD=your_password
-# DB_DATABASE=trading_platform
-# JWT_SECRET=your_secret_key
+# Run Frontend (Terminal 1)
+cd apps/web && npm run dev
 
-# Run the backend
-npm run start:dev
+# Run Backend (Terminal 2)
+cd apps/api && npm run start:dev
 ```
 
-Backend will run on `http://localhost:3001`
+Open http://localhost:3000
 
-### 3. Frontend Setup
+---
 
-```bash
-cd apps/web
-
-# Install dependencies
-npm install
-
-# Create .env.local file (or copy .env.example)
-echo "NEXT_PUBLIC_API_URL=http://localhost:3001" > .env.local
-
-# Run the frontend
-npm run dev
-```
-
-Frontend will run on `http://localhost:3000`
-
-### 4. Database Setup
-
-The database schema will be automatically created when you start the backend (TypeORM synchronize is enabled for development).
-
-For production, you should:
-1. Set `synchronize: false` in `app.module.ts`
-2. Use migrations instead
-
-## 📖 Usage
-
-1. **Register**: Go to `http://localhost:3000` and click "Get Started"
-2. **Login**: Use your credentials to sign in
-3. **Dashboard**: View your paper trading account with $100K balance
-4. **Trade**: Click "Start Trading" to begin (trading interface coming in next phase)
-
-## 🏗️ Project Structure
+## 📁 Project Structure
 
 ```
 trading-platform/
 ├── apps/
-│   ├── api/          # NestJS backend
-│   │   ├── src/
-│   │   │   ├── auth/
-│   │   │   ├── users/
-│   │   │   ├── accounts/
-│   │   │   ├── orders/
-│   │   │   ├── positions/
-│   │   │   └── market-data/
-│   │   └── ...
-│   └── web/          # Next.js frontend
-│       ├── app/
-│       │   ├── auth/
-│       │   ├── dashboard/
-│       │   └── ...
-│       ├── components/
-│       ├── contexts/
-│       └── lib/
-└── packages/         # Shared code (future)
+│   ├── web/              # Next.js Frontend
+│   │   ├── app/          # Pages (portfolio, watchlist, dashboard)
+│   │   ├── components/   # React components
+│   │   └── lib/          # Utilities (priceService, api)
+│   │
+│   └── api/              # NestJS Backend
+│       ├── src/
+│       │   ├── portfolio-import/   # AI screenshot import
+│       │   ├── portfolio-chat/     # AI mentor
+│       │   └── market-data/        # Price proxy
+│       └── .env                    # API keys (not in git)
+│
+└── package.json
 ```
 
-## 🎯 Roadmap
+---
 
-### Phase 1 (Current - MVP)
-- [x] Authentication & User Management
-- [x] Paper Trading Accounts
-- [x] Basic Order System
-- [x] Market Data Service (Mock)
-- [x] Dashboard UI
-- [ ] Trading Interface
-- [ ] Portfolio View
-- [ ] Market Explorer
+## 🔑 Environment Variables
 
-### Phase 2
-- [ ] Options Chain
-- [ ] Greeks Calculation
-- [ ] Risk Management
+Create `apps/api/.env`:
 
-### Phase 3
-- [ ] Social Features
-- [ ] Community Feed
-- [ ] User Profiles
+```env
+OPENROUTER_API_KEY=sk-or-v1-xxx
+OPENROUTER_CHAT_MODEL=qwen/qwen-2.5-vl-72b-instruct
+FINNHUB_API_KEY=xxx
+JWT_SECRET=your-secret
+```
 
-### Phase 4
-- [ ] AI Integration
-- [ ] Ticker Analysis
-- [ ] Strategy Suggestions
+---
 
-### Phase 5
-- [ ] Live Trading Integration
-- [ ] Real Brokerage API
-- [ ] KYC/AML Compliance
+## 📜 License
 
-## 🔐 Security Notes
-
-- Passwords are hashed using bcrypt
-- JWT tokens for authentication
-- Environment variables for sensitive data
-- Input validation with class-validator
-- CORS configured for frontend
-
-## 📝 API Endpoints
-
-### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Login
-- `GET /auth/profile` - Get user profile (protected)
-
-### Accounts
-- `GET /accounts` - Get user accounts (protected)
-
-### Orders
-- `POST /orders` - Place order (protected)
-- `GET /orders/:accountId` - Get account orders (protected)
-
-### WebSocket
-- `priceUpdate` - Real-time price updates
-
-## 🤝 Contributing
-
-This is a learning/demo project. Feel free to fork and experiment!
-
-## 📄 License
-
-MIT
-
-## 🙏 Acknowledgments
-
-Inspired by Moomoo and Tiger Trade platforms.
+Private project - All rights reserved
