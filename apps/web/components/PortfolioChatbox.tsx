@@ -107,7 +107,8 @@ export function PortfolioChatbox({
             backgroundColor: '#0d1f3c',
             borderRadius: '12px',
             border: '1px solid #1e3a5f',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11'
         }}>
             {/* Header */}
             <div
