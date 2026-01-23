@@ -60,6 +60,7 @@ function DraggableCard({
     };
 
     const isDropTarget = dragOverIndex === index && isDragging;
+    const glowColor = '#f59e0b'; // Gold glow for all cards
 
     return (
         <div
@@ -79,10 +80,22 @@ function DraggableCard({
                 cursor: 'grab',
                 transition: 'all 0.2s ease',
                 transform: isDropTarget ? 'scale(1.02)' : 'scale(1)',
-                boxShadow: isDropTarget ? `0 0 20px ${card.color}44` : 'none',
+                boxShadow: `0 0 20px ${glowColor}22, inset 0 1px 0 ${glowColor}11${isDropTarget ? `, 0 0 30px ${card.color}44` : ''}`,
                 opacity: isDragging && dragOverIndex !== index ? 0.7 : 1,
                 minWidth: isMinimized ? 'auto' : '200px',
                 flex: isMinimized ? '0 0 auto' : '1 1 200px',
+            }}
+            onMouseEnter={(e) => {
+                if (!isDragging) {
+                    e.currentTarget.style.borderColor = glowColor;
+                    e.currentTarget.style.boxShadow = `0 0 30px ${glowColor}44, inset 0 1px 0 ${glowColor}22`;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                }
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = isDropTarget ? card.color : '#3f4f66';
+                e.currentTarget.style.boxShadow = `0 0 20px ${glowColor}22, inset 0 1px 0 ${glowColor}11`;
+                e.currentTarget.style.transform = 'scale(1)';
             }}
         >
             {/* Drag Handle */}
