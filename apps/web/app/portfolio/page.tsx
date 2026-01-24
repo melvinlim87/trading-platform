@@ -645,24 +645,23 @@ export default function PortfolioPage() {
                         <div
                             onClick={() => setShowAccountsSection(!showAccountsSection)}
                             style={{
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center',
                                 padding: '12px 16px', backgroundColor: '#0d1f3c', borderRadius: '8px',
                                 cursor: 'pointer', marginBottom: showAccountsSection ? '12px' : '0',
-                                boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11'
+                                boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11', gap: '12px'
                             }}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>🏦 Broker Accounts</span>
-                                <span style={{ fontSize: '13px', color: '#64748b' }}>{brokerAccounts.length} account{brokerAccounts.length > 1 ? 's' : ''}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '15px', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap' }}>🏦 Broker Accounts</span>
+                                <span style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap' }}>({brokerAccounts.length})</span>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                <span style={{ fontSize: '13px', color: '#94a3b8' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
                                     Total: <span style={{ fontWeight: '600', color: '#fff' }}>${brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0).toLocaleString()}</span>
                                 </span>
-                                <span style={{ fontSize: '13px', color: '#94a3b8' }}>
-                                    Idle Cash: <span style={{ fontWeight: '600', color: '#f59e0b' }}>
+                                <span style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                                    Idle: <span style={{ fontWeight: '600', color: '#f59e0b' }}>
                                         ${(() => {
-                                            // Sum idle cash per broker (Total Balance - Active Positions for that broker)
                                             return brokerAccounts.reduce((totalIdle, account) => {
                                                 const brokerPositions = positions.filter(p => p.broker === account.brokerName);
                                                 const activeValue = brokerPositions.reduce((sum, p) => sum + calculateNotional(p), 0);
@@ -675,14 +674,14 @@ export default function PortfolioPage() {
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setEditingAccount(null); setShowAccountModal(true); }}
                                     style={{
-                                        padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600',
+                                        padding: '5px 10px', borderRadius: '5px', fontSize: '11px', fontWeight: '600',
                                         background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
-                                        color: '#fff', border: 'none', cursor: 'pointer'
+                                        color: '#fff', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap'
                                     }}
                                 >
-                                    + Add Account
+                                    + Add
                                 </button>
-                                <span style={{ transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+                                <span style={{ transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '10px' }}>▼</span>
                             </div>
                         </div>
 
