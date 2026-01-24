@@ -667,6 +667,16 @@ export default function PortfolioPage() {
                                         })()}
                                     </span>
                                 </span>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setEditingAccount(null); setShowAccountModal(true); }}
+                                    style={{
+                                        padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '600',
+                                        background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
+                                        color: '#fff', border: 'none', cursor: 'pointer'
+                                    }}
+                                >
+                                    + Add Account
+                                </button>
                                 <span style={{ transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
                             </div>
                         </div>
@@ -729,18 +739,6 @@ export default function PortfolioPage() {
                                         })}
                                     </tbody>
                                 </table>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
-                                    <button
-                                        onClick={() => { setEditingAccount(null); setShowAccountModal(true); }}
-                                        style={{
-                                            padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600',
-                                            background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
-                                            color: '#fff', border: 'none', cursor: 'pointer'
-                                        }}
-                                    >
-                                        + Add Account
-                                    </button>
-                                </div>
                             </div>
                         )}
                     </div>
