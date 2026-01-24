@@ -582,15 +582,16 @@ export default function PortfolioPage() {
 
                     // Cash reserves - uninvested money (demo value, would come from account in production)
                     const cashReserves = 5000.00; // Demo: $5,000 cash on standby
-                    const totalAssets = totalNotional + cashReserves;
+                    // Use margin (capital at risk) for accurate portfolio value with leveraged positions
+                    const totalAssets = totalMarginUsed + cashReserves;
                     const cashPercentage = totalAssets > 0 ? (cashReserves / totalAssets) * 100 : 0;
-                    const investedPercentage = totalAssets > 0 ? (totalNotional / totalAssets) * 100 : 0;
+                    const investedPercentage = totalAssets > 0 ? (totalMarginUsed / totalAssets) * 100 : 0;
 
                     const dashboardCards: CardData[] = [
                         {
                             id: 'portfolio-value',
                             label: 'Portfolio Value',
-                            value: `$${totalNotional.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                            value: `$${totalMarginUsed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                             subValue: `${investedPercentage.toFixed(1)}% invested • ${positions.length} positions`,
                             icon: '💎',
                             color: '#00d4ff'
