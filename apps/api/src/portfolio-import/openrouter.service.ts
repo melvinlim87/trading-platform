@@ -10,8 +10,18 @@ export interface ExtractedPosition {
     pnl?: number;
 }
 
+// Account-level info extracted from screenshots
+export interface ExtractedAccountInfo {
+    brokerName?: string;        // e.g., "Binance", "IBKR"
+    platform?: string;          // e.g., "MT5", "TradingView"
+    totalBalance?: number;      // Total account equity
+    availableBalance?: number;  // Free margin / available cash
+    currency?: string;          // USD, USDT, etc.
+}
+
 export interface ExtractionResult {
     positions: ExtractedPosition[];
+    accountInfo?: ExtractedAccountInfo;  // Account-level data if visible
     rawResponse?: string;
 }
 
@@ -41,14 +51,21 @@ export class OpenRouterService {
 
         this.logger.log('Processing image for extraction...');
 
-        const prompt = `You are a financial data extraction assistant. Analyze this portfolio screenshot and extract all position data.
+        const prompt = `You are a financial data extraction assistant. Analyze this portfolio screenshot and extract all position data AND account-level information.
 
 Return ONLY a valid JSON object with this exact structure:
 {
+  "accountInfo": {
+    "brokerName": "BROKER_NAME_IF_VISIBLE",
+    "platform": "PLATFORM_IF_VISIBLE",
+    "totalBalance": TOTAL_ACCOUNT_EQUITY_IF_VISIBLE,
+    "availableBalance": AVAILABLE_CASH_OR_FREE_MARGIN_IF_VISIBLE,
+    "currency": "USD_OR_OTHER_CURRENCY"
+  },
   "positions": [
     {
       "symbol": "TICKER_SYMBOL",
-      "quantity": NUMBER_OF_SHARES,
+      "quantity": NUMBER_OF_SHARES_OR_LOTS,
       "avgPrice": AVERAGE_PRICE_PER_SHARE,
       "currentPrice": CURRENT_PRICE_IF_VISIBLE,
       "pnl": PROFIT_OR_LOSS_IF_VISIBLE
@@ -57,8 +74,12 @@ Return ONLY a valid JSON object with this exact structure:
 }
 
 Rules:
+- Look for account equity, total balance, or account value in headers/summaries
+- Look for available balance, free margin, or cash balance  
+- Identify broker name from logos or headers (Binance, IBKR, OANDA, etc.)
 - Extract ALL visible positions
-- Use standard ticker symbols (e.g., AAPL, TSLA, GOOGL)
+- Use standard ticker symbols (e.g., AAPL, TSLA, EURUSD, BTCUSD)
+- For forex, quantity should be lot size (e.g., 0.1, 1.0)
 - Numbers should be plain numbers without currency symbols
 - If a value is not visible, omit that field
 - Return ONLY the JSON, no explanations`;
@@ -122,7 +143,7 @@ Rules:
                 throw new Error('Invalid response structure');
             }
 
-            this.logger.log(`Extracted ${parsed.positions.length} positions`);
+            this.logger.log(`Extracted ${parsed.positions.length} positions${parsed.accountInfo ? ', plus account info' : ''}`);
 
             return {
                 positions: parsed.positions.map((p: any) => ({
@@ -132,6 +153,13 @@ Rules:
                     currentPrice: p.currentPrice ? Number(p.currentPrice) : undefined,
                     pnl: p.pnl ? Number(p.pnl) : undefined,
                 })),
+                accountInfo: parsed.accountInfo ? {
+                    brokerName: parsed.accountInfo.brokerName,
+                    platform: parsed.accountInfo.platform,
+                    totalBalance: parsed.accountInfo.totalBalance ? Number(parsed.accountInfo.totalBalance) : undefined,
+                    availableBalance: parsed.accountInfo.availableBalance ? Number(parsed.accountInfo.availableBalance) : undefined,
+                    currency: parsed.accountInfo.currency || 'USD',
+                } : undefined,
                 rawResponse: content,
             };
         } catch (error: any) {

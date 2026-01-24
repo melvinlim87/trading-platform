@@ -45,6 +45,26 @@ interface Account {
     positions: Position[];
 }
 
+// Broker Account for tracking total balance (including idle cash)
+interface BrokerAccount {
+    id: string;
+    brokerName: string;      // e.g., "Binance", "Coinbase"
+    platform?: string;       // e.g., "Binance App", "Coinbase Pro"
+    totalBalance: number;    // Total account value
+    currency: string;        // USD, USDT, etc.
+    lastUpdated: string;     // ISO timestamp
+    verificationSource: 'manual' | 'api_linked' | 'ai_import';
+}
+
+// Mock broker accounts for demo
+const mockBrokerAccounts: BrokerAccount[] = [
+    { id: 'ba1', brokerName: 'Binance', platform: 'Binance App', totalBalance: 25000, currency: 'USD', lastUpdated: '2026-01-25T08:00:00Z', verificationSource: 'api_linked' },
+    { id: 'ba2', brokerName: 'Coinbase', platform: 'Coinbase Pro', totalBalance: 8000, currency: 'USD', lastUpdated: '2026-01-24T15:30:00Z', verificationSource: 'ai_import' },
+    { id: 'ba3', brokerName: 'OANDA', platform: 'MT5', totalBalance: 20000, currency: 'USD', lastUpdated: '2026-01-25T06:00:00Z', verificationSource: 'manual' },
+    { id: 'ba4', brokerName: 'IBKR', platform: 'TWS', totalBalance: 35000, currency: 'USD', lastUpdated: '2026-01-25T07:00:00Z', verificationSource: 'api_linked' },
+    { id: 'ba5', brokerName: 'IG', platform: 'MT4', totalBalance: 15000, currency: 'USD', lastUpdated: '2026-01-24T20:00:00Z', verificationSource: 'manual' },
+];
+
 // Extended mock positions with BALANCED notional values (~$15-20k each asset class for clear pie chart)
 const mockPositions: Position[] = [
     // Cryptocurrency (~$20k notional)
@@ -124,10 +144,14 @@ export default function PortfolioPage() {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [selectedAccountId, setSelectedAccountId] = useState<string>('');
     const [positions, setPositions] = useState<Position[]>(mockPositions);
+    const [brokerAccounts, setBrokerAccounts] = useState<BrokerAccount[]>(mockBrokerAccounts);
     const [isLoading, setIsLoading] = useState(true);
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         crypto: true, forex: true, stock: true, unit_trust: true, etf: true, commodity: true
     });
+    const [showAccountsSection, setShowAccountsSection] = useState(true);
+    const [showAccountModal, setShowAccountModal] = useState(false);
+    const [editingAccount, setEditingAccount] = useState<BrokerAccount | null>(null);
 
     // Upload state
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -615,6 +639,112 @@ export default function PortfolioPage() {
                 </div>
 
                 <div className="portfolio-main-grid">
+                    {/* Broker Accounts Summary - Shows total balance and idle cash per broker */}
+                    <div style={{ gridColumn: '1 / -1', marginBottom: '16px' }}>
+                        <div
+                            onClick={() => setShowAccountsSection(!showAccountsSection)}
+                            style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                padding: '12px 16px', backgroundColor: '#0d1f3c', borderRadius: '8px',
+                                cursor: 'pointer', marginBottom: showAccountsSection ? '12px' : '0',
+                                boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11'
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>🏦 Broker Accounts</span>
+                                <span style={{ fontSize: '13px', color: '#64748b' }}>{brokerAccounts.length} account{brokerAccounts.length > 1 ? 's' : ''}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                <span style={{ fontSize: '13px', color: '#94a3b8' }}>
+                                    Total: <span style={{ fontWeight: '600', color: '#fff' }}>${brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0).toLocaleString()}</span>
+                                </span>
+                                <span style={{ fontSize: '13px', color: '#94a3b8' }}>
+                                    Idle Cash: <span style={{ fontWeight: '600', color: '#f59e0b' }}>
+                                        ${(() => {
+                                            const totalBrokerBalance = brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0);
+                                            const totalPositionValue = positions.reduce((sum, p) => sum + calculateNotional(p), 0);
+                                            return Math.max(0, totalBrokerBalance - totalPositionValue).toLocaleString();
+                                        })()}
+                                    </span>
+                                </span>
+                                <span style={{ transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+                            </div>
+                        </div>
+
+                        {showAccountsSection && (
+                            <div style={{ backgroundColor: '#0d1f3c', borderRadius: '8px', padding: '12px', boxShadow: '0 0 15px #f59e0b15' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                    <thead>
+                                        <tr style={{ color: '#64748b', fontSize: '11px' }}>
+                                            <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>BROKER</th>
+                                            <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>TOTAL BALANCE</th>
+                                            <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>ACTIVE POSITIONS</th>
+                                            <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>IDLE CASH</th>
+                                            <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>SOURCE</th>
+                                            <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>UPDATED</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {brokerAccounts.map(account => {
+                                            const brokerPositions = positions.filter(p => p.broker === account.brokerName);
+                                            const activeValue = brokerPositions.reduce((sum, p) => sum + calculateNotional(p), 0);
+                                            const idleCash = Math.max(0, account.totalBalance - activeValue);
+                                            const idlePercent = account.totalBalance > 0 ? (idleCash / account.totalBalance * 100) : 0;
+
+                                            return (
+                                                <tr key={account.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
+                                                    <td style={{ padding: '10px 8px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <span style={{ fontWeight: '600', color: '#fff' }}>{account.brokerName}</span>
+                                                            {account.platform && <span style={{ fontSize: '11px', color: '#64748b' }}>({account.platform})</span>}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ textAlign: 'right', padding: '10px 8px', fontWeight: '600', color: '#fff' }}>
+                                                        ${account.totalBalance.toLocaleString()}
+                                                    </td>
+                                                    <td style={{ textAlign: 'right', padding: '10px 8px', color: '#22c55e' }}>
+                                                        ${activeValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                                        <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>({brokerPositions.length} pos)</span>
+                                                    </td>
+                                                    <td style={{ textAlign: 'right', padding: '10px 8px' }}>
+                                                        <span style={{ color: idleCash > 0 ? '#f59e0b' : '#64748b', fontWeight: '600' }}>
+                                                            ${idleCash.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                                        </span>
+                                                        <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>({idlePercent.toFixed(0)}%)</span>
+                                                    </td>
+                                                    <td style={{ textAlign: 'center', padding: '10px 8px' }}>
+                                                        {account.verificationSource === 'api_linked' ? (
+                                                            <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#f59e0b22', color: '#f59e0b' }}>✓ API</span>
+                                                        ) : account.verificationSource === 'ai_import' ? (
+                                                            <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#22c55e22', color: '#22c55e' }}>✓ AI</span>
+                                                        ) : (
+                                                            <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#64748b22', color: '#94a3b8' }}>✎ Manual</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ textAlign: 'center', padding: '10px 8px', fontSize: '11px', color: '#64748b' }}>
+                                                        {new Date(account.lastUpdated).toLocaleDateString()}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                                    <button
+                                        onClick={() => { setEditingAccount(null); setShowAccountModal(true); }}
+                                        style={{
+                                            padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600',
+                                            background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
+                                            color: '#fff', border: 'none', cursor: 'pointer'
+                                        }}
+                                    >
+                                        + Add Account
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Holdings - Left Side */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {Object.entries(groupedPositions).map(([assetClass, classPositions]) => {
@@ -861,6 +991,131 @@ export default function PortfolioPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Account Entry/Edit Modal */}
+            {showAccountModal && (
+                <div className="modal-overlay" onClick={() => setShowAccountModal(false)}>
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            backgroundColor: '#0d1f3c', borderRadius: '16px', padding: '24px',
+                            width: '450px', maxWidth: '90vw', boxShadow: '0 0 30px #f59e0b22'
+                        }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h2 style={{ color: '#fff', margin: 0, fontSize: '18px' }}>
+                                {editingAccount ? 'Edit Broker Account' : 'Add Broker Account'}
+                            </h2>
+                            <button onClick={() => setShowAccountModal(false)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '24px', cursor: 'pointer' }}>×</button>
+                        </div>
+
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const form = e.target as HTMLFormElement;
+                            const formData = new FormData(form);
+                            const newAccount: BrokerAccount = {
+                                id: editingAccount?.id || `ba-${Date.now()}`,
+                                brokerName: formData.get('brokerName') as string,
+                                platform: formData.get('platform') as string || undefined,
+                                totalBalance: parseFloat(formData.get('totalBalance') as string) || 0,
+                                currency: formData.get('currency') as string || 'USD',
+                                lastUpdated: new Date().toISOString(),
+                                verificationSource: formData.get('verificationSource') as 'manual' | 'api_linked' | 'ai_import'
+                            };
+
+                            if (editingAccount) {
+                                setBrokerAccounts(prev => prev.map(a => a.id === editingAccount.id ? newAccount : a));
+                            } else {
+                                setBrokerAccounts(prev => [...prev, newAccount]);
+                            }
+                            setShowAccountModal(false);
+                        }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Broker Name *</label>
+                                    <input
+                                        name="brokerName"
+                                        type="text"
+                                        defaultValue={editingAccount?.brokerName || ''}
+                                        required
+                                        placeholder="e.g., Binance, IBKR, OANDA"
+                                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #1e3a5f', backgroundColor: '#0a1628', color: '#fff', fontSize: '14px' }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Platform (optional)</label>
+                                    <input
+                                        name="platform"
+                                        type="text"
+                                        defaultValue={editingAccount?.platform || ''}
+                                        placeholder="e.g., MT5, TradingView, Mobile App"
+                                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #1e3a5f', backgroundColor: '#0a1628', color: '#fff', fontSize: '14px' }}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <div style={{ flex: 2 }}>
+                                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Total Balance *</label>
+                                        <input
+                                            name="totalBalance"
+                                            type="number"
+                                            step="0.01"
+                                            defaultValue={editingAccount?.totalBalance || ''}
+                                            required
+                                            placeholder="0.00"
+                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #1e3a5f', backgroundColor: '#0a1628', color: '#fff', fontSize: '14px' }}
+                                        />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Currency</label>
+                                        <select
+                                            name="currency"
+                                            defaultValue={editingAccount?.currency || 'USD'}
+                                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #1e3a5f', backgroundColor: '#0a1628', color: '#fff', fontSize: '14px' }}
+                                        >
+                                            <option value="USD">USD</option>
+                                            <option value="USDT">USDT</option>
+                                            <option value="EUR">EUR</option>
+                                            <option value="GBP">GBP</option>
+                                            <option value="SGD">SGD</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '12px', color: '#94a3b8', marginBottom: '6px' }}>Data Source</label>
+                                    <select
+                                        name="verificationSource"
+                                        defaultValue={editingAccount?.verificationSource || 'manual'}
+                                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #1e3a5f', backgroundColor: '#0a1628', color: '#fff', fontSize: '14px' }}
+                                    >
+                                        <option value="manual">✎ Manual Entry</option>
+                                        <option value="ai_import">✓ AI Import (from screenshot)</option>
+                                        <option value="api_linked">✓ API Linked</option>
+                                    </select>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAccountModal(false)}
+                                        style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #1e3a5f', backgroundColor: 'transparent', color: '#94a3b8', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+                                    >
+                                        {editingAccount ? 'Update Account' : 'Add Account'}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* AI Import Modal */}
             {showUploadModal && (
