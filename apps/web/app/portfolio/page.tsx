@@ -646,20 +646,20 @@ export default function PortfolioPage() {
                             onClick={() => setShowAccountsSection(!showAccountsSection)}
                             style={{
                                 display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center',
-                                padding: '12px 16px', backgroundColor: '#0d1f3c', borderRadius: '8px',
+                                padding: '16px 20px', backgroundColor: '#0d1f3c', borderRadius: '8px',
                                 cursor: 'pointer', marginBottom: showAccountsSection ? '12px' : '0',
-                                boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11', gap: '12px'
+                                boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11', gap: '16px'
                             }}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '15px', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap' }}>🏦 Broker Accounts</span>
-                                <span style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap' }}>({brokerAccounts.length})</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '17px', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap' }}>🏦 Broker Accounts</span>
+                                <span style={{ fontSize: '14px', color: '#64748b', whiteSpace: 'nowrap' }}>({brokerAccounts.length})</span>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
                                     Total: <span style={{ fontWeight: '600', color: '#fff' }}>${brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0).toLocaleString()}</span>
                                 </span>
-                                <span style={{ fontSize: '12px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                                <span style={{ fontSize: '14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
                                     Idle: <span style={{ fontWeight: '600', color: '#f59e0b' }}>
                                         ${(() => {
                                             return brokerAccounts.reduce((totalIdle, account) => {
@@ -674,14 +674,14 @@ export default function PortfolioPage() {
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setEditingAccount(null); setShowAccountModal(true); }}
                                     style={{
-                                        padding: '5px 10px', borderRadius: '5px', fontSize: '11px', fontWeight: '600',
+                                        padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: '600',
                                         background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
                                         color: '#fff', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap'
                                     }}
                                 >
                                     + Add
                                 </button>
-                                <span style={{ transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '10px' }}>▼</span>
+                                <span style={{ transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '12px' }}>▼</span>
                             </div>
                         </div>
 
