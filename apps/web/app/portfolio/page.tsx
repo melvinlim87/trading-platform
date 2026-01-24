@@ -619,6 +619,13 @@ export default function PortfolioPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {Object.entries(groupedPositions).map(([assetClass, classPositions]) => {
                             const config = assetClassConfig[assetClass];
+                            // Calculate section totals
+                            const sectionInitialValue = classPositions.reduce((sum, p) => {
+                                if (p.assetClass === 'forex' && p.lotSize !== undefined) {
+                                    return sum + (p.lotSize * 100000 * p.avgPrice);
+                                }
+                                return sum + (p.avgPrice * p.quantity * (p.leverage || 1));
+                            }, 0);
                             const sectionNotional = classPositions.reduce((sum, p) => sum + calculateNotional(p), 0);
                             const sectionPnL = classPositions.reduce((sum, p) => sum + calculatePnL(p), 0);
                             const isExpanded = expandedSections[assetClass];
@@ -644,10 +651,11 @@ export default function PortfolioPage() {
                                             </span>
                                             <span style={{ fontSize: '13px', color: '#64748b' }}>{classPositions.length} position{classPositions.length > 1 ? 's' : ''}</span>
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', fontSize: '13px' }}>
-                                            <span>Notional: <span style={{ fontWeight: '600', color: '#fff' }}>${sectionNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></span>
-                                            <span>P&L: <span style={{ fontWeight: '600', color: sectionPnL >= 0 ? '#22c55e' : '#ef4444' }}>
-                                                ${Math.abs(sectionPnL).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '13px' }}>
+                                            <span style={{ color: '#94a3b8' }}>Initial: <span style={{ fontWeight: '600', color: '#fff' }}>${sectionInitialValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></span>
+                                            <span style={{ color: '#94a3b8' }}>Current: <span style={{ fontWeight: '600', color: '#fff' }}>${sectionNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></span>
+                                            <span style={{ color: '#94a3b8' }}>P&L: <span style={{ fontWeight: '600', color: sectionPnL >= 0 ? '#22c55e' : '#ef4444' }}>
+                                                {sectionPnL >= 0 ? '+' : '-'}${Math.abs(sectionPnL).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span></span>
                                         </div>
                                     </div>
