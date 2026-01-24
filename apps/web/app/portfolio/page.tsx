@@ -661,9 +661,13 @@ export default function PortfolioPage() {
                                 <span style={{ fontSize: '13px', color: '#94a3b8' }}>
                                     Idle Cash: <span style={{ fontWeight: '600', color: '#f59e0b' }}>
                                         ${(() => {
-                                            const totalBrokerBalance = brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0);
-                                            const totalPositionValue = positions.reduce((sum, p) => sum + calculateNotional(p), 0);
-                                            return Math.max(0, totalBrokerBalance - totalPositionValue).toLocaleString();
+                                            // Sum idle cash per broker (Total Balance - Active Positions for that broker)
+                                            return brokerAccounts.reduce((totalIdle, account) => {
+                                                const brokerPositions = positions.filter(p => p.broker === account.brokerName);
+                                                const activeValue = brokerPositions.reduce((sum, p) => sum + calculateNotional(p), 0);
+                                                const idleCash = Math.max(0, account.totalBalance - activeValue);
+                                                return totalIdle + idleCash;
+                                            }, 0).toLocaleString();
                                         })()}
                                     </span>
                                 </span>
