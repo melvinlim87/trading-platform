@@ -482,13 +482,15 @@ export default function PortfolioPage() {
     const totalInvested = positions.reduce((sum, p) => sum + (p.avgPrice * p.quantity), 0);
     const totalMarginUsed = positions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
 
+    // Use margin (capital at risk) for portfolio allocation pie chart instead of notional
+    // This gives accurate allocation view for leveraged positions
     const exposure = Object.entries(groupedPositions).map(([assetClass, classPositions]) => {
-        const value = classPositions.reduce((sum, p) => sum + calculateNotional(p), 0);
+        const value = classPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
         return {
             assetClass,
             ...assetClassConfig[assetClass],
             value,
-            percentage: (value / totalNotional) * 100,
+            percentage: (value / totalMarginUsed) * 100,
             posCount: classPositions.length,
         };
     }).sort((a, b) => b.value - a.value);
