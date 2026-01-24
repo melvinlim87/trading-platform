@@ -17,7 +17,7 @@ interface Position {
     id: string;
     symbol: string;
     name: string;
-    quantity: number;
+    quantity: number;      // For stocks/crypto: shares, For forex: lot size (0.01 = micro, 0.1 = mini, 1 = standard)
     avgPrice: number;
     currentPrice: number;
     assetClass: string;
@@ -28,6 +28,9 @@ interface Position {
     optionDetails?: string;
     broker?: string;
     platform?: string;
+    // Forex/CFD specific
+    lotSize?: number;      // Standard lot = 1 (100,000 units), Mini = 0.1, Micro = 0.01
+    pipValue?: number;     // Value per pip movement
     // Verification fields
     verificationSource?: 'ai_import' | 'api_linked' | 'manual';
     verificationConfidence?: number;
@@ -47,9 +50,9 @@ const mockPositions: Position[] = [
     // Cryptocurrency (~$20k notional)
     { id: '1', symbol: 'BTCUSD', name: 'Bitcoin', quantity: 0.25, avgPrice: 42500.00, currentPrice: 68000.00, assetClass: 'crypto', positionType: 'long', broker: 'Binance', platform: 'Binance App', verificationSource: 'api_linked', verifiedAt: '2026-01-15T10:30:00Z' },
     { id: '2', symbol: 'ETHUSDT', name: 'Ethereum', quantity: 1.5, avgPrice: 2200.00, currentPrice: 3500.00, assetClass: 'crypto', positionType: 'long', broker: 'Coinbase', platform: 'Coinbase Pro', verificationSource: 'ai_import', verifiedAt: '2026-01-18T14:20:00Z' },
-    // Forex (~$18k notional)
-    { id: '3', symbol: 'EURUSD', name: 'Euro / US Dollar', quantity: 15000, avgPrice: 1.09, currentPrice: 1.10, assetClass: 'forex', positionType: 'long', broker: 'OANDA', platform: 'MT5', verificationSource: 'ai_import', verifiedAt: '2026-01-17T09:15:00Z' },
-    { id: '9', symbol: 'GBPJPY', name: 'GBP/JPY', quantity: 100, avgPrice: 185.50, currentPrice: 188.20, assetClass: 'forex', positionType: 'long', broker: 'IG', platform: 'MT4', verificationSource: 'manual' },
+    // Forex CFD (~$18k notional) - Using lot sizes: 1 lot = 100,000 units
+    { id: '3', symbol: 'EURUSD', name: 'Euro / US Dollar', quantity: 0.15, avgPrice: 1.0850, currentPrice: 1.0425, assetClass: 'forex', positionType: 'long', lotSize: 0.15, pipValue: 10, broker: 'OANDA', platform: 'MT5', verificationSource: 'ai_import', verifiedAt: '2026-01-17T09:15:00Z' },
+    { id: '9', symbol: 'GBPJPY', name: 'GBP/JPY', quantity: 0.1, avgPrice: 185.50, currentPrice: 188.20, assetClass: 'forex', positionType: 'long', lotSize: 0.1, pipValue: 6.35, broker: 'IG', platform: 'MT4', verificationSource: 'manual' },
     // Stocks (~$20k notional)
     { id: '4', symbol: 'TSLA', name: 'Tesla Inc', quantity: 15, avgPrice: 250.00, currentPrice: 438.50, assetClass: 'stock', positionType: 'long', broker: 'IBKR', platform: 'TWS', verificationSource: 'api_linked', verifiedAt: '2026-01-19T08:00:00Z' },
     { id: '5', symbol: 'AAPL', name: 'Apple Inc', quantity: 40, avgPrice: 150.00, currentPrice: 185.20, assetClass: 'stock', positionType: 'long', broker: 'Fidelity', platform: 'Web', verificationSource: 'ai_import', verifiedAt: '2026-01-16T11:45:00Z' },
@@ -73,6 +76,46 @@ const assetClassConfig: Record<string, { bg: string; text: string; label: string
     'unit_trust': { bg: '#a855f7', text: '#fff', label: 'Unit Trusts', icon: '🏦', borderColor: '#a855f7' },// Purple
     'etf': { bg: '#ec4899', text: '#fff', label: 'ETFs', icon: '📊', borderColor: '#ec4899' },              // Pink (was orange, now distinct)
     'commodity': { bg: '#eab308', text: '#000', label: 'Commodities', icon: '🥇', borderColor: '#eab308' }, // Yellow/Gold
+};
+
+// Forex/CFD Helper Functions
+const STANDARD_LOT = 100000; // 1 standard lot = 100,000 units
+
+// Calculate forex notional value (for lot-based positions)
+const getForexNotional = (pos: Position): number => {
+    if (pos.assetClass === 'forex' && pos.lotSize !== undefined) {
+        // Notional = lot size * standard lot * current price
+        return pos.lotSize * STANDARD_LOT * pos.currentPrice;
+    }
+    return pos.quantity * pos.currentPrice;
+};
+
+// Calculate forex P&L (pip-based)
+const getForexPnL = (pos: Position): number => {
+    if (pos.assetClass === 'forex' && pos.lotSize !== undefined) {
+        // For forex: P&L = pips moved * pip value * lot size
+        const isJpyPair = pos.symbol.includes('JPY');
+        const pipMultiplier = isJpyPair ? 100 : 10000; // JPY pairs have 2 decimal pips
+        const pipsGained = (pos.currentPrice - pos.avgPrice) * pipMultiplier;
+        const pipValue = pos.pipValue || 10; // Default $10 per pip for 1 lot
+        return pipsGained * pipValue * pos.lotSize;
+    }
+    // Standard calculation for non-forex
+    return (pos.currentPrice - pos.avgPrice) * pos.quantity;
+};
+
+// Format lot size for display
+const formatLotSize = (lots: number): string => {
+    if (lots >= 1) return `${lots.toFixed(2)} lot${lots !== 1 ? 's' : ''}`;
+    if (lots >= 0.1) return `${(lots * 10).toFixed(1)} mini lot${lots !== 0.1 ? 's' : ''}`;
+    return `${(lots * 100).toFixed(0)} micro lot${lots !== 0.01 ? 's' : ''}`;
+};
+
+// Get pips for forex display
+const getForexPips = (pos: Position): number => {
+    const isJpyPair = pos.symbol.includes('JPY');
+    const pipMultiplier = isJpyPair ? 100 : 10000;
+    return (pos.currentPrice - pos.avgPrice) * pipMultiplier;
 };
 
 export default function PortfolioPage() {
@@ -369,8 +412,18 @@ export default function PortfolioPage() {
         return acc;
     }, {} as Record<string, Position[]>);
 
-    const calculateNotional = (pos: Position) => pos.quantity * pos.currentPrice * (pos.leverage || 1);
-    const calculatePnL = (pos: Position) => (pos.currentPrice - pos.avgPrice) * pos.quantity * (pos.leverage || 1);
+    const calculateNotional = (pos: Position) => {
+        if (pos.assetClass === 'forex' && pos.lotSize !== undefined) {
+            return getForexNotional(pos);
+        }
+        return pos.quantity * pos.currentPrice * (pos.leverage || 1);
+    };
+    const calculatePnL = (pos: Position) => {
+        if (pos.assetClass === 'forex' && pos.lotSize !== undefined) {
+            return getForexPnL(pos);
+        }
+        return (pos.currentPrice - pos.avgPrice) * pos.quantity * (pos.leverage || 1);
+    };
     const calculatePnLPercent = (pos: Position) => ((pos.currentPrice - pos.avgPrice) / pos.avgPrice) * 100;
 
     const totalNotional = positions.reduce((sum, p) => sum + calculateNotional(p), 0);
@@ -701,7 +754,16 @@ export default function PortfolioPage() {
                                                                     </div>
                                                                 </td>
                                                                 <td style={{ textAlign: 'right', padding: '8px 2px' }}>
-                                                                    <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{pos.quantity}</span>
+                                                                    {pos.assetClass === 'forex' && pos.lotSize !== undefined ? (
+                                                                        <div>
+                                                                            <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{formatLotSize(pos.lotSize)}</span>
+                                                                            <span style={{ display: 'block', fontSize: '10px', color: '#64748b' }}>
+                                                                                {getForexPips(pos) >= 0 ? '+' : ''}{getForexPips(pos).toFixed(1)} pips
+                                                                            </span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{pos.quantity}</span>
+                                                                    )}
                                                                     {pos.leverage && pos.leverage > 1 && (
                                                                         <span style={{ marginLeft: '2px', padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#3b82f622', color: '#3b82f6' }}>{pos.leverage}x</span>
                                                                     )}
