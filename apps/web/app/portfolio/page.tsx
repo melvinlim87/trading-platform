@@ -70,9 +70,9 @@ const mockPositions: Position[] = [
     // Cryptocurrency (~$20k notional)
     { id: '1', symbol: 'BTCUSD', name: 'Bitcoin', quantity: 0.25, avgPrice: 42500.00, currentPrice: 68000.00, assetClass: 'crypto', positionType: 'long', broker: 'Binance', platform: 'Binance App', verificationSource: 'api_linked', verifiedAt: '2026-01-15T10:30:00Z' },
     { id: '2', symbol: 'ETHUSDT', name: 'Ethereum', quantity: 1.5, avgPrice: 2200.00, currentPrice: 3500.00, assetClass: 'crypto', positionType: 'long', broker: 'Coinbase', platform: 'Coinbase Pro', verificationSource: 'ai_import', verifiedAt: '2026-01-18T14:20:00Z' },
-    // Forex CFD (~$18k notional) - Using lot sizes: 1 lot = 100,000 units
-    { id: '3', symbol: 'EURUSD', name: 'Euro / US Dollar', quantity: 0.15, avgPrice: 1.0850, currentPrice: 1.0425, assetClass: 'forex', positionType: 'long', lotSize: 0.15, pipValue: 10, broker: 'OANDA', platform: 'MT5', verificationSource: 'ai_import', verifiedAt: '2026-01-17T09:15:00Z' },
-    { id: '9', symbol: 'GBPJPY', name: 'GBP/JPY', quantity: 0.1, avgPrice: 185.50, currentPrice: 188.20, assetClass: 'forex', positionType: 'long', lotSize: 0.1, pipValue: 6.35, broker: 'IG', platform: 'MT4', verificationSource: 'manual' },
+    // Forex CFD (~$18k notional) - Using lot sizes: 1 lot = 100,000 units, leverage 50:1
+    { id: '3', symbol: 'EURUSD', name: 'Euro / US Dollar', quantity: 0.15, avgPrice: 1.0850, currentPrice: 1.0425, assetClass: 'forex', positionType: 'long', lotSize: 0.15, pipValue: 10, leverage: 50, broker: 'OANDA', platform: 'MT5', verificationSource: 'ai_import', verifiedAt: '2026-01-17T09:15:00Z' },
+    { id: '9', symbol: 'GBPJPY', name: 'GBP/JPY', quantity: 0.1, avgPrice: 185.50, currentPrice: 188.20, assetClass: 'forex', positionType: 'long', lotSize: 0.1, pipValue: 6.35, leverage: 50, broker: 'IG', platform: 'MT4', verificationSource: 'manual' },
     // Stocks (~$20k notional)
     { id: '4', symbol: 'TSLA', name: 'Tesla Inc', quantity: 15, avgPrice: 250.00, currentPrice: 438.50, assetClass: 'stock', positionType: 'long', broker: 'IBKR', platform: 'TWS', verificationSource: 'api_linked', verifiedAt: '2026-01-19T08:00:00Z' },
     { id: '5', symbol: 'AAPL', name: 'Apple Inc', quantity: 40, avgPrice: 150.00, currentPrice: 185.20, assetClass: 'stock', positionType: 'long', broker: 'Fidelity', platform: 'Web', verificationSource: 'ai_import', verifiedAt: '2026-01-16T11:45:00Z' },
@@ -442,6 +442,33 @@ export default function PortfolioPage() {
         }
         return pos.quantity * pos.currentPrice * (pos.leverage || 1);
     };
+
+    // Calculate actual margin/capital used (for broker balance calculations)
+    // For leveraged positions, this is the actual capital at risk, not the full notional
+    const calculateMarginUsed = (pos: Position) => {
+        const leverage = pos.leverage || 1;
+
+        // If margin is explicitly set, use it
+        if (pos.margin && pos.margin > 0) {
+            return pos.margin;
+        }
+
+        if (pos.assetClass === 'forex' && pos.lotSize !== undefined) {
+            // Forex: notional / leverage (typical forex leverage is 30-100x)
+            const notional = getForexNotional(pos);
+            return notional / leverage;
+        }
+
+        if (pos.assetClass === 'crypto' && leverage > 1) {
+            // Crypto perpetuals/margin: notional / leverage
+            const notional = pos.quantity * pos.currentPrice * leverage;
+            return notional / leverage; // = quantity * currentPrice
+        }
+
+        // Spot positions: full value is the capital used
+        return pos.quantity * pos.currentPrice;
+    };
+
     const calculatePnL = (pos: Position) => {
         if (pos.assetClass === 'forex' && pos.lotSize !== undefined) {
             return getForexPnL(pos);
@@ -453,6 +480,7 @@ export default function PortfolioPage() {
     const totalNotional = positions.reduce((sum, p) => sum + calculateNotional(p), 0);
     const totalPnL = positions.reduce((sum, p) => sum + calculatePnL(p), 0);
     const totalInvested = positions.reduce((sum, p) => sum + (p.avgPrice * p.quantity), 0);
+    const totalMarginUsed = positions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
 
     const exposure = Object.entries(groupedPositions).map(([assetClass, classPositions]) => {
         const value = classPositions.reduce((sum, p) => sum + calculateNotional(p), 0);
@@ -664,7 +692,7 @@ export default function PortfolioPage() {
                                         ${(() => {
                                             return brokerAccounts.reduce((totalIdle, account) => {
                                                 const brokerPositions = positions.filter(p => p.broker === account.brokerName);
-                                                const activeValue = brokerPositions.reduce((sum, p) => sum + calculateNotional(p), 0);
+                                                const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
                                                 const idleCash = Math.max(0, account.totalBalance - activeValue);
                                                 return totalIdle + idleCash;
                                             }, 0).toLocaleString();
@@ -701,7 +729,7 @@ export default function PortfolioPage() {
                                     <tbody>
                                         {brokerAccounts.map(account => {
                                             const brokerPositions = positions.filter(p => p.broker === account.brokerName);
-                                            const activeValue = brokerPositions.reduce((sum, p) => sum + calculateNotional(p), 0);
+                                            const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
                                             const idleCash = Math.max(0, account.totalBalance - activeValue);
                                             const idlePercent = account.totalBalance > 0 ? (idleCash / account.totalBalance * 100) : 0;
 
