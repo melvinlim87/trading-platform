@@ -173,6 +173,7 @@ export default function PortfolioPage() {
         currentPrice: '',
         assetClass: 'stock',
         positionType: 'long',
+        leverage: '1',  // Default 1x (no leverage)
         broker: '',
         platform: '',
         expiry: '',
@@ -381,6 +382,7 @@ export default function PortfolioPage() {
             currentPrice: parseFloat(manualPosition.currentPrice) || parseFloat(manualPosition.avgPrice) || 0,
             assetClass: manualPosition.assetClass,
             positionType: manualPosition.positionType as Position['positionType'],
+            leverage: parseFloat(manualPosition.leverage) || 1,
             broker: manualPosition.broker || undefined,
             platform: manualPosition.platform || undefined,
             expiry: manualPosition.expiry || undefined
@@ -400,6 +402,7 @@ export default function PortfolioPage() {
             currentPrice: '',
             assetClass: 'stock',
             positionType: 'long',
+            leverage: '1',
             broker: '',
             platform: '',
             expiry: '',
@@ -1512,7 +1515,42 @@ export default function PortfolioPage() {
                                 />
                             </div>
 
-                            {/* Row 4: Broker, Platform */}
+                            {/* Row 5: Leverage - Important for forex/crypto margin trading */}
+                            <div style={{ marginBottom: '16px' }}>
+                                <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>
+                                    Leverage <span style={{ color: '#f59e0b' }}>(important for forex/margin trading)</span>
+                                </label>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        value={manualPosition.leverage}
+                                        onChange={e => updateManualPosition('leverage', e.target.value)}
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '80px', textAlign: 'right' }}
+                                    />
+                                    <span style={{ color: '#64748b', fontSize: '14px' }}>:1</span>
+                                    <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
+                                        {['1', '2', '5', '10', '20', '50', '100'].map(lev => (
+                                            <button
+                                                key={lev}
+                                                type="button"
+                                                onClick={() => updateManualPosition('leverage', lev)}
+                                                style={{
+                                                    padding: '6px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '500',
+                                                    backgroundColor: manualPosition.leverage === lev ? '#0ea5e9' : '#1e3a5f',
+                                                    color: manualPosition.leverage === lev ? '#fff' : '#94a3b8',
+                                                    border: 'none', cursor: 'pointer'
+                                                }}
+                                            >
+                                                {lev}x
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Row 6: Broker, Platform */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                                 <div>
                                     <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Broker</label>
