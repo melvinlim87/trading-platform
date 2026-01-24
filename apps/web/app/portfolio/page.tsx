@@ -619,28 +619,29 @@ export default function PortfolioPage() {
                     />
                 </div>
 
-                {/* AI Portfolio Chatbox */}
-                <div style={{ marginBottom: '24px' }}>
-                    <PortfolioChatbox
-                        positions={positions.map(p => ({
-                            symbol: p.symbol,
-                            name: p.name || p.symbol,
-                            quantity: p.quantity,
-                            avgPrice: p.avgPrice,
-                            currentPrice: p.currentPrice || p.avgPrice,
-                            assetClass: p.assetClass || 'other',
-                            positionType: p.positionType,
-                            leverage: p.leverage
-                        }))}
-                        userName="Trader"
-                        riskProfile="Moderate"
-                        cashBalance={0}
-                    />
-                </div>
+                {/* AI Portfolio Chatbox + Broker Accounts - Side by Side */}
+                <div style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
+                    {/* AI Portfolio Chatbox - Left Side */}
+                    <div style={{ flex: '1', minWidth: 0 }}>
+                        <PortfolioChatbox
+                            positions={positions.map(p => ({
+                                symbol: p.symbol,
+                                name: p.name || p.symbol,
+                                quantity: p.quantity,
+                                avgPrice: p.avgPrice,
+                                currentPrice: p.currentPrice || p.avgPrice,
+                                assetClass: p.assetClass || 'other',
+                                positionType: p.positionType,
+                                leverage: p.leverage
+                            }))}
+                            userName="Trader"
+                            riskProfile="Moderate"
+                            cashBalance={0}
+                        />
+                    </div>
 
-                <div className="portfolio-main-grid">
-                    {/* Broker Accounts Summary - Shows total balance and idle cash per broker */}
-                    <div style={{ gridColumn: '1 / -1', marginBottom: '16px' }}>
+                    {/* Broker Accounts Summary - Right Side */}
+                    <div style={{ flex: '1', minWidth: 0 }}>
                         <div
                             onClick={() => setShowAccountsSection(!showAccountsSection)}
                             style={{
@@ -746,7 +747,9 @@ export default function PortfolioPage() {
                             </div>
                         )}
                     </div>
+                </div>
 
+                <div className="portfolio-main-grid">
                     {/* Holdings - Left Side */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {Object.entries(groupedPositions).map(([assetClass, classPositions]) => {
