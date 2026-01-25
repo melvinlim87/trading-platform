@@ -36,7 +36,7 @@ interface Position {
     verificationConfidence?: number;
     verifiedAt?: string;
     // Risk override - allows user to manually set risk level
-    riskOverride?: 'auto' | 'low' | 'medium' | 'high' | 'critical';
+    riskOverride?: 'low' | 'medium' | 'high' | 'critical';
 }
 
 interface Account {
@@ -159,7 +159,7 @@ const calculatePositionRisk = (
     assetClass: string
 ): RiskAssessment => {
     // Check for manual override first
-    if (pos.riskOverride && pos.riskOverride !== 'auto') {
+    if (pos.riskOverride) {
         const overrideConfigs: Record<string, Omit<RiskAssessment, 'reasons' | 'score'>> = {
             low: { level: 'low', label: 'LOW', color: '#fff', bgColor: '#22c55e' },
             medium: { level: 'medium', label: 'MEDIUM', color: '#000', bgColor: '#facc15' },
@@ -308,7 +308,7 @@ export default function PortfolioPage() {
         customPositionType: '',
         customBroker: '',
         customPlatform: '',
-        riskLevel: 'auto'  // auto, low, medium, high, critical
+        riskLevel: 'low'  // low, medium, high, critical
     });
 
     // Symbol search autocomplete state
@@ -540,7 +540,7 @@ export default function PortfolioPage() {
             customPositionType: '',
             customBroker: '',
             customPlatform: '',
-            riskLevel: 'auto'
+            riskLevel: 'low'
         });
     };
 
@@ -1156,7 +1156,6 @@ export default function PortfolioPage() {
                                                                             paddingRight: '16px'
                                                                         }}
                                                                     >
-                                                                        <option value="auto">AUTO</option>
                                                                         <option value="low">LOW</option>
                                                                         <option value="medium">MEDIUM</option>
                                                                         <option value="high">HIGH</option>
