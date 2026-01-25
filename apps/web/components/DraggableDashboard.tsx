@@ -17,9 +17,9 @@ interface DraggableDashboardProps {
     cards: CardData[];
 }
 
-const STORAGE_KEY = 'dashboard-card-layout';
-const COLS = 10;
-const ROW_HEIGHT = 55;
+const STORAGE_KEY = 'dashboard-card-layout-v2';
+const COLS = 14;
+const ROW_HEIGHT = 50;
 
 export function DraggableDashboard({ cards }: DraggableDashboardProps) {
     const [layout, setLayout] = useState<Layout[]>([]);
@@ -27,15 +27,25 @@ export function DraggableDashboard({ cards }: DraggableDashboardProps) {
     const [mounted, setMounted] = useState(false);
     const [containerWidth, setContainerWidth] = useState(1000);
 
-    // Generate default layout - 5 cards in a row
+    // Generate default layout - 7 cards optimally arranged
     const generateDefaultLayout = useCallback((): Layout[] => {
+        // First row: 4 cards, Second row: 3 cards (centered)
+        const layoutConfig = [
+            { x: 0, y: 0, w: 3.5, h: 2 },   // Portfolio Value
+            { x: 3.5, y: 0, w: 3.5, h: 2 }, // Idle Cash
+            { x: 7, y: 0, w: 3.5, h: 2 },   // Floating P&L
+            { x: 10.5, y: 0, w: 3.5, h: 2 },// Capital Invested
+            { x: 0, y: 2, w: 4.67, h: 2 },  // Total Returns
+            { x: 4.67, y: 2, w: 4.67, h: 2 }, // Today's Gain
+            { x: 9.33, y: 2, w: 4.67, h: 2 }, // Cash Reserves
+        ];
         return cards.map((card, index) => ({
             i: card.id,
-            x: (index % 5) * 2,
-            y: Math.floor(index / 5) * 2,
-            w: 2,
-            h: 2,
-            minW: 1,
+            x: Math.round((layoutConfig[index]?.x ?? (index % 4) * 3.5) * 1),
+            y: Math.round((layoutConfig[index]?.y ?? Math.floor(index / 4) * 2) * 1),
+            w: Math.round((layoutConfig[index]?.w ?? 3.5) * 1),
+            h: layoutConfig[index]?.h ?? 2,
+            minW: 2,
             minH: 1,
         }));
     }, [cards]);
@@ -223,22 +233,18 @@ export function DraggableDashboard({ cards }: DraggableDashboardProps) {
                                 {!isMin && (
                                     <>
                                         <div style={{
-                                            fontSize: 'clamp(18px, 2.5vw, 28px)',
+                                            fontSize: 'clamp(20px, 2.2vw, 32px)',
                                             fontWeight: '700',
                                             color: card.color,
-                                            marginBottom: '4px',
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis'
+                                            marginBottom: '6px',
+                                            lineHeight: 1.1
                                         }}>
                                             {card.value}
                                         </div>
                                         <div style={{
-                                            fontSize: '11px',
-                                            color: '#64748b',
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis'
+                                            fontSize: '12px',
+                                            color: '#94a3b8',
+                                            lineHeight: 1.3
                                         }}>
                                             {card.subValue}
                                         </div>
