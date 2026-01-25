@@ -138,6 +138,115 @@ const getForexPips = (pos: Position): number => {
     return (pos.currentPrice - pos.avgPrice) * pipMultiplier;
 };
 
+// Risk Level Types
+type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
+
+interface RiskAssessment {
+    level: RiskLevel;
+    label: string;
+    color: string;
+    bgColor: string;
+    reasons: string[];
+    score: number; // 0-100
+}
+
+// Calculate position risk based on multiple factors
+const calculatePositionRisk = (
+    pos: Position,
+    totalPortfolioValue: number,
+    assetClass: string
+): RiskAssessment => {
+    const reasons: string[] = [];
+    let score = 0;
+
+    // Factor 1: Position size as % of portfolio (max 40 points)
+    const posValue = pos.currentPrice * pos.quantity;
+    const marginUsed = posValue / (pos.leverage || 1);
+    const portfolioPct = totalPortfolioValue > 0 ? (marginUsed / totalPortfolioValue) * 100 : 0;
+
+    if (portfolioPct > 15) {
+        score += 40;
+        reasons.push(`${portfolioPct.toFixed(1)}% of portfolio (very concentrated)`);
+    } else if (portfolioPct > 10) {
+        score += 30;
+        reasons.push(`${portfolioPct.toFixed(1)}% of portfolio (concentrated)`);
+    } else if (portfolioPct > 5) {
+        score += 15;
+        reasons.push(`${portfolioPct.toFixed(1)}% of portfolio`);
+    } else if (portfolioPct > 2) {
+        score += 5;
+    }
+
+    // Factor 2: Leverage risk (max 30 points)
+    const leverage = pos.leverage || 1;
+    if (leverage >= 50) {
+        score += 30;
+        reasons.push(`${leverage}x leverage (extreme)`);
+    } else if (leverage >= 20) {
+        score += 20;
+        reasons.push(`${leverage}x leverage (high)`);
+    } else if (leverage >= 5) {
+        score += 10;
+        reasons.push(`${leverage}x leverage`);
+    } else if (leverage > 1) {
+        score += 5;
+    }
+
+    // Factor 3: Asset volatility (max 20 points)
+    const volatileAssets = ['crypto', 'forex'];
+    const moderateAssets = ['commodity', 'etf'];
+
+    if (volatileAssets.includes(assetClass)) {
+        score += 15;
+        if (assetClass === 'crypto') {
+            reasons.push('Crypto (high volatility)');
+        }
+    } else if (moderateAssets.includes(assetClass)) {
+        score += 8;
+    }
+
+    // Factor 4: Large lot size for forex (max 10 points)
+    if (assetClass === 'forex' && pos.lotSize) {
+        if (pos.lotSize >= 1) {
+            score += 10;
+            reasons.push(`${pos.lotSize} standard lot(s)`);
+        } else if (pos.lotSize >= 0.5) {
+            score += 5;
+        }
+    }
+
+    // Determine risk level based on score
+    let level: RiskLevel;
+    let label: string;
+    let color: string;
+    let bgColor: string;
+
+    if (score >= 60) {
+        level = 'critical';
+        label = 'CRITICAL';
+        color = '#fff';
+        bgColor = '#dc2626';
+    } else if (score >= 40) {
+        level = 'high';
+        label = 'HIGH';
+        color = '#fff';
+        bgColor = '#f97316';
+    } else if (score >= 20) {
+        level = 'medium';
+        label = 'MEDIUM';
+        color = '#000';
+        bgColor = '#facc15';
+    } else {
+        level = 'low';
+        label = 'LOW';
+        color = '#fff';
+        bgColor = '#22c55e';
+    }
+
+    return { level, label, color, bgColor, reasons, score };
+};
+
+
 export default function PortfolioPage() {
     const { user, isLoading: authLoading } = useAuth();
     const router = useRouter();
@@ -866,8 +975,9 @@ export default function PortfolioPage() {
                                                         <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
                                                         <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
                                                         <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
-                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
-                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
+                                                        <th style={{ width: '8%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
+                                                        <th style={{ width: '8%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
+                                                        <th style={{ width: '8%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>RISK</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -877,6 +987,7 @@ export default function PortfolioPage() {
                                                         const notional = calculateNotional(pos);
                                                         const initialValue = pos.avgPrice * pos.quantity * (pos.leverage || 1);
                                                         const badge = getPositionBadge(pos, config);
+                                                        const risk = calculatePositionRisk(pos, totalMarginUsed, assetClass);
 
                                                         return (
                                                             <tr key={pos.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
@@ -993,6 +1104,23 @@ export default function PortfolioPage() {
                                                                 <td style={{ textAlign: 'center', padding: '8px 2px' }}>
                                                                     <span style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: '#a855f733', color: '#fff' }}>
                                                                         {pos.platform || '—'}
+                                                                    </span>
+                                                                </td>
+                                                                <td style={{ textAlign: 'center', padding: '8px 2px' }}>
+                                                                    <span
+                                                                        title={risk.reasons.length > 0 ? risk.reasons.join(' • ') : 'Low risk position'}
+                                                                        style={{
+                                                                            padding: '3px 8px',
+                                                                            borderRadius: '4px',
+                                                                            fontSize: '10px',
+                                                                            fontWeight: '700',
+                                                                            backgroundColor: risk.bgColor,
+                                                                            color: risk.color,
+                                                                            cursor: 'help',
+                                                                            letterSpacing: '0.5px'
+                                                                        }}
+                                                                    >
+                                                                        {risk.label}
                                                                     </span>
                                                                 </td>
                                                             </tr>
