@@ -35,6 +35,8 @@ interface Position {
     verificationSource?: 'ai_import' | 'api_linked' | 'manual';
     verificationConfidence?: number;
     verifiedAt?: string;
+    // Risk override - allows user to manually set risk level
+    riskOverride?: 'auto' | 'low' | 'medium' | 'high' | 'critical';
 }
 
 interface Account {
@@ -156,6 +158,22 @@ const calculatePositionRisk = (
     totalPortfolioValue: number,
     assetClass: string
 ): RiskAssessment => {
+    // Check for manual override first
+    if (pos.riskOverride && pos.riskOverride !== 'auto') {
+        const overrideConfigs: Record<string, Omit<RiskAssessment, 'reasons' | 'score'>> = {
+            low: { level: 'low', label: 'LOW', color: '#fff', bgColor: '#22c55e' },
+            medium: { level: 'medium', label: 'MEDIUM', color: '#000', bgColor: '#facc15' },
+            high: { level: 'high', label: 'HIGH', color: '#fff', bgColor: '#f97316' },
+            critical: { level: 'critical', label: 'CRITICAL', color: '#fff', bgColor: '#dc2626' },
+        };
+        const config = overrideConfigs[pos.riskOverride];
+        return {
+            ...config,
+            reasons: ['Manually set by user'],
+            score: pos.riskOverride === 'low' ? 10 : pos.riskOverride === 'medium' ? 30 : pos.riskOverride === 'high' ? 50 : 70
+        };
+    }
+
     const reasons: string[] = [];
     let score = 0;
 
@@ -289,7 +307,8 @@ export default function PortfolioPage() {
         customAssetClass: '',
         customPositionType: '',
         customBroker: '',
-        customPlatform: ''
+        customPlatform: '',
+        riskLevel: 'auto'  // auto, low, medium, high, critical
     });
 
     // Symbol search autocomplete state
@@ -494,7 +513,9 @@ export default function PortfolioPage() {
             leverage: parseFloat(manualPosition.leverage) || 1,
             broker: manualPosition.broker || undefined,
             platform: manualPosition.platform || undefined,
-            expiry: manualPosition.expiry || undefined
+            expiry: manualPosition.expiry || undefined,
+            riskOverride: manualPosition.riskLevel as Position['riskOverride'],
+            verificationSource: 'manual'
         };
 
         setPositions(prev => [...prev, newPosition]);
@@ -518,7 +539,8 @@ export default function PortfolioPage() {
             customAssetClass: '',
             customPositionType: '',
             customBroker: '',
-            customPlatform: ''
+            customPlatform: '',
+            riskLevel: 'auto'
         });
     };
 
@@ -1107,21 +1129,39 @@ export default function PortfolioPage() {
                                                                     </span>
                                                                 </td>
                                                                 <td style={{ textAlign: 'center', padding: '8px 2px' }}>
-                                                                    <span
+                                                                    <select
+                                                                        value={pos.riskOverride || 'auto'}
+                                                                        onChange={(e) => {
+                                                                            const newValue = e.target.value as Position['riskOverride'];
+                                                                            setPositions(prev => prev.map(p =>
+                                                                                p.id === pos.id ? { ...p, riskOverride: newValue } : p
+                                                                            ));
+                                                                        }}
                                                                         title={risk.reasons.length > 0 ? risk.reasons.join(' • ') : 'Low risk position'}
                                                                         style={{
-                                                                            padding: '3px 8px',
+                                                                            padding: '4px 6px',
                                                                             borderRadius: '4px',
                                                                             fontSize: '10px',
                                                                             fontWeight: '700',
                                                                             backgroundColor: risk.bgColor,
                                                                             color: risk.color,
-                                                                            cursor: 'help',
-                                                                            letterSpacing: '0.5px'
+                                                                            border: 'none',
+                                                                            cursor: 'pointer',
+                                                                            letterSpacing: '0.5px',
+                                                                            appearance: 'none',
+                                                                            WebkitAppearance: 'none',
+                                                                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='${risk.color === '#fff' ? 'white' : 'black'}'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E")`,
+                                                                            backgroundRepeat: 'no-repeat',
+                                                                            backgroundPosition: 'right 4px center',
+                                                                            paddingRight: '16px'
                                                                         }}
                                                                     >
-                                                                        {risk.label}
-                                                                    </span>
+                                                                        <option value="auto">AUTO</option>
+                                                                        <option value="low">LOW</option>
+                                                                        <option value="medium">MEDIUM</option>
+                                                                        <option value="high">HIGH</option>
+                                                                        <option value="critical">CRITICAL</option>
+                                                                    </select>
                                                                 </td>
                                                             </tr>
                                                         );
