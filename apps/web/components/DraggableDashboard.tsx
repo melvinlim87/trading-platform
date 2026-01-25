@@ -146,13 +146,13 @@ export function DraggableDashboard({ cards: initialCards }: DraggableDashboardPr
                     >
                         {/* Header */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '14px' }}>{card.icon}</span>
-                            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '500' }}>{card.label}</span>
+                            <span style={{ fontSize: '16px' }}>{card.icon}</span>
+                            <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '500' }}>{card.label}</span>
                         </div>
 
                         {/* Value */}
                         <div style={{
-                            fontSize: '18px',
+                            fontSize: '20px',
                             fontWeight: '700',
                             color: card.color,
                             marginBottom: '4px',
@@ -166,7 +166,7 @@ export function DraggableDashboard({ cards: initialCards }: DraggableDashboardPr
 
                         {/* Sub Value */}
                         <div style={{
-                            fontSize: '10px',
+                            fontSize: '12px',
                             color: '#64748b',
                             lineHeight: 1.2,
                             whiteSpace: 'nowrap',
