@@ -587,6 +587,15 @@ export default function PortfolioPage() {
                     const cashPercentage = totalAssets > 0 ? (cashReserves / totalAssets) * 100 : 0;
                     const investedPercentage = totalAssets > 0 ? (totalMarginUsed / totalAssets) * 100 : 0;
 
+                    // Calculate total idle cash across all broker accounts
+                    const totalIdleCash = brokerAccounts.reduce((totalIdle, account) => {
+                        const brokerPositions = positions.filter(p => p.broker === account.brokerName);
+                        const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
+                        const idleCash = Math.max(0, account.totalBalance - activeValue);
+                        return totalIdle + idleCash;
+                    }, 0);
+                    const idleCashPercent = (totalIdleCash / brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0)) * 100 || 0;
+
                     const dashboardCards: CardData[] = [
                         {
                             id: 'portfolio-value',
@@ -597,12 +606,20 @@ export default function PortfolioPage() {
                             color: '#00d4ff'
                         },
                         {
-                            id: 'cash-reserves',
-                            label: 'Cash Reserves',
-                            value: `$${cashReserves.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                            subValue: `${cashPercentage.toFixed(1)}% of total assets`,
-                            icon: '🏦',
-                            color: '#06b6d4'
+                            id: 'idle-cash',
+                            label: 'Idle Cash',
+                            value: `$${totalIdleCash.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                            subValue: `${idleCashPercent.toFixed(1)}% uninvested • ${brokerAccounts.length} accounts`,
+                            icon: '💵',
+                            color: '#f59e0b'
+                        },
+                        {
+                            id: 'floating-pnl',
+                            label: 'Floating P&L',
+                            value: `${unrealizedPnL >= 0 ? '+' : ''}$${Math.abs(unrealizedPnL).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                            subValue: `${unrealizedPnL >= 0 ? '↑' : '↓'} ${Math.abs(totalReturnPercent).toFixed(2)}% unrealized`,
+                            icon: unrealizedPnL >= 0 ? '📈' : '📉',
+                            color: unrealizedPnL >= 0 ? '#10b981' : '#ef4444'
                         },
                         {
                             id: 'capital-invested',
@@ -627,6 +644,14 @@ export default function PortfolioPage() {
                             subValue: `${dailyChangePercent >= 0 ? '↑' : '↓'} ${Math.abs(dailyChangePercent).toFixed(2)}% today`,
                             icon: dailyChange >= 0 ? '🔥' : '❄️',
                             color: dailyChange >= 0 ? '#10b981' : '#ef4444'
+                        },
+                        {
+                            id: 'cash-reserves',
+                            label: 'Cash Reserves',
+                            value: `$${cashReserves.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                            subValue: `${cashPercentage.toFixed(1)}% of total assets`,
+                            icon: '🏦',
+                            color: '#06b6d4'
                         },
                     ];
 
