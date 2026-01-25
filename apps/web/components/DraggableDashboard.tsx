@@ -107,11 +107,11 @@ export function DraggableDashboard({ cards: initialCards }: DraggableDashboardPr
                 </button>
             </div>
 
-            {/* Cards Grid - Simple Flexbox */}
+            {/* Cards Grid - Compact 7-card layout */}
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                gap: '16px',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: '12px',
             }}>
                 {cards.map((card, index) => (
                     <div
@@ -121,8 +121,8 @@ export function DraggableDashboard({ cards: initialCards }: DraggableDashboardPr
                         onDragOver={(e) => handleDragOver(e, index)}
                         onDragEnd={handleDragEnd}
                         style={{
-                            padding: '20px',
-                            borderRadius: '12px',
+                            padding: '14px 12px',
+                            borderRadius: '10px',
                             background: 'linear-gradient(135deg, #0d1f3c 0%, #1e3a5f 100%)',
                             border: `1px solid ${draggedIndex === index ? glowColor : '#3f4f66'}`,
                             cursor: 'grab',
@@ -145,27 +145,33 @@ export function DraggableDashboard({ cards: initialCards }: DraggableDashboardPr
                         }}
                     >
                         {/* Header */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                            <span style={{ fontSize: '18px' }}>{card.icon}</span>
-                            <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '500' }}>{card.label}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '14px' }}>{card.icon}</span>
+                            <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '500' }}>{card.label}</span>
                         </div>
 
                         {/* Value */}
                         <div style={{
-                            fontSize: '26px',
+                            fontSize: '18px',
                             fontWeight: '700',
                             color: card.color,
-                            marginBottom: '8px',
-                            lineHeight: 1.1
+                            marginBottom: '4px',
+                            lineHeight: 1.1,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
                         }}>
                             {card.value}
                         </div>
 
                         {/* Sub Value */}
                         <div style={{
-                            fontSize: '12px',
-                            color: '#94a3b8',
-                            lineHeight: 1.3
+                            fontSize: '10px',
+                            color: '#64748b',
+                            lineHeight: 1.2,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
                         }}>
                             {card.subValue}
                         </div>
