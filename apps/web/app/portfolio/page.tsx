@@ -11,6 +11,7 @@ import { searchAssets, getAssetBySymbol, AssetInfo } from '@/lib/assetLibrary';
 import { PortfolioPerformanceChart, AnimatedValue, Sparkline, generateSparklineData } from '@/components/PortfolioCharts';
 import { PortfolioChatbox } from '@/components/PortfolioChatbox';
 import { DraggableDashboard, CardData } from '@/components/DraggableDashboard';
+import { DraggablePanels, PanelConfig } from '@/components/DraggablePanels';
 import Link from 'next/link';
 
 interface Position {
@@ -358,6 +359,9 @@ export default function PortfolioPage() {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisReport, setAnalysisReport] = useState<PortfolioAnalysisReport | null>(null);
     const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+    // Import history state
+    const [importHistory, setImportHistory] = useState<{ id: string; timestamp: Date; positions: number }[]>([]);
 
     // Fetch real prices on mount and every 30 seconds
     const fetchPrices = useCallback(async () => {
@@ -1002,6 +1006,163 @@ export default function PortfolioPage() {
                     );
                 })()}
 
+                {/* Draggable AI Tools Section */}
+                <div style={{ marginBottom: '24px' }}>
+                    <DraggablePanels
+                        storageKey="portfolio-ai-panels"
+                        panels={[
+                            {
+                                id: 'ai-analyst',
+                                title: 'AI Portfolio Analyst' + (analysisReport ? ` (Score: ${analysisReport.overallScore})` : ''),
+                                icon: '🤖',
+                                defaultExpanded: true,
+                                render: () => (
+                                    <div style={{ marginTop: '16px' }}>
+                                        {/* Generate Button */}
+                                        <div style={{ marginBottom: '16px' }}>
+                                            <button
+                                                onClick={runAnalysis}
+                                                disabled={isAnalyzing || positions.length === 0}
+                                                style={{
+                                                    padding: '12px 24px',
+                                                    borderRadius: '8px',
+                                                    backgroundColor: isAnalyzing ? '#3f4f66' : '#3b82f6',
+                                                    color: '#fff',
+                                                    border: 'none',
+                                                    cursor: isAnalyzing || positions.length === 0 ? 'not-allowed' : 'pointer',
+                                                    fontWeight: '600',
+                                                    fontSize: '14px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px'
+                                                }}
+                                            >
+                                                {isAnalyzing ? (<><span>⏳</span> Analyzing...</>) : (<>🔍 Analyze Portfolio</>)}
+                                            </button>
+                                        </div>
+
+                                        {/* Error Display */}
+                                        {analysisError && (
+                                            <div style={{ padding: '12px', backgroundColor: '#ef444422', borderRadius: '8px', color: '#ef4444', marginBottom: '16px' }}>⚠️ {analysisError}</div>
+                                        )}
+
+                                        {/* Analysis Report */}
+                                        {analysisReport && (
+                                            <div style={{ display: 'grid', gap: '16px' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '16px', alignItems: 'center' }}>
+                                                    <div style={{
+                                                        width: '100px', height: '100px', borderRadius: '50%',
+                                                        border: `6px solid ${analysisReport.overallScore >= 70 ? '#22c55e' : analysisReport.overallScore >= 50 ? '#eab308' : '#ef4444'}`,
+                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0a1628'
+                                                    }}>
+                                                        <span style={{ fontSize: '28px', fontWeight: '700', color: '#fff' }}>{analysisReport.overallScore}</span>
+                                                        <span style={{ fontSize: '11px', color: '#64748b' }}>{analysisReport.scoreLabel}</span>
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontSize: '14px', color: '#94a3b8', lineHeight: '1.5' }}>{analysisReport.summary}</div>
+                                                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '8px' }}>Generated: {new Date(analysisReport.generatedAt).toLocaleString()}</div>
+                                                    </div>
+                                                </div>
+                                                {analysisReport.riskAlerts.length > 0 && (
+                                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
+                                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>⚠️ Risk Alerts ({analysisReport.riskAlerts.length})</div>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                            {analysisReport.riskAlerts.map((alert, i) => (
+                                                                <div key={i} style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: alert.level === 'critical' ? '#ef444422' : '#f9731622', borderLeft: `3px solid ${alert.level === 'critical' ? '#ef4444' : '#f97316'}` }}>
+                                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{alert.symbol}</div>
+                                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{alert.reason}</div>
+                                                                    {alert.suggestion && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>💡 {alert.suggestion}</div>}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {analysisReport.newsAlerts.length > 0 && (
+                                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
+                                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>📰 News to Watch ({analysisReport.newsAlerts.length})</div>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                            {analysisReport.newsAlerts.map((news, i) => (
+                                                                <div key={i} style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#3b82f622', borderLeft: `3px solid ${news.impact === 'high' ? '#ef4444' : '#3b82f6'}` }}>
+                                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{news.symbol}</div>
+                                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{news.headline}</div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {analysisReport.recommendations.length > 0 && (
+                                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
+                                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>💡 Recommendations</div>
+                                                        <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                            {analysisReport.recommendations.map((rec, i) => (
+                                                                <li key={i} style={{ fontSize: '12px', color: '#94a3b8' }}>{rec}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Empty State */}
+                                        {!analysisReport && !isAnalyzing && !analysisError && (
+                                            <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
+                                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🤖</div>
+                                                <div style={{ fontSize: '14px' }}>Click "Analyze Portfolio" to get AI-powered insights</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            },
+                            {
+                                id: 'ai-chat',
+                                title: 'Portfolio Chat',
+                                icon: '💬',
+                                defaultExpanded: true,
+                                render: () => (
+                                    <div style={{ marginTop: '16px' }}>
+                                        <PortfolioChatbox
+                                            positions={positions.map(p => ({
+                                                symbol: p.symbol,
+                                                name: p.name || p.symbol,
+                                                quantity: p.quantity,
+                                                avgPrice: p.avgPrice,
+                                                currentPrice: p.currentPrice || p.avgPrice,
+                                                assetClass: p.assetClass || 'other',
+                                                positionType: p.positionType,
+                                                leverage: p.leverage
+                                            }))}
+                                            userName="Trader"
+                                            riskProfile="Moderate"
+                                            cashBalance={0}
+                                        />
+                                    </div>
+                                )
+                            },
+                            {
+                                id: 'import-history',
+                                title: 'Import History',
+                                icon: '📤',
+                                defaultExpanded: false,
+                                render: () => (
+                                    <div style={{ marginTop: '16px' }}>
+                                        {importHistory.length === 0 ? (
+                                            <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
+                                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📤</div>
+                                                <div style={{ fontSize: '14px' }}>No import history yet</div>
+                                                <div style={{ fontSize: '12px', marginTop: '4px' }}>Use AI Import to upload portfolio screenshots</div>
+                                            </div>
+                                        ) : (
+                                            <div style={{ fontSize: '13px', color: '#94a3b8' }}>
+                                                {importHistory.length} imports recorded
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            }
+                        ]}
+                    />
+                </div>
+
                 {/* Performance Charts Section - 2 Column Layout */}
                 <div style={{ marginBottom: '24px' }}>
                     <PortfolioPerformanceChart
@@ -1018,133 +1179,111 @@ export default function PortfolioPage() {
                     />
                 </div>
 
-                {/* AI Portfolio Chatbox + Broker Accounts - Side by Side */}
-                <div style={{ display: 'flex', gap: '24px', marginBottom: '24px' }}>
-                    {/* AI Portfolio Chatbox - Left Side */}
-                    <div style={{ flex: '1', minWidth: 0 }}>
-                        <PortfolioChatbox
-                            positions={positions.map(p => ({
-                                symbol: p.symbol,
-                                name: p.name || p.symbol,
-                                quantity: p.quantity,
-                                avgPrice: p.avgPrice,
-                                currentPrice: p.currentPrice || p.avgPrice,
-                                assetClass: p.assetClass || 'other',
-                                positionType: p.positionType,
-                                leverage: p.leverage
-                            }))}
-                            userName="Trader"
-                            riskProfile="Moderate"
-                            cashBalance={0}
-                        />
-                    </div>
-
-                    {/* Broker Accounts Summary - Right Side */}
-                    <div style={{ flex: '1', minWidth: 0 }}>
-                        <div
-                            onClick={() => setShowAccountsSection(!showAccountsSection)}
-                            style={{
-                                display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center',
-                                padding: '16px 20px', backgroundColor: '#0d1f3c', borderRadius: '8px',
-                                cursor: 'pointer', marginBottom: showAccountsSection ? '12px' : '0',
-                                boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11', gap: '16px'
-                            }}
-                        >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <span style={{ fontSize: '17px', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap' }}>🏦 Broker Accounts</span>
-                                <span style={{ fontSize: '14px', color: '#64748b', whiteSpace: 'nowrap' }}>({brokerAccounts.length})</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                                <span style={{ fontSize: '14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                                    Total: <span style={{ fontWeight: '600', color: '#fff' }}>${brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0).toLocaleString()}</span>
-                                </span>
-                                <span style={{ fontSize: '14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                                    Idle: <span style={{ fontWeight: '600', color: '#f59e0b' }}>
-                                        ${(() => {
-                                            return brokerAccounts.reduce((totalIdle, account) => {
-                                                const brokerPositions = positions.filter(p => p.broker === account.brokerName);
-                                                const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
-                                                const idleCash = Math.max(0, account.totalBalance - activeValue);
-                                                return totalIdle + idleCash;
-                                            }, 0).toLocaleString();
-                                        })()}
-                                    </span>
-                                </span>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setEditingAccount(null); setShowAccountModal(true); }}
-                                    style={{
-                                        padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: '600',
-                                        background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
-                                        color: '#fff', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap'
-                                    }}
-                                >
-                                    + Add
-                                </button>
-                                <span style={{ transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '12px' }}>▼</span>
-                            </div>
+                {/* Broker Accounts Section */}
+                <div style={{ marginBottom: '24px' }}>
+                    <div
+                        onClick={() => setShowAccountsSection(!showAccountsSection)}
+                        style={{
+                            display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '16px 20px', backgroundColor: '#0d1f3c', borderRadius: '8px',
+                            cursor: 'pointer', marginBottom: showAccountsSection ? '12px' : '0',
+                            boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11', gap: '16px'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ fontSize: '17px', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap' }}>🏦 Broker Accounts</span>
+                            <span style={{ fontSize: '14px', color: '#64748b', whiteSpace: 'nowrap' }}>({brokerAccounts.length})</span>
                         </div>
-
-                        {showAccountsSection && (
-                            <div style={{ backgroundColor: '#0d1f3c', borderRadius: '8px', padding: '12px', boxShadow: '0 0 15px #f59e0b15' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                                    <thead>
-                                        <tr style={{ color: '#64748b', fontSize: '11px' }}>
-                                            <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>BROKER</th>
-                                            <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>TOTAL BALANCE</th>
-                                            <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>ACTIVE POSITIONS</th>
-                                            <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>IDLE CASH</th>
-                                            <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>SOURCE</th>
-                                            <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>UPDATED</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {brokerAccounts.map(account => {
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                                Total: <span style={{ fontWeight: '600', color: '#fff' }}>${brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0).toLocaleString()}</span>
+                            </span>
+                            <span style={{ fontSize: '14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                                Idle: <span style={{ fontWeight: '600', color: '#f59e0b' }}>
+                                    ${(() => {
+                                        return brokerAccounts.reduce((totalIdle, account) => {
                                             const brokerPositions = positions.filter(p => p.broker === account.brokerName);
                                             const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
                                             const idleCash = Math.max(0, account.totalBalance - activeValue);
-                                            const idlePercent = account.totalBalance > 0 ? (idleCash / account.totalBalance * 100) : 0;
-
-                                            return (
-                                                <tr key={account.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
-                                                    <td style={{ padding: '10px 8px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <span style={{ fontWeight: '600', color: '#fff' }}>{account.brokerName}</span>
-                                                            {account.platform && <span style={{ fontSize: '11px', color: '#64748b' }}>({account.platform})</span>}
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ textAlign: 'right', padding: '10px 8px', fontWeight: '600', color: '#fff' }}>
-                                                        ${account.totalBalance.toLocaleString()}
-                                                    </td>
-                                                    <td style={{ textAlign: 'right', padding: '10px 8px', color: '#22c55e' }}>
-                                                        ${activeValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                                        <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>({brokerPositions.length} pos)</span>
-                                                    </td>
-                                                    <td style={{ textAlign: 'right', padding: '10px 8px' }}>
-                                                        <span style={{ color: idleCash > 0 ? '#f59e0b' : '#64748b', fontWeight: '600' }}>
-                                                            ${idleCash.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                                        </span>
-                                                        <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>({idlePercent.toFixed(0)}%)</span>
-                                                    </td>
-                                                    <td style={{ textAlign: 'center', padding: '10px 8px' }}>
-                                                        {account.verificationSource === 'api_linked' ? (
-                                                            <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#f59e0b22', color: '#f59e0b' }}>✓ API</span>
-                                                        ) : account.verificationSource === 'ai_import' ? (
-                                                            <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#22c55e22', color: '#22c55e' }}>✓ AI</span>
-                                                        ) : (
-                                                            <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#64748b22', color: '#94a3b8' }}>✎ Manual</span>
-                                                        )}
-                                                    </td>
-                                                    <td style={{ textAlign: 'center', padding: '10px 8px', fontSize: '11px', color: '#64748b' }}>
-                                                        {new Date(account.lastUpdated).toLocaleDateString()}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                                            return totalIdle + idleCash;
+                                        }, 0).toLocaleString();
+                                    })()}
+                                </span>
+                            </span>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setEditingAccount(null); setShowAccountModal(true); }}
+                                style={{
+                                    padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: '600',
+                                    background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
+                                    color: '#fff', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap'
+                                }}
+                            >
+                                + Add
+                            </button>
+                            <span style={{ transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '12px' }}>▼</span>
+                        </div>
                     </div>
+
+                    {showAccountsSection && (
+                        <div style={{ backgroundColor: '#0d1f3c', borderRadius: '8px', padding: '12px', boxShadow: '0 0 15px #f59e0b15' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                <thead>
+                                    <tr style={{ color: '#64748b', fontSize: '11px' }}>
+                                        <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>BROKER</th>
+                                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>TOTAL BALANCE</th>
+                                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>ACTIVE POSITIONS</th>
+                                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>IDLE CASH</th>
+                                        <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>SOURCE</th>
+                                        <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>UPDATED</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {brokerAccounts.map(account => {
+                                        const brokerPositions = positions.filter(p => p.broker === account.brokerName);
+                                        const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
+                                        const idleCash = Math.max(0, account.totalBalance - activeValue);
+                                        const idlePercent = account.totalBalance > 0 ? (idleCash / account.totalBalance * 100) : 0;
+
+                                        return (
+                                            <tr key={account.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
+                                                <td style={{ padding: '10px 8px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span style={{ fontWeight: '600', color: '#fff' }}>{account.brokerName}</span>
+                                                        {account.platform && <span style={{ fontSize: '11px', color: '#64748b' }}>({account.platform})</span>}
+                                                    </div>
+                                                </td>
+                                                <td style={{ textAlign: 'right', padding: '10px 8px', fontWeight: '600', color: '#fff' }}>
+                                                    ${account.totalBalance.toLocaleString()}
+                                                </td>
+                                                <td style={{ textAlign: 'right', padding: '10px 8px', color: '#22c55e' }}>
+                                                    ${activeValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                                    <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>({brokerPositions.length} pos)</span>
+                                                </td>
+                                                <td style={{ textAlign: 'right', padding: '10px 8px' }}>
+                                                    <span style={{ color: idleCash > 0 ? '#f59e0b' : '#64748b', fontWeight: '600' }}>
+                                                        ${idleCash.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                                    </span>
+                                                    <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>({idlePercent.toFixed(0)}%)</span>
+                                                </td>
+                                                <td style={{ textAlign: 'center', padding: '10px 8px' }}>
+                                                    {account.verificationSource === 'api_linked' ? (
+                                                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#f59e0b22', color: '#f59e0b' }}>✓ API</span>
+                                                    ) : account.verificationSource === 'ai_import' ? (
+                                                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#22c55e22', color: '#22c55e' }}>✓ AI</span>
+                                                    ) : (
+                                                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#64748b22', color: '#94a3b8' }}>✎ Manual</span>
+                                                    )}
+                                                </td>
+                                                <td style={{ textAlign: 'center', padding: '10px 8px', fontSize: '11px', color: '#64748b' }}>
+                                                    {new Date(account.lastUpdated).toLocaleDateString()}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
 
                 <div className="portfolio-main-grid">
@@ -1610,298 +1749,117 @@ export default function PortfolioPage() {
                         </form>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* Edit Position Modal */}
-            {showEditModal && editingPosition && (
-                <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-                    <div style={{ backgroundColor: '#0d1f3c', borderRadius: '16px', padding: '24px', width: '420px', border: '1px solid #1e3a5f' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>✏️ Edit Position - {editingPosition.symbol}</h3>
-                            <button onClick={() => { setShowEditModal(false); setEditingPosition(null); }} style={{ fontSize: '24px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div>
-                                <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Quantity</label>
-                                <input
-                                    type="number"
-                                    value={editingPosition.quantity}
-                                    onChange={(e) => setEditingPosition({ ...editingPosition, quantity: parseFloat(e.target.value) || 0 })}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f33', border: '1px solid #3f4f66', color: '#fff', fontSize: '14px' }}
-                                />
+            {
+                showEditModal && editingPosition && (
+                    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+                        <div style={{ backgroundColor: '#0d1f3c', borderRadius: '16px', padding: '24px', width: '420px', border: '1px solid #1e3a5f' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>✏️ Edit Position - {editingPosition.symbol}</h3>
+                                <button onClick={() => { setShowEditModal(false); setEditingPosition(null); }} style={{ fontSize: '24px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
                             </div>
-                            <div>
-                                <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Entry Price</label>
-                                <input
-                                    type="number"
-                                    value={editingPosition.avgPrice}
-                                    onChange={(e) => setEditingPosition({ ...editingPosition, avgPrice: parseFloat(e.target.value) || 0 })}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f33', border: '1px solid #3f4f66', color: '#fff', fontSize: '14px' }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Leverage</label>
-                                <input
-                                    type="number"
-                                    value={editingPosition.leverage || 1}
-                                    onChange={(e) => setEditingPosition({ ...editingPosition, leverage: parseFloat(e.target.value) || 1 })}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f33', border: '1px solid #3f4f66', color: '#fff', fontSize: '14px' }}
-                                />
-                            </div>
-                            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                                <button onClick={() => { setShowEditModal(false); setEditingPosition(null); }} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3f4f66', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
-                                <button onClick={handleSaveEdit} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Save Changes</button>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div>
+                                    <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Quantity</label>
+                                    <input
+                                        type="number"
+                                        value={editingPosition.quantity}
+                                        onChange={(e) => setEditingPosition({ ...editingPosition, quantity: parseFloat(e.target.value) || 0 })}
+                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f33', border: '1px solid #3f4f66', color: '#fff', fontSize: '14px' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Entry Price</label>
+                                    <input
+                                        type="number"
+                                        value={editingPosition.avgPrice}
+                                        onChange={(e) => setEditingPosition({ ...editingPosition, avgPrice: parseFloat(e.target.value) || 0 })}
+                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f33', border: '1px solid #3f4f66', color: '#fff', fontSize: '14px' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Leverage</label>
+                                    <input
+                                        type="number"
+                                        value={editingPosition.leverage || 1}
+                                        onChange={(e) => setEditingPosition({ ...editingPosition, leverage: parseFloat(e.target.value) || 1 })}
+                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f33', border: '1px solid #3f4f66', color: '#fff', fontSize: '14px' }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                                    <button onClick={() => { setShowEditModal(false); setEditingPosition(null); }} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3f4f66', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+                                    <button onClick={handleSaveEdit} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Save Changes</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Confirm Close Position Dialog */}
-            {showConfirmClose && (
-                <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-                    <div style={{ backgroundColor: '#0d1f3c', borderRadius: '16px', padding: '24px', width: '380px', border: '1px solid #1e3a5f' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', marginBottom: '16px' }}>✓ Close Position</h3>
-                        <p style={{ color: '#94a3b8', marginBottom: '16px' }}>
-                            Are you sure you want to close this position? This will record the realized P&L in your trade history.
-                        </p>
-                        {(() => {
-                            const pos = positions.find(p => p.id === showConfirmClose);
-                            if (!pos) return null;
-                            const pnl = pos.assetClass === 'forex' && pos.lotSize !== undefined
-                                ? getForexPnL(pos)
-                                : (pos.currentPrice - pos.avgPrice) * pos.quantity;
-                            return (
-                                <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: pnl >= 0 ? '#22c55e22' : '#ef444422', marginBottom: '16px' }}>
-                                    <div style={{ color: '#94a3b8', fontSize: '12px' }}>{pos.symbol}</div>
-                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: pnl >= 0 ? '#22c55e' : '#ef4444' }}>
-                                        {pnl >= 0 ? '+' : ''}${pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {
+                showConfirmClose && (
+                    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+                        <div style={{ backgroundColor: '#0d1f3c', borderRadius: '16px', padding: '24px', width: '380px', border: '1px solid #1e3a5f' }}>
+                            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', marginBottom: '16px' }}>✓ Close Position</h3>
+                            <p style={{ color: '#94a3b8', marginBottom: '16px' }}>
+                                Are you sure you want to close this position? This will record the realized P&L in your trade history.
+                            </p>
+                            {(() => {
+                                const pos = positions.find(p => p.id === showConfirmClose);
+                                if (!pos) return null;
+                                const pnl = pos.assetClass === 'forex' && pos.lotSize !== undefined
+                                    ? getForexPnL(pos)
+                                    : (pos.currentPrice - pos.avgPrice) * pos.quantity;
+                                return (
+                                    <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: pnl >= 0 ? '#22c55e22' : '#ef444422', marginBottom: '16px' }}>
+                                        <div style={{ color: '#94a3b8', fontSize: '12px' }}>{pos.symbol}</div>
+                                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: pnl >= 0 ? '#22c55e' : '#ef4444' }}>
+                                            {pnl >= 0 ? '+' : ''}${pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </div>
                                     </div>
-                                </div>
-                            );
-                        })()}
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                            <button onClick={() => setShowConfirmClose(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3f4f66', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
-                            <button onClick={() => handleClosePosition(showConfirmClose)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Close Position</button>
+                                );
+                            })()}
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button onClick={() => setShowConfirmClose(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3f4f66', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+                                <button onClick={() => handleClosePosition(showConfirmClose)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Close Position</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Confirm Delete Position Dialog */}
-            {showConfirmDelete && (
-                <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-                    <div style={{ backgroundColor: '#0d1f3c', borderRadius: '16px', padding: '24px', width: '380px', border: '1px solid #1e3a5f' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ef4444', marginBottom: '16px' }}>🗑️ Delete Position</h3>
-                        <p style={{ color: '#94a3b8', marginBottom: '16px' }}>
-                            Are you sure you want to delete this position? This is typically for erroneous entries.
-                            <strong style={{ color: '#f59e0b' }}> No P&L will be recorded.</strong>
-                        </p>
-                        {(() => {
-                            const pos = positions.find(p => p.id === showConfirmDelete);
-                            if (!pos) return null;
-                            return (
-                                <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ef444422', marginBottom: '16px' }}>
-                                    <div style={{ color: '#94a3b8', fontSize: '12px' }}>{pos.symbol}</div>
-                                    <div style={{ fontSize: '14px', color: '#fff' }}>{pos.quantity} @ ${pos.avgPrice.toFixed(2)}</div>
-                                </div>
-                            );
-                        })()}
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                            <button onClick={() => setShowConfirmDelete(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3f4f66', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
-                            <button onClick={() => handleDeletePosition(showConfirmDelete)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Delete</button>
+            {
+                showConfirmDelete && (
+                    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+                        <div style={{ backgroundColor: '#0d1f3c', borderRadius: '16px', padding: '24px', width: '380px', border: '1px solid #1e3a5f' }}>
+                            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ef4444', marginBottom: '16px' }}>🗑️ Delete Position</h3>
+                            <p style={{ color: '#94a3b8', marginBottom: '16px' }}>
+                                Are you sure you want to delete this position? This is typically for erroneous entries.
+                                <strong style={{ color: '#f59e0b' }}> No P&L will be recorded.</strong>
+                            </p>
+                            {(() => {
+                                const pos = positions.find(p => p.id === showConfirmDelete);
+                                if (!pos) return null;
+                                return (
+                                    <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ef444422', marginBottom: '16px' }}>
+                                        <div style={{ color: '#94a3b8', fontSize: '12px' }}>{pos.symbol}</div>
+                                        <div style={{ fontSize: '14px', color: '#fff' }}>{pos.quantity} @ ${pos.avgPrice.toFixed(2)}</div>
+                                    </div>
+                                );
+                            })()}
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button onClick={() => setShowConfirmDelete(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3f4f66', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+                                <button onClick={() => handleDeletePosition(showConfirmDelete)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Delete</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* AI Portfolio Analyst Panel */}
-            <div style={{ marginTop: '24px', backgroundColor: '#0d1f3c', borderRadius: '12px', border: '1px solid #1e3a5f', overflow: 'hidden' }}>
-                <div
-                    onClick={() => setShowAnalyst(!showAnalyst)}
-                    style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', backgroundColor: '#0d1f3c' }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '18px' }}>🤖</span>
-                        <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>AI Portfolio Analyst</span>
-                        {analysisReport && (
-                            <span style={{
-                                padding: '2px 8px',
-                                borderRadius: '12px',
-                                fontSize: '12px',
-                                fontWeight: '600',
-                                backgroundColor: analysisReport.overallScore >= 70 ? '#22c55e33' : analysisReport.overallScore >= 50 ? '#eab30833' : '#ef444433',
-                                color: analysisReport.overallScore >= 70 ? '#22c55e' : analysisReport.overallScore >= 50 ? '#eab308' : '#ef4444'
-                            }}>
-                                Score: {analysisReport.overallScore}
-                            </span>
-                        )}
-                    </div>
-                    <span style={{ color: '#64748b', transition: 'transform 0.2s', transform: showAnalyst ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
-                </div>
-
-                {showAnalyst && (
-                    <div style={{ padding: '0 20px 20px', borderTop: '1px solid #1e3a5f33' }}>
-                        {/* Generate Button */}
-                        <div style={{ marginTop: '16px', marginBottom: '16px' }}>
-                            <button
-                                onClick={runAnalysis}
-                                disabled={isAnalyzing || positions.length === 0}
-                                style={{
-                                    padding: '12px 24px',
-                                    borderRadius: '8px',
-                                    backgroundColor: isAnalyzing ? '#3f4f66' : '#3b82f6',
-                                    color: '#fff',
-                                    border: 'none',
-                                    cursor: isAnalyzing || positions.length === 0 ? 'not-allowed' : 'pointer',
-                                    fontWeight: '600',
-                                    fontSize: '14px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px'
-                                }}
-                            >
-                                {isAnalyzing ? (
-                                    <>
-                                        <span style={{ animation: 'spin 1s linear infinite' }}>⏳</span>
-                                        Analyzing...
-                                    </>
-                                ) : (
-                                    <>🔍 Analyze Portfolio</>
-                                )}
-                            </button>
-                        </div>
-
-                        {/* Error Display */}
-                        {analysisError && (
-                            <div style={{ padding: '12px', backgroundColor: '#ef444422', borderRadius: '8px', color: '#ef4444', marginBottom: '16px' }}>
-                                ⚠️ {analysisError}
-                            </div>
-                        )}
-
-                        {/* Analysis Report */}
-                        {analysisReport && (
-                            <div style={{ display: 'grid', gap: '16px' }}>
-                                {/* Score & Summary */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '16px', alignItems: 'center' }}>
-                                    <div style={{
-                                        width: '100px',
-                                        height: '100px',
-                                        borderRadius: '50%',
-                                        border: `6px solid ${analysisReport.overallScore >= 70 ? '#22c55e' : analysisReport.overallScore >= 50 ? '#eab308' : '#ef4444'}`,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        backgroundColor: '#0a1628'
-                                    }}>
-                                        <span style={{ fontSize: '28px', fontWeight: '700', color: '#fff' }}>{analysisReport.overallScore}</span>
-                                        <span style={{ fontSize: '11px', color: '#64748b' }}>{analysisReport.scoreLabel}</span>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: '14px', color: '#94a3b8', lineHeight: '1.5' }}>{analysisReport.summary}</div>
-                                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '8px' }}>
-                                            Generated: {new Date(analysisReport.generatedAt).toLocaleString()}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Risk Alerts */}
-                                {analysisReport.riskAlerts.length > 0 && (
-                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
-                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            ⚠️ Risk Alerts ({analysisReport.riskAlerts.length})
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            {analysisReport.riskAlerts.map((alert, i) => (
-                                                <div key={i} style={{
-                                                    padding: '8px 12px',
-                                                    borderRadius: '6px',
-                                                    backgroundColor: alert.level === 'critical' ? '#ef444422' : alert.level === 'high' ? '#f9731622' : '#eab30822',
-                                                    borderLeft: `3px solid ${alert.level === 'critical' ? '#ef4444' : alert.level === 'high' ? '#f97316' : '#eab308'}`
-                                                }}>
-                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{alert.symbol}</div>
-                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{alert.reason}</div>
-                                                    {alert.suggestion && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>💡 {alert.suggestion}</div>}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* News Alerts */}
-                                {analysisReport.newsAlerts.length > 0 && (
-                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
-                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            📰 News to Watch ({analysisReport.newsAlerts.length})
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            {analysisReport.newsAlerts.map((news, i) => (
-                                                <div key={i} style={{
-                                                    padding: '8px 12px',
-                                                    borderRadius: '6px',
-                                                    backgroundColor: '#3b82f622',
-                                                    borderLeft: `3px solid ${news.impact === 'high' ? '#ef4444' : news.impact === 'medium' ? '#eab308' : '#3b82f6'}`
-                                                }}>
-                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{news.symbol}</div>
-                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{news.headline}</div>
-                                                    {news.timeframe && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>🕐 {news.timeframe}</div>}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Overtrading Warnings */}
-                                {analysisReport.overtradingWarnings.length > 0 && (
-                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
-                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            🔄 Overtrading Warnings ({analysisReport.overtradingWarnings.length})
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            {analysisReport.overtradingWarnings.map((warn, i) => (
-                                                <div key={i} style={{
-                                                    padding: '8px 12px',
-                                                    borderRadius: '6px',
-                                                    backgroundColor: '#8b5cf622',
-                                                    borderLeft: '3px solid #8b5cf6'
-                                                }}>
-                                                    {warn.symbol && <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{warn.symbol}</div>}
-                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{warn.warning}</div>
-                                                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>💡 {warn.suggestion}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Recommendations */}
-                                {analysisReport.recommendations.length > 0 && (
-                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
-                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            💡 Recommendations
-                                        </div>
-                                        <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            {analysisReport.recommendations.map((rec, i) => (
-                                                <li key={i} style={{ fontSize: '12px', color: '#94a3b8' }}>{rec}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Empty State */}
-                        {!analysisReport && !isAnalyzing && !analysisError && (
-                            <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
-                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🤖</div>
-                                <div style={{ fontSize: '14px' }}>Click "Analyze Portfolio" to get AI-powered insights</div>
-                                <div style={{ fontSize: '12px', marginTop: '4px' }}>Risk assessment • News alerts • Trading recommendations</div>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
+                )
+            }
 
             {/* Trade History Panel */}
             <div style={{ marginTop: '24px', backgroundColor: '#0d1f3c', borderRadius: '12px', border: '1px solid #1e3a5f', overflow: 'hidden' }}>
@@ -2017,497 +1975,501 @@ export default function PortfolioPage() {
             </div>
 
             {/* AI Import Modal */}
-            {showUploadModal && (
-                <div className="modal-overlay">
-                    <div className="ai-import-modal" style={{ backgroundColor: '#0d1f3c', borderRadius: '16px' }}>
-                        <div style={{ padding: '24px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>📸 AI Portfolio Import</h3>
-                                <button onClick={resetUpload} style={{ fontSize: '24px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
-                            </div>
+            {
+                showUploadModal && (
+                    <div className="modal-overlay">
+                        <div className="ai-import-modal" style={{ backgroundColor: '#0d1f3c', borderRadius: '16px' }}>
+                            <div style={{ padding: '24px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                    <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>📸 AI Portfolio Import</h3>
+                                    <button onClick={resetUpload} style={{ fontSize: '24px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                                </div>
 
-                            {uploadStatus === 'idle' && (
-                                <>
-                                    <p style={{ fontSize: '14px', marginBottom: '16px', color: '#64748b' }}>
-                                        Upload a screenshot of your portfolio from another broker. Our AI (Qwen 2.5 VL via OpenRouter) will extract the positions automatically.
-                                    </p>
-                                    <div
-                                        onDragOver={handleDragOver}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={handleDrop}
-                                        style={{
-                                            border: `2px dashed ${isDragging ? '#00d4ff' : '#3f4f66'}`,
-                                            borderRadius: '12px',
-                                            padding: '32px',
-                                            textAlign: 'center',
-                                            backgroundColor: isDragging ? 'rgba(0,212,255,0.1)' : 'transparent',
-                                            transition: 'all 0.2s'
-                                        }}
-                                    >
-                                        {uploadPreview ? (
-                                            <div>
-                                                <img src={uploadPreview} alt="Preview" style={{ maxHeight: '160px', margin: '0 auto', borderRadius: '8px', marginBottom: '16px' }} />
-                                                <button onClick={() => { setUploadFile(null); setUploadPreview(''); }} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>Remove</button>
-                                            </div>
-                                        ) : (
-                                            <div>
-                                                <p style={{ fontSize: '32px', marginBottom: '8px' }}>📤</p>
-                                                <p style={{ marginBottom: '12px', color: '#e2e8f0' }}>Drag and drop screenshot</p>
-                                                <label style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'inline-block', backgroundColor: '#1e3a5f', color: '#fff' }}>
-                                                    Browse
-                                                    <input type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
-                                                </label>
+                                {uploadStatus === 'idle' && (
+                                    <>
+                                        <p style={{ fontSize: '14px', marginBottom: '16px', color: '#64748b' }}>
+                                            Upload a screenshot of your portfolio from another broker. Our AI (Qwen 2.5 VL via OpenRouter) will extract the positions automatically.
+                                        </p>
+                                        <div
+                                            onDragOver={handleDragOver}
+                                            onDragLeave={handleDragLeave}
+                                            onDrop={handleDrop}
+                                            style={{
+                                                border: `2px dashed ${isDragging ? '#00d4ff' : '#3f4f66'}`,
+                                                borderRadius: '12px',
+                                                padding: '32px',
+                                                textAlign: 'center',
+                                                backgroundColor: isDragging ? 'rgba(0,212,255,0.1)' : 'transparent',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            {uploadPreview ? (
+                                                <div>
+                                                    <img src={uploadPreview} alt="Preview" style={{ maxHeight: '160px', margin: '0 auto', borderRadius: '8px', marginBottom: '16px' }} />
+                                                    <button onClick={() => { setUploadFile(null); setUploadPreview(''); }} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>Remove</button>
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <p style={{ fontSize: '32px', marginBottom: '8px' }}>📤</p>
+                                                    <p style={{ marginBottom: '12px', color: '#e2e8f0' }}>Drag and drop screenshot</p>
+                                                    <label style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'inline-block', backgroundColor: '#1e3a5f', color: '#fff' }}>
+                                                        Browse
+                                                        <input type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
+                                                    </label>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {uploadFile && (
+                                            <button onClick={handleUpload} style={{ width: '100%', marginTop: '16px', padding: '12px', borderRadius: '8px', fontWeight: '500', backgroundColor: '#00d4ff', color: '#0a1628', border: 'none', cursor: 'pointer' }}>
+                                                🤖 Extract with AI
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+
+                                {uploadStatus === 'uploading' && (
+                                    <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                                        <div style={{ fontSize: '32px', marginBottom: '16px', animation: 'spin 1s linear infinite' }}>⚙️</div>
+                                        <p style={{ color: '#e2e8f0' }}>AI is analyzing your screenshot...</p>
+                                        <p style={{ fontSize: '12px', marginTop: '8px', color: '#64748b' }}>Using Qwen 2.5 VL via OpenRouter</p>
+                                    </div>
+                                )}
+
+                                {uploadStatus === 'error' && (
+                                    <div style={{ padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: 'rgba(239,68,68,0.2)', border: '1px solid #ef4444' }}>
+                                        <p style={{ color: '#ef4444' }}>{uploadError}</p>
+                                        <button onClick={() => setUploadStatus('idle')} style={{ textDecoration: 'underline', marginTop: '8px', color: '#fff', background: 'none', border: 'none', cursor: 'pointer' }}>Try Again</button>
+                                    </div>
+                                )}
+
+                                {uploadStatus === 'extracted' && (
+                                    <>
+                                        <p style={{ fontSize: '12px', marginBottom: '10px', color: '#64748b' }}>Review extracted positions:</p>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '350px', overflowY: 'auto' }}>
+                                            {extractedPositions.map((pos, idx) => {
+                                                const selectedClass = assetClassOptions.find(o => o.value === pos.assetClass) || assetClassOptions[2];
+                                                const isOption = pos.positionType === 'option';
+                                                return (
+                                                    <div key={idx} style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f', borderLeft: `3px solid ${selectedClass.color}` }}>
+                                                        {/* Row 1: Symbol, Qty, Entry Price, Category */}
+                                                        <div className="position-grid-row1" style={{ marginBottom: '8px' }}>
+                                                            <div>
+                                                                <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Symbol</label>
+                                                                <input value={pos.symbol} onChange={e => updateExtractedPosition(idx, 'symbol', e.target.value)}
+                                                                    style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', fontWeight: '600', width: '100%' }} />
+                                                            </div>
+                                                            <div>
+                                                                <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Qty</label>
+                                                                <input type="number" value={pos.quantity} onChange={e => updateExtractedPosition(idx, 'quantity', e.target.value)}
+                                                                    style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', textAlign: 'right', width: '100%' }} />
+                                                            </div>
+                                                            <div>
+                                                                <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Entry $</label>
+                                                                <input type="number" value={pos.avgPrice} onChange={e => updateExtractedPosition(idx, 'avgPrice', e.target.value)}
+                                                                    style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', textAlign: 'right', width: '100%' }} />
+                                                            </div>
+                                                            <div>
+                                                                <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Category</label>
+                                                                <select value={pos.assetClass || 'stock'} onChange={e => updateExtractedPosition(idx, 'assetClass', e.target.value)}
+                                                                    style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: selectedClass.color, border: `1px solid ${selectedClass.color}40`, cursor: 'pointer', width: '100%' }}>
+                                                                    {assetClassOptions.map(opt => (<option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        {/* Row 2: Broker, Platform, Expiry (if option) */}
+                                                        <div className={`position-grid-row2 ${isOption ? 'with-expiry' : ''}`}>
+                                                            <div>
+                                                                <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Broker</label>
+                                                                <select value={pos.broker || ''} onChange={e => updateExtractedPosition(idx, 'broker', e.target.value)}
+                                                                    style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', cursor: 'pointer', width: '100%' }}>
+                                                                    <option value="">Select Broker</option>
+                                                                    <option value="ibkr">IBKR</option>
+                                                                    <option value="td_ameritrade">TD Ameritrade</option>
+                                                                    <option value="fidelity">Fidelity</option>
+                                                                    <option value="schwab">Schwab</option>
+                                                                    <option value="etrade">E*TRADE</option>
+                                                                    <option value="robinhood">Robinhood</option>
+                                                                    <option value="webull">Webull</option>
+                                                                    <option value="binance">Binance</option>
+                                                                    <option value="coinbase">Coinbase</option>
+                                                                    <option value="kraken">Kraken</option>
+                                                                    <option value="oanda">OANDA</option>
+                                                                    <option value="ig">IG</option>
+                                                                    <option value="saxo">Saxo</option>
+                                                                    <option value="tiger">Tiger</option>
+                                                                    <option value="moomoo">Moomoo</option>
+                                                                    <option value="other">Other</option>
+                                                                </select>
+                                                            </div>
+                                                            <div>
+                                                                <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Platform</label>
+                                                                <select value={pos.platform || ''} onChange={e => updateExtractedPosition(idx, 'platform', e.target.value)}
+                                                                    style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', cursor: 'pointer', width: '100%' }}>
+                                                                    <option value="">Select Platform</option>
+                                                                    <option value="tws">TWS</option>
+                                                                    <option value="thinkorswim">thinkorSwim</option>
+                                                                    <option value="mt4">MT4</option>
+                                                                    <option value="mt5">MT5</option>
+                                                                    <option value="tradingview">TradingView</option>
+                                                                    <option value="mobile">Mobile App</option>
+                                                                    <option value="web">Web</option>
+                                                                    <option value="other">Other</option>
+                                                                </select>
+                                                            </div>
+                                                            {isOption && (
+                                                                <div>
+                                                                    <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Expiry</label>
+                                                                    <input type="date" value={pos.expiry || ''} onChange={e => updateExtractedPosition(idx, 'expiry', e.target.value)}
+                                                                        style={{ padding: '5px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%' }} />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        {/* Option toggle */}
+                                                        <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <label style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                                                                <input type="checkbox" checked={pos.positionType === 'option'} onChange={e => updateExtractedPosition(idx, 'positionType', e.target.checked ? 'option' : 'long')}
+                                                                    style={{ accentColor: '#22c55e' }} />
+                                                                <span>This is an Option</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
+                                            <button onClick={resetUpload} style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#1e3a5f', color: '#fff', border: 'none', cursor: 'pointer' }}>Cancel</button>
+                                            <button onClick={handleConfirmImport} style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', backgroundColor: '#00d4ff', color: '#0a1628', border: 'none', cursor: 'pointer' }}>
+                                                Import {extractedPositions.length} Positions
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Manual Position Entry Modal */}
+            {
+                showManualModal && (
+                    <div className="modal-overlay">
+                        <div className="ai-import-modal" style={{ backgroundColor: '#0d1f3c', borderRadius: '16px' }}>
+                            <div style={{ padding: '24px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                    <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>➕ Add New Position</h3>
+                                    <button onClick={resetManualPosition} style={{ fontSize: '24px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                                </div>
+
+                                <p style={{ fontSize: '14px', marginBottom: '20px', color: '#64748b' }}>
+                                    Manually add a position to your portfolio.
+                                </p>
+
+                                {/* Row 1: Category, Position Type */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                    <div>
+                                        <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Category *</label>
+                                        <select
+                                            value={manualPosition.assetClass}
+                                            onChange={e => updateManualPosition('assetClass', e.target.value)}
+                                            style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                        >
+                                            {assetClassOptions.map(opt => (
+                                                <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
+                                            ))}
+                                            <option value="other">📝 Other</option>
+                                        </select>
+                                        {manualPosition.assetClass === 'other' && (
+                                            <input
+                                                value={manualPosition.customAssetClass || ''}
+                                                onChange={e => updateManualPosition('customAssetClass', e.target.value)}
+                                                placeholder="Enter custom category..."
+                                                style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                            />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Position Type</label>
+                                        <select
+                                            value={manualPosition.positionType}
+                                            onChange={e => updateManualPosition('positionType', e.target.value)}
+                                            style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                        >
+                                            <option value="long">📈 Long</option>
+                                            <option value="short">📉 Short</option>
+                                            <option value="spot">💰 Spot</option>
+                                            <option value="perpetual">♾️ Perpetual</option>
+                                            <option value="option">📋 Option</option>
+                                            <option value="other">📝 Other</option>
+                                        </select>
+                                        {manualPosition.positionType === 'other' && (
+                                            <input
+                                                value={manualPosition.customPositionType || ''}
+                                                onChange={e => updateManualPosition('customPositionType', e.target.value)}
+                                                placeholder="Enter custom type..."
+                                                style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Row 2: Symbol, Name */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                    <div style={{ position: 'relative' }}>
+                                        <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Symbol * (Search or type)</label>
+                                        <input
+                                            ref={symbolInputRef}
+                                            value={manualPosition.symbol}
+                                            onChange={e => updateManualPosition('symbol', e.target.value)}
+                                            onFocus={() => {
+                                                if (manualPosition.symbol.length > 0) {
+                                                    const suggestions = searchAssets(manualPosition.symbol, manualPosition.assetClass !== 'other' ? manualPosition.assetClass : undefined);
+                                                    setSymbolSuggestions(suggestions);
+                                                    setShowSymbolSuggestions(suggestions.length > 0);
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                // Delay to allow click on suggestion
+                                                setTimeout(() => setShowSymbolSuggestions(false), 200);
+                                            }}
+                                            placeholder="Type to search AAPL, BTC, EUR..."
+                                            autoComplete="off"
+                                            style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', fontWeight: '600' }}
+                                        />
+                                        {/* Autocomplete Suggestions Dropdown */}
+                                        {showSymbolSuggestions && symbolSuggestions.length > 0 && (
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '100%',
+                                                left: 0,
+                                                right: 0,
+                                                backgroundColor: '#0d1f3c',
+                                                border: '1px solid #3f4f66',
+                                                borderRadius: '6px',
+                                                marginTop: '4px',
+                                                maxHeight: '200px',
+                                                overflowY: 'auto',
+                                                zIndex: 100,
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                                            }}>
+                                                {symbolSuggestions.map((asset, idx) => (
+                                                    <div
+                                                        key={`${asset.symbol}-${idx}`}
+                                                        onClick={() => selectAssetSuggestion(asset)}
+                                                        style={{
+                                                            padding: '10px 12px',
+                                                            cursor: 'pointer',
+                                                            borderBottom: idx < symbolSuggestions.length - 1 ? '1px solid #1e3a5f' : 'none',
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center'
+                                                        }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                    >
+                                                        <div>
+                                                            <span style={{ fontWeight: '600', color: '#fff' }}>{asset.symbol}</span>
+                                                            <span style={{ marginLeft: '8px', color: '#94a3b8', fontSize: '12px' }}>{asset.name}</span>
+                                                        </div>
+                                                        <span style={{
+                                                            fontSize: '10px',
+                                                            padding: '2px 6px',
+                                                            borderRadius: '4px',
+                                                            backgroundColor: asset.assetClass === 'stock' ? '#3b82f622' :
+                                                                asset.assetClass === 'crypto' ? '#f59e0b22' :
+                                                                    asset.assetClass === 'forex' ? '#10b98122' :
+                                                                        asset.assetClass === 'etf' ? '#ec489922' : '#a855f722',
+                                                            color: asset.assetClass === 'stock' ? '#3b82f6' :
+                                                                asset.assetClass === 'crypto' ? '#f59e0b' :
+                                                                    asset.assetClass === 'forex' ? '#10b981' :
+                                                                        asset.assetClass === 'etf' ? '#ec4899' : '#a855f7'
+                                                        }}>
+                                                            {asset.assetClass}
+                                                        </span>
+                                                    </div>
+                                                ))}
                                             </div>
                                         )}
                                     </div>
-                                    {uploadFile && (
-                                        <button onClick={handleUpload} style={{ width: '100%', marginTop: '16px', padding: '12px', borderRadius: '8px', fontWeight: '500', backgroundColor: '#00d4ff', color: '#0a1628', border: 'none', cursor: 'pointer' }}>
-                                            🤖 Extract with AI
-                                        </button>
-                                    )}
-                                </>
-                            )}
-
-                            {uploadStatus === 'uploading' && (
-                                <div style={{ textAlign: 'center', padding: '32px 0' }}>
-                                    <div style={{ fontSize: '32px', marginBottom: '16px', animation: 'spin 1s linear infinite' }}>⚙️</div>
-                                    <p style={{ color: '#e2e8f0' }}>AI is analyzing your screenshot...</p>
-                                    <p style={{ fontSize: '12px', marginTop: '8px', color: '#64748b' }}>Using Qwen 2.5 VL via OpenRouter</p>
-                                </div>
-                            )}
-
-                            {uploadStatus === 'error' && (
-                                <div style={{ padding: '16px', borderRadius: '8px', marginBottom: '16px', backgroundColor: 'rgba(239,68,68,0.2)', border: '1px solid #ef4444' }}>
-                                    <p style={{ color: '#ef4444' }}>{uploadError}</p>
-                                    <button onClick={() => setUploadStatus('idle')} style={{ textDecoration: 'underline', marginTop: '8px', color: '#fff', background: 'none', border: 'none', cursor: 'pointer' }}>Try Again</button>
-                                </div>
-                            )}
-
-                            {uploadStatus === 'extracted' && (
-                                <>
-                                    <p style={{ fontSize: '12px', marginBottom: '10px', color: '#64748b' }}>Review extracted positions:</p>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '350px', overflowY: 'auto' }}>
-                                        {extractedPositions.map((pos, idx) => {
-                                            const selectedClass = assetClassOptions.find(o => o.value === pos.assetClass) || assetClassOptions[2];
-                                            const isOption = pos.positionType === 'option';
-                                            return (
-                                                <div key={idx} style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f', borderLeft: `3px solid ${selectedClass.color}` }}>
-                                                    {/* Row 1: Symbol, Qty, Entry Price, Category */}
-                                                    <div className="position-grid-row1" style={{ marginBottom: '8px' }}>
-                                                        <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Symbol</label>
-                                                            <input value={pos.symbol} onChange={e => updateExtractedPosition(idx, 'symbol', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', fontWeight: '600', width: '100%' }} />
-                                                        </div>
-                                                        <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Qty</label>
-                                                            <input type="number" value={pos.quantity} onChange={e => updateExtractedPosition(idx, 'quantity', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', textAlign: 'right', width: '100%' }} />
-                                                        </div>
-                                                        <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Entry $</label>
-                                                            <input type="number" value={pos.avgPrice} onChange={e => updateExtractedPosition(idx, 'avgPrice', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '12px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', textAlign: 'right', width: '100%' }} />
-                                                        </div>
-                                                        <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Category</label>
-                                                            <select value={pos.assetClass || 'stock'} onChange={e => updateExtractedPosition(idx, 'assetClass', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: selectedClass.color, border: `1px solid ${selectedClass.color}40`, cursor: 'pointer', width: '100%' }}>
-                                                                {assetClassOptions.map(opt => (<option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>))}
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    {/* Row 2: Broker, Platform, Expiry (if option) */}
-                                                    <div className={`position-grid-row2 ${isOption ? 'with-expiry' : ''}`}>
-                                                        <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Broker</label>
-                                                            <select value={pos.broker || ''} onChange={e => updateExtractedPosition(idx, 'broker', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', cursor: 'pointer', width: '100%' }}>
-                                                                <option value="">Select Broker</option>
-                                                                <option value="ibkr">IBKR</option>
-                                                                <option value="td_ameritrade">TD Ameritrade</option>
-                                                                <option value="fidelity">Fidelity</option>
-                                                                <option value="schwab">Schwab</option>
-                                                                <option value="etrade">E*TRADE</option>
-                                                                <option value="robinhood">Robinhood</option>
-                                                                <option value="webull">Webull</option>
-                                                                <option value="binance">Binance</option>
-                                                                <option value="coinbase">Coinbase</option>
-                                                                <option value="kraken">Kraken</option>
-                                                                <option value="oanda">OANDA</option>
-                                                                <option value="ig">IG</option>
-                                                                <option value="saxo">Saxo</option>
-                                                                <option value="tiger">Tiger</option>
-                                                                <option value="moomoo">Moomoo</option>
-                                                                <option value="other">Other</option>
-                                                            </select>
-                                                        </div>
-                                                        <div>
-                                                            <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Platform</label>
-                                                            <select value={pos.platform || ''} onChange={e => updateExtractedPosition(idx, 'platform', e.target.value)}
-                                                                style={{ padding: '6px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', cursor: 'pointer', width: '100%' }}>
-                                                                <option value="">Select Platform</option>
-                                                                <option value="tws">TWS</option>
-                                                                <option value="thinkorswim">thinkorSwim</option>
-                                                                <option value="mt4">MT4</option>
-                                                                <option value="mt5">MT5</option>
-                                                                <option value="tradingview">TradingView</option>
-                                                                <option value="mobile">Mobile App</option>
-                                                                <option value="web">Web</option>
-                                                                <option value="other">Other</option>
-                                                            </select>
-                                                        </div>
-                                                        {isOption && (
-                                                            <div>
-                                                                <label style={{ fontSize: '9px', color: '#64748b', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Expiry</label>
-                                                                <input type="date" value={pos.expiry || ''} onChange={e => updateExtractedPosition(idx, 'expiry', e.target.value)}
-                                                                    style={{ padding: '5px', borderRadius: '4px', fontSize: '11px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%' }} />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {/* Option toggle */}
-                                                    <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <label style={{ fontSize: '10px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                                                            <input type="checkbox" checked={pos.positionType === 'option'} onChange={e => updateExtractedPosition(idx, 'positionType', e.target.checked ? 'option' : 'long')}
-                                                                style={{ accentColor: '#22c55e' }} />
-                                                            <span>This is an Option</span>
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
-                                        <button onClick={resetUpload} style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#1e3a5f', color: '#fff', border: 'none', cursor: 'pointer' }}>Cancel</button>
-                                        <button onClick={handleConfirmImport} style={{ flex: 1, padding: '10px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', backgroundColor: '#00d4ff', color: '#0a1628', border: 'none', cursor: 'pointer' }}>
-                                            Import {extractedPositions.length} Positions
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Manual Position Entry Modal */}
-            {showManualModal && (
-                <div className="modal-overlay">
-                    <div className="ai-import-modal" style={{ backgroundColor: '#0d1f3c', borderRadius: '16px' }}>
-                        <div style={{ padding: '24px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>➕ Add New Position</h3>
-                                <button onClick={resetManualPosition} style={{ fontSize: '24px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
-                            </div>
-
-                            <p style={{ fontSize: '14px', marginBottom: '20px', color: '#64748b' }}>
-                                Manually add a position to your portfolio.
-                            </p>
-
-                            {/* Row 1: Category, Position Type */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Category *</label>
-                                    <select
-                                        value={manualPosition.assetClass}
-                                        onChange={e => updateManualPosition('assetClass', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
-                                    >
-                                        {assetClassOptions.map(opt => (
-                                            <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
-                                        ))}
-                                        <option value="other">📝 Other</option>
-                                    </select>
-                                    {manualPosition.assetClass === 'other' && (
+                                    <div>
+                                        <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Name</label>
                                         <input
-                                            value={manualPosition.customAssetClass || ''}
-                                            onChange={e => updateManualPosition('customAssetClass', e.target.value)}
-                                            placeholder="Enter custom category..."
-                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                            value={manualPosition.name}
+                                            onChange={e => updateManualPosition('name', e.target.value)}
+                                            placeholder="Apple Inc, Bitcoin..."
+                                            style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%' }}
                                         />
-                                    )}
+                                    </div>
                                 </div>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Position Type</label>
-                                    <select
-                                        value={manualPosition.positionType}
-                                        onChange={e => updateManualPosition('positionType', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
-                                    >
-                                        <option value="long">📈 Long</option>
-                                        <option value="short">📉 Short</option>
-                                        <option value="spot">💰 Spot</option>
-                                        <option value="perpetual">♾️ Perpetual</option>
-                                        <option value="option">📋 Option</option>
-                                        <option value="other">📝 Other</option>
-                                    </select>
-                                    {manualPosition.positionType === 'other' && (
-                                        <input
-                                            value={manualPosition.customPositionType || ''}
-                                            onChange={e => updateManualPosition('customPositionType', e.target.value)}
-                                            placeholder="Enter custom type..."
-                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
-                                        />
-                                    )}
-                                </div>
-                            </div>
 
-                            {/* Row 2: Symbol, Name */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                                <div style={{ position: 'relative' }}>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Symbol * (Search or type)</label>
+                                {/* Row 3: Quantity, Entry Price */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                    <div>
+                                        <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Quantity *</label>
+                                        <input
+                                            type="number"
+                                            value={manualPosition.quantity}
+                                            onChange={e => updateManualPosition('quantity', e.target.value)}
+                                            placeholder="10"
+                                            style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Entry Price *</label>
+                                        <input
+                                            type="number"
+                                            value={manualPosition.avgPrice}
+                                            onChange={e => updateManualPosition('avgPrice', e.target.value)}
+                                            placeholder="150.00"
+                                            style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Row 4: Current Price (optional) */}
+                                <div style={{ marginBottom: '16px' }}>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Current Price (optional - leave blank to auto-fetch)</label>
                                     <input
-                                        ref={symbolInputRef}
-                                        value={manualPosition.symbol}
-                                        onChange={e => updateManualPosition('symbol', e.target.value)}
-                                        onFocus={() => {
-                                            if (manualPosition.symbol.length > 0) {
-                                                const suggestions = searchAssets(manualPosition.symbol, manualPosition.assetClass !== 'other' ? manualPosition.assetClass : undefined);
-                                                setSymbolSuggestions(suggestions);
-                                                setShowSymbolSuggestions(suggestions.length > 0);
-                                            }
-                                        }}
-                                        onBlur={() => {
-                                            // Delay to allow click on suggestion
-                                            setTimeout(() => setShowSymbolSuggestions(false), 200);
-                                        }}
-                                        placeholder="Type to search AAPL, BTC, EUR..."
-                                        autoComplete="off"
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', fontWeight: '600' }}
+                                        type="number"
+                                        value={manualPosition.currentPrice}
+                                        onChange={e => updateManualPosition('currentPrice', e.target.value)}
+                                        placeholder="Auto-fetch from market"
+                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
                                     />
-                                    {/* Autocomplete Suggestions Dropdown */}
-                                    {showSymbolSuggestions && symbolSuggestions.length > 0 && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: '100%',
-                                            left: 0,
-                                            right: 0,
-                                            backgroundColor: '#0d1f3c',
-                                            border: '1px solid #3f4f66',
-                                            borderRadius: '6px',
-                                            marginTop: '4px',
-                                            maxHeight: '200px',
-                                            overflowY: 'auto',
-                                            zIndex: 100,
-                                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-                                        }}>
-                                            {symbolSuggestions.map((asset, idx) => (
-                                                <div
-                                                    key={`${asset.symbol}-${idx}`}
-                                                    onClick={() => selectAssetSuggestion(asset)}
+                                </div>
+
+                                {/* Row 5: Leverage - Important for forex/crypto margin trading */}
+                                <div style={{ marginBottom: '16px' }}>
+                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>
+                                        Leverage <span style={{ color: '#f59e0b' }}>(important for forex/margin trading)</span>
+                                    </label>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            value={manualPosition.leverage}
+                                            onChange={e => updateManualPosition('leverage', e.target.value)}
+                                            style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '80px', textAlign: 'right' }}
+                                        />
+                                        <span style={{ color: '#64748b', fontSize: '14px' }}>:1</span>
+                                        <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
+                                            {['1', '2', '5', '10', '20', '50', '100'].map(lev => (
+                                                <button
+                                                    key={lev}
+                                                    type="button"
+                                                    onClick={() => updateManualPosition('leverage', lev)}
                                                     style={{
-                                                        padding: '10px 12px',
-                                                        cursor: 'pointer',
-                                                        borderBottom: idx < symbolSuggestions.length - 1 ? '1px solid #1e3a5f' : 'none',
-                                                        display: 'flex',
-                                                        justifyContent: 'space-between',
-                                                        alignItems: 'center'
+                                                        padding: '6px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '500',
+                                                        backgroundColor: manualPosition.leverage === lev ? '#0ea5e9' : '#1e3a5f',
+                                                        color: manualPosition.leverage === lev ? '#fff' : '#94a3b8',
+                                                        border: 'none', cursor: 'pointer'
                                                     }}
-                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
-                                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                                 >
-                                                    <div>
-                                                        <span style={{ fontWeight: '600', color: '#fff' }}>{asset.symbol}</span>
-                                                        <span style={{ marginLeft: '8px', color: '#94a3b8', fontSize: '12px' }}>{asset.name}</span>
-                                                    </div>
-                                                    <span style={{
-                                                        fontSize: '10px',
-                                                        padding: '2px 6px',
-                                                        borderRadius: '4px',
-                                                        backgroundColor: asset.assetClass === 'stock' ? '#3b82f622' :
-                                                            asset.assetClass === 'crypto' ? '#f59e0b22' :
-                                                                asset.assetClass === 'forex' ? '#10b98122' :
-                                                                    asset.assetClass === 'etf' ? '#ec489922' : '#a855f722',
-                                                        color: asset.assetClass === 'stock' ? '#3b82f6' :
-                                                            asset.assetClass === 'crypto' ? '#f59e0b' :
-                                                                asset.assetClass === 'forex' ? '#10b981' :
-                                                                    asset.assetClass === 'etf' ? '#ec4899' : '#a855f7'
-                                                    }}>
-                                                        {asset.assetClass}
-                                                    </span>
-                                                </div>
+                                                    {lev}x
+                                                </button>
                                             ))}
                                         </div>
-                                    )}
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Name</label>
-                                    <input
-                                        value={manualPosition.name}
-                                        onChange={e => updateManualPosition('name', e.target.value)}
-                                        placeholder="Apple Inc, Bitcoin..."
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%' }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Row 3: Quantity, Entry Price */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Quantity *</label>
-                                    <input
-                                        type="number"
-                                        value={manualPosition.quantity}
-                                        onChange={e => updateManualPosition('quantity', e.target.value)}
-                                        placeholder="10"
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Entry Price *</label>
-                                    <input
-                                        type="number"
-                                        value={manualPosition.avgPrice}
-                                        onChange={e => updateManualPosition('avgPrice', e.target.value)}
-                                        placeholder="150.00"
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Row 4: Current Price (optional) */}
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Current Price (optional - leave blank to auto-fetch)</label>
-                                <input
-                                    type="number"
-                                    value={manualPosition.currentPrice}
-                                    onChange={e => updateManualPosition('currentPrice', e.target.value)}
-                                    placeholder="Auto-fetch from market"
-                                    style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', textAlign: 'right' }}
-                                />
-                            </div>
-
-                            {/* Row 5: Leverage - Important for forex/crypto margin trading */}
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>
-                                    Leverage <span style={{ color: '#f59e0b' }}>(important for forex/margin trading)</span>
-                                </label>
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        step="1"
-                                        value={manualPosition.leverage}
-                                        onChange={e => updateManualPosition('leverage', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '80px', textAlign: 'right' }}
-                                    />
-                                    <span style={{ color: '#64748b', fontSize: '14px' }}>:1</span>
-                                    <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
-                                        {['1', '2', '5', '10', '20', '50', '100'].map(lev => (
-                                            <button
-                                                key={lev}
-                                                type="button"
-                                                onClick={() => updateManualPosition('leverage', lev)}
-                                                style={{
-                                                    padding: '6px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '500',
-                                                    backgroundColor: manualPosition.leverage === lev ? '#0ea5e9' : '#1e3a5f',
-                                                    color: manualPosition.leverage === lev ? '#fff' : '#94a3b8',
-                                                    border: 'none', cursor: 'pointer'
-                                                }}
-                                            >
-                                                {lev}x
-                                            </button>
-                                        ))}
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Row 6: Broker, Platform */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Broker</label>
-                                    <select
-                                        value={manualPosition.broker}
-                                        onChange={e => updateManualPosition('broker', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
-                                    >
-                                        <option value="">Select Broker</option>
-                                        <option value="ibkr">IBKR</option>
-                                        <option value="td_ameritrade">TD Ameritrade</option>
-                                        <option value="fidelity">Fidelity</option>
-                                        <option value="schwab">Schwab</option>
-                                        <option value="etrade">E*TRADE</option>
-                                        <option value="robinhood">Robinhood</option>
-                                        <option value="webull">Webull</option>
-                                        <option value="binance">Binance</option>
-                                        <option value="coinbase">Coinbase</option>
-                                        <option value="kraken">Kraken</option>
-                                        <option value="oanda">OANDA</option>
-                                        <option value="ig">IG</option>
-                                        <option value="saxo">Saxo</option>
-                                        <option value="tiger">Tiger</option>
-                                        <option value="moomoo">Moomoo</option>
-                                        <option value="other">📝 Other</option>
-                                    </select>
-                                    {manualPosition.broker === 'other' && (
+                                {/* Row 6: Broker, Platform */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                    <div>
+                                        <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Broker</label>
+                                        <select
+                                            value={manualPosition.broker}
+                                            onChange={e => updateManualPosition('broker', e.target.value)}
+                                            style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                        >
+                                            <option value="">Select Broker</option>
+                                            <option value="ibkr">IBKR</option>
+                                            <option value="td_ameritrade">TD Ameritrade</option>
+                                            <option value="fidelity">Fidelity</option>
+                                            <option value="schwab">Schwab</option>
+                                            <option value="etrade">E*TRADE</option>
+                                            <option value="robinhood">Robinhood</option>
+                                            <option value="webull">Webull</option>
+                                            <option value="binance">Binance</option>
+                                            <option value="coinbase">Coinbase</option>
+                                            <option value="kraken">Kraken</option>
+                                            <option value="oanda">OANDA</option>
+                                            <option value="ig">IG</option>
+                                            <option value="saxo">Saxo</option>
+                                            <option value="tiger">Tiger</option>
+                                            <option value="moomoo">Moomoo</option>
+                                            <option value="other">📝 Other</option>
+                                        </select>
+                                        {manualPosition.broker === 'other' && (
+                                            <input
+                                                value={manualPosition.customBroker || ''}
+                                                onChange={e => updateManualPosition('customBroker', e.target.value)}
+                                                placeholder="Enter broker name..."
+                                                style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                            />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Platform</label>
+                                        <select
+                                            value={manualPosition.platform}
+                                            onChange={e => updateManualPosition('platform', e.target.value)}
+                                            style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                        >
+                                            <option value="">Select Platform</option>
+                                            <option value="tws">TWS</option>
+                                            <option value="thinkorswim">thinkorSwim</option>
+                                            <option value="mt4">MT4</option>
+                                            <option value="mt5">MT5</option>
+                                            <option value="tradingview">TradingView</option>
+                                            <option value="mobile">Mobile App</option>
+                                            <option value="web">Web</option>
+                                            <option value="other">📝 Other</option>
+                                        </select>
+                                        {manualPosition.platform === 'other' && (
+                                            <input
+                                                value={manualPosition.customPlatform || ''}
+                                                onChange={e => updateManualPosition('customPlatform', e.target.value)}
+                                                placeholder="Enter platform name..."
+                                                style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Row 5: Expiry (for options) */}
+                                {manualPosition.positionType === 'option' && (
+                                    <div style={{ marginBottom: '16px' }}>
+                                        <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Expiry Date</label>
                                         <input
-                                            value={manualPosition.customBroker || ''}
-                                            onChange={e => updateManualPosition('customBroker', e.target.value)}
-                                            placeholder="Enter broker name..."
-                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
+                                            type="date"
+                                            value={manualPosition.expiry}
+                                            onChange={e => updateManualPosition('expiry', e.target.value)}
+                                            style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%' }}
                                         />
-                                    )}
-                                </div>
-                                <div>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Platform</label>
-                                    <select
-                                        value={manualPosition.platform}
-                                        onChange={e => updateManualPosition('platform', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#94a3b8', border: '1px solid #3f4f66', width: '100%', cursor: 'pointer' }}
+                                    </div>
+                                )}
+
+                                {/* Buttons */}
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+                                    <button
+                                        onClick={resetManualPosition}
+                                        style={{ flex: 1, padding: '12px', borderRadius: '8px', fontSize: '14px', backgroundColor: '#1e3a5f', color: '#fff', border: 'none', cursor: 'pointer' }}
                                     >
-                                        <option value="">Select Platform</option>
-                                        <option value="tws">TWS</option>
-                                        <option value="thinkorswim">thinkorSwim</option>
-                                        <option value="mt4">MT4</option>
-                                        <option value="mt5">MT5</option>
-                                        <option value="tradingview">TradingView</option>
-                                        <option value="mobile">Mobile App</option>
-                                        <option value="web">Web</option>
-                                        <option value="other">📝 Other</option>
-                                    </select>
-                                    {manualPosition.platform === 'other' && (
-                                        <input
-                                            value={manualPosition.customPlatform || ''}
-                                            onChange={e => updateManualPosition('customPlatform', e.target.value)}
-                                            placeholder="Enter platform name..."
-                                            style={{ padding: '8px', borderRadius: '6px', fontSize: '13px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%', marginTop: '6px' }}
-                                        />
-                                    )}
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleManualSubmit}
+                                        style={{ flex: 1, padding: '12px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', backgroundColor: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer' }}
+                                    >
+                                        ✓ Add Position
+                                    </button>
                                 </div>
-                            </div>
-
-                            {/* Row 5: Expiry (for options) */}
-                            {manualPosition.positionType === 'option' && (
-                                <div style={{ marginBottom: '16px' }}>
-                                    <label style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Expiry Date</label>
-                                    <input
-                                        type="date"
-                                        value={manualPosition.expiry}
-                                        onChange={e => updateManualPosition('expiry', e.target.value)}
-                                        style={{ padding: '10px', borderRadius: '6px', fontSize: '14px', backgroundColor: '#0a1628', color: '#fff', border: '1px solid #3f4f66', width: '100%' }}
-                                    />
-                                </div>
-                            )}
-
-                            {/* Buttons */}
-                            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                                <button
-                                    onClick={resetManualPosition}
-                                    style={{ flex: 1, padding: '12px', borderRadius: '8px', fontSize: '14px', backgroundColor: '#1e3a5f', color: '#fff', border: 'none', cursor: 'pointer' }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleManualSubmit}
-                                    style={{ flex: 1, padding: '12px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', backgroundColor: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer' }}
-                                >
-                                    ✓ Add Position
-                                </button>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <style jsx>{`
                 @keyframes spin {
@@ -2515,6 +2477,6 @@ export default function PortfolioPage() {
                     to { transform: rotate(360deg); }
                 }
             `}</style>
-        </div >
+        </div>
     );
 }
