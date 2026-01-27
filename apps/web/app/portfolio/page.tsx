@@ -152,6 +152,32 @@ interface RiskAssessment {
     score: number; // 0-100
 }
 
+// Trade History Entry - tracks all position changes
+interface TradeHistoryEntry {
+    id: string;
+    positionId: string;
+    symbol: string;
+    name: string;
+    action: 'close' | 'edit' | 'delete' | 'open';
+    timestamp: string;
+    // For closed positions
+    quantity?: number;
+    entryPrice?: number;
+    exitPrice?: number;
+    realizedPnL?: number;
+    realizedPnLPercent?: number;
+    // For edits - what changed
+    changes?: {
+        field: string;
+        oldValue: string | number;
+        newValue: string | number;
+    }[];
+    // Additional info
+    broker?: string;
+    assetClass?: string;
+    notes?: string;
+}
+
 // Calculate position risk based on multiple factors
 const calculatePositionRisk = (
     pos: Position,
@@ -318,6 +344,15 @@ export default function PortfolioPage() {
 
     const [priceSource, setPriceSource] = useState<string>('loading...');
 
+    // Trade History & Position Actions state
+    const [tradeHistory, setTradeHistory] = useState<TradeHistoryEntry[]>([]);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingPosition, setEditingPosition] = useState<Position | null>(null);
+    const [showConfirmClose, setShowConfirmClose] = useState<string | null>(null); // positionId
+    const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null); // positionId
+    const [showTradeHistory, setShowTradeHistory] = useState(false);
+    const [historyFilter, setHistoryFilter] = useState<'all' | 'close' | 'edit' | 'delete'>('all');
+
     // Fetch real prices on mount and every 30 seconds
     const fetchPrices = useCallback(async () => {
         try {
@@ -449,6 +484,138 @@ export default function PortfolioPage() {
         setExtractedPositions([]);
         setImportId('');
         setUploadError('');
+    };
+
+    // Position Action Handlers
+    const handleEditPosition = (position: Position) => {
+        setEditingPosition({ ...position });
+        setShowEditModal(true);
+    };
+
+    const handleSaveEdit = () => {
+        if (!editingPosition) return;
+
+        const original = positions.find(p => p.id === editingPosition.id);
+        if (!original) return;
+
+        // Track changes for history
+        const changes: { field: string; oldValue: string | number; newValue: string | number }[] = [];
+        if (original.quantity !== editingPosition.quantity) {
+            changes.push({ field: 'Quantity', oldValue: original.quantity, newValue: editingPosition.quantity });
+        }
+        if (original.avgPrice !== editingPosition.avgPrice) {
+            changes.push({ field: 'Entry Price', oldValue: original.avgPrice, newValue: editingPosition.avgPrice });
+        }
+        if (original.leverage !== editingPosition.leverage) {
+            changes.push({ field: 'Leverage', oldValue: original.leverage || 1, newValue: editingPosition.leverage || 1 });
+        }
+
+        if (changes.length > 0) {
+            // Add to history
+            const historyEntry: TradeHistoryEntry = {
+                id: `hist-${Date.now()}`,
+                positionId: editingPosition.id,
+                symbol: editingPosition.symbol,
+                name: editingPosition.name,
+                action: 'edit',
+                timestamp: new Date().toISOString(),
+                changes,
+                broker: editingPosition.broker,
+                assetClass: editingPosition.assetClass
+            };
+            setTradeHistory(prev => [historyEntry, ...prev]);
+        }
+
+        // Update position
+        setPositions(prev => prev.map(p => p.id === editingPosition.id ? editingPosition : p));
+        setShowEditModal(false);
+        setEditingPosition(null);
+    };
+
+    const handleClosePosition = (positionId: string) => {
+        const position = positions.find(p => p.id === positionId);
+        if (!position) return;
+
+        const pnl = position.assetClass === 'forex' && position.lotSize !== undefined
+            ? getForexPnL(position)
+            : (position.currentPrice - position.avgPrice) * position.quantity;
+        const pnlPercent = ((position.currentPrice - position.avgPrice) / position.avgPrice) * 100;
+
+        // Add to trade history
+        const historyEntry: TradeHistoryEntry = {
+            id: `hist-${Date.now()}`,
+            positionId: position.id,
+            symbol: position.symbol,
+            name: position.name,
+            action: 'close',
+            timestamp: new Date().toISOString(),
+            quantity: position.quantity,
+            entryPrice: position.avgPrice,
+            exitPrice: position.currentPrice,
+            realizedPnL: pnl,
+            realizedPnLPercent: pnlPercent,
+            broker: position.broker,
+            assetClass: position.assetClass
+        };
+        setTradeHistory(prev => [historyEntry, ...prev]);
+
+        // Remove from active positions
+        setPositions(prev => prev.filter(p => p.id !== positionId));
+        setShowConfirmClose(null);
+    };
+
+    const handleDeletePosition = (positionId: string) => {
+        const position = positions.find(p => p.id === positionId);
+        if (!position) return;
+
+        // Add to trade history as deleted
+        const historyEntry: TradeHistoryEntry = {
+            id: `hist-${Date.now()}`,
+            positionId: position.id,
+            symbol: position.symbol,
+            name: position.name,
+            action: 'delete',
+            timestamp: new Date().toISOString(),
+            quantity: position.quantity,
+            entryPrice: position.avgPrice,
+            broker: position.broker,
+            assetClass: position.assetClass,
+            notes: 'Position deleted (erroneous entry)'
+        };
+        setTradeHistory(prev => [historyEntry, ...prev]);
+
+        // Remove from active positions
+        setPositions(prev => prev.filter(p => p.id !== positionId));
+        setShowConfirmDelete(null);
+    };
+
+    const filteredHistory = tradeHistory.filter(entry =>
+        historyFilter === 'all' || entry.action === historyFilter
+    );
+
+    const exportHistoryToCSV = () => {
+        const headers = ['Date', 'Symbol', 'Action', 'Quantity', 'Entry Price', 'Exit Price', 'P&L', 'P&L %', 'Broker', 'Notes'];
+        const rows = filteredHistory.map(entry => [
+            new Date(entry.timestamp).toLocaleString(),
+            entry.symbol,
+            entry.action.toUpperCase(),
+            entry.quantity || '-',
+            entry.entryPrice ? `$${entry.entryPrice.toFixed(2)}` : '-',
+            entry.exitPrice ? `$${entry.exitPrice.toFixed(2)}` : '-',
+            entry.realizedPnL ? `$${entry.realizedPnL.toFixed(2)}` : '-',
+            entry.realizedPnLPercent ? `${entry.realizedPnLPercent.toFixed(2)}%` : '-',
+            entry.broker || '-',
+            entry.changes ? entry.changes.map(c => `${c.field}: ${c.oldValue} → ${c.newValue}`).join('; ') : (entry.notes || '-')
+        ]);
+
+        const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `trade_history_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     // Manual position entry handlers
@@ -1000,6 +1167,7 @@ export default function PortfolioPage() {
                                                         <th style={{ width: '8%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
                                                         <th style={{ width: '8%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
                                                         <th style={{ width: '8%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>RISK</th>
+                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ACTIONS</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1161,6 +1329,61 @@ export default function PortfolioPage() {
                                                                         <option value="high">HIGH</option>
                                                                         <option value="critical">CRITICAL</option>
                                                                     </select>
+                                                                </td>
+                                                                <td style={{ textAlign: 'center', padding: '8px 2px' }}>
+                                                                    <div style={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
+                                                                        {/* Edit Button */}
+                                                                        <button
+                                                                            onClick={() => handleEditPosition(pos)}
+                                                                            title="Edit position"
+                                                                            style={{
+                                                                                padding: '4px 8px',
+                                                                                borderRadius: '4px',
+                                                                                fontSize: '12px',
+                                                                                backgroundColor: '#3b82f633',
+                                                                                color: '#3b82f6',
+                                                                                border: 'none',
+                                                                                cursor: 'pointer',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '2px'
+                                                                            }}
+                                                                        >✏️</button>
+                                                                        {/* Close Button */}
+                                                                        <button
+                                                                            onClick={() => setShowConfirmClose(pos.id)}
+                                                                            title="Close position"
+                                                                            style={{
+                                                                                padding: '4px 8px',
+                                                                                borderRadius: '4px',
+                                                                                fontSize: '12px',
+                                                                                backgroundColor: '#22c55e33',
+                                                                                color: '#22c55e',
+                                                                                border: 'none',
+                                                                                cursor: 'pointer',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '2px'
+                                                                            }}
+                                                                        >✓</button>
+                                                                        {/* Delete Button */}
+                                                                        <button
+                                                                            onClick={() => setShowConfirmDelete(pos.id)}
+                                                                            title="Delete position"
+                                                                            style={{
+                                                                                padding: '4px 8px',
+                                                                                borderRadius: '4px',
+                                                                                fontSize: '12px',
+                                                                                backgroundColor: '#ef444433',
+                                                                                color: '#ef4444',
+                                                                                border: 'none',
+                                                                                cursor: 'pointer',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '2px'
+                                                                            }}
+                                                                        >🗑️</button>
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                         );
@@ -1346,6 +1569,222 @@ export default function PortfolioPage() {
                     </div>
                 </div>
             )}
+
+            {/* Edit Position Modal */}
+            {showEditModal && editingPosition && (
+                <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+                    <div style={{ backgroundColor: '#0d1f3c', borderRadius: '16px', padding: '24px', width: '420px', border: '1px solid #1e3a5f' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff' }}>✏️ Edit Position - {editingPosition.symbol}</h3>
+                            <button onClick={() => { setShowEditModal(false); setEditingPosition(null); }} style={{ fontSize: '24px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div>
+                                <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Quantity</label>
+                                <input
+                                    type="number"
+                                    value={editingPosition.quantity}
+                                    onChange={(e) => setEditingPosition({ ...editingPosition, quantity: parseFloat(e.target.value) || 0 })}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f33', border: '1px solid #3f4f66', color: '#fff', fontSize: '14px' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Entry Price</label>
+                                <input
+                                    type="number"
+                                    value={editingPosition.avgPrice}
+                                    onChange={(e) => setEditingPosition({ ...editingPosition, avgPrice: parseFloat(e.target.value) || 0 })}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f33', border: '1px solid #3f4f66', color: '#fff', fontSize: '14px' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>Leverage</label>
+                                <input
+                                    type="number"
+                                    value={editingPosition.leverage || 1}
+                                    onChange={(e) => setEditingPosition({ ...editingPosition, leverage: parseFloat(e.target.value) || 1 })}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#1e3a5f33', border: '1px solid #3f4f66', color: '#fff', fontSize: '14px' }}
+                                />
+                            </div>
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                                <button onClick={() => { setShowEditModal(false); setEditingPosition(null); }} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3f4f66', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+                                <button onClick={handleSaveEdit} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Close Position Dialog */}
+            {showConfirmClose && (
+                <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+                    <div style={{ backgroundColor: '#0d1f3c', borderRadius: '16px', padding: '24px', width: '380px', border: '1px solid #1e3a5f' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#fff', marginBottom: '16px' }}>✓ Close Position</h3>
+                        <p style={{ color: '#94a3b8', marginBottom: '16px' }}>
+                            Are you sure you want to close this position? This will record the realized P&L in your trade history.
+                        </p>
+                        {(() => {
+                            const pos = positions.find(p => p.id === showConfirmClose);
+                            if (!pos) return null;
+                            const pnl = pos.assetClass === 'forex' && pos.lotSize !== undefined
+                                ? getForexPnL(pos)
+                                : (pos.currentPrice - pos.avgPrice) * pos.quantity;
+                            return (
+                                <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: pnl >= 0 ? '#22c55e22' : '#ef444422', marginBottom: '16px' }}>
+                                    <div style={{ color: '#94a3b8', fontSize: '12px' }}>{pos.symbol}</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: pnl >= 0 ? '#22c55e' : '#ef4444' }}>
+                                        {pnl >= 0 ? '+' : ''}${pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button onClick={() => setShowConfirmClose(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3f4f66', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+                            <button onClick={() => handleClosePosition(showConfirmClose)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#22c55e', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Close Position</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Delete Position Dialog */}
+            {showConfirmDelete && (
+                <div className="modal-overlay" style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+                    <div style={{ backgroundColor: '#0d1f3c', borderRadius: '16px', padding: '24px', width: '380px', border: '1px solid #1e3a5f' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#ef4444', marginBottom: '16px' }}>🗑️ Delete Position</h3>
+                        <p style={{ color: '#94a3b8', marginBottom: '16px' }}>
+                            Are you sure you want to delete this position? This is typically for erroneous entries.
+                            <strong style={{ color: '#f59e0b' }}> No P&L will be recorded.</strong>
+                        </p>
+                        {(() => {
+                            const pos = positions.find(p => p.id === showConfirmDelete);
+                            if (!pos) return null;
+                            return (
+                                <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ef444422', marginBottom: '16px' }}>
+                                    <div style={{ color: '#94a3b8', fontSize: '12px' }}>{pos.symbol}</div>
+                                    <div style={{ fontSize: '14px', color: '#fff' }}>{pos.quantity} @ ${pos.avgPrice.toFixed(2)}</div>
+                                </div>
+                            );
+                        })()}
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            <button onClick={() => setShowConfirmDelete(null)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#3f4f66', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+                            <button onClick={() => handleDeletePosition(showConfirmDelete)} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: '600' }}>Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Trade History Panel */}
+            <div style={{ marginTop: '24px', backgroundColor: '#0d1f3c', borderRadius: '12px', border: '1px solid #1e3a5f', overflow: 'hidden' }}>
+                <div
+                    onClick={() => setShowTradeHistory(!showTradeHistory)}
+                    style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', backgroundColor: '#0d1f3c' }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>📜</span>
+                        <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>Trade History</span>
+                        <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '12px', backgroundColor: '#3b82f633', color: '#3b82f6' }}>{tradeHistory.length}</span>
+                    </div>
+                    <span style={{ color: '#64748b', fontSize: '18px' }}>{showTradeHistory ? '▲' : '▼'}</span>
+                </div>
+
+                {showTradeHistory && (
+                    <div style={{ padding: '0 20px 20px' }}>
+                        {/* Filters */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {(['all', 'close', 'edit', 'delete'] as const).map(filter => (
+                                    <button
+                                        key={filter}
+                                        onClick={() => setHistoryFilter(filter)}
+                                        style={{
+                                            padding: '6px 14px',
+                                            borderRadius: '6px',
+                                            fontSize: '12px',
+                                            fontWeight: '600',
+                                            backgroundColor: historyFilter === filter ? '#3b82f6' : '#1e3a5f33',
+                                            color: historyFilter === filter ? '#fff' : '#94a3b8',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            textTransform: 'capitalize'
+                                        }}
+                                    >{filter === 'all' ? 'All' : filter === 'close' ? 'Closed' : filter === 'edit' ? 'Edited' : 'Deleted'}</button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={exportHistoryToCSV}
+                                disabled={filteredHistory.length === 0}
+                                style={{
+                                    padding: '6px 14px',
+                                    borderRadius: '6px',
+                                    fontSize: '12px',
+                                    fontWeight: '600',
+                                    backgroundColor: filteredHistory.length > 0 ? '#22c55e33' : '#3f4f6633',
+                                    color: filteredHistory.length > 0 ? '#22c55e' : '#64748b',
+                                    border: 'none',
+                                    cursor: filteredHistory.length > 0 ? 'pointer' : 'not-allowed'
+                                }}
+                            >📥 Export CSV</button>
+                        </div>
+
+                        {/* History Table */}
+                        {filteredHistory.length === 0 ? (
+                            <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+                                <div style={{ fontSize: '32px', marginBottom: '12px' }}>📭</div>
+                                <div>No trade history yet. Close, edit, or delete positions to see them here.</div>
+                            </div>
+                        ) : (
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                    <thead>
+                                        <tr style={{ color: '#64748b', textAlign: 'left' }}>
+                                            <th style={{ padding: '10px 8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>DATE</th>
+                                            <th style={{ padding: '10px 8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>SYMBOL</th>
+                                            <th style={{ padding: '10px 8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>ACTION</th>
+                                            <th style={{ padding: '10px 8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600', textAlign: 'right' }}>QTY</th>
+                                            <th style={{ padding: '10px 8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600', textAlign: 'right' }}>ENTRY</th>
+                                            <th style={{ padding: '10px 8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600', textAlign: 'right' }}>EXIT</th>
+                                            <th style={{ padding: '10px 8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600', textAlign: 'right' }}>P&L</th>
+                                            <th style={{ padding: '10px 8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>NOTES</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredHistory.map(entry => (
+                                            <tr key={entry.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
+                                                <td style={{ padding: '10px 8px', color: '#94a3b8' }}>{new Date(entry.timestamp).toLocaleDateString()}</td>
+                                                <td style={{ padding: '10px 8px', fontWeight: '600', color: '#fff' }}>{entry.symbol}</td>
+                                                <td style={{ padding: '10px 8px' }}>
+                                                    <span style={{
+                                                        padding: '3px 8px',
+                                                        borderRadius: '4px',
+                                                        fontSize: '11px',
+                                                        fontWeight: '600',
+                                                        backgroundColor: entry.action === 'close' ? '#22c55e33' : entry.action === 'edit' ? '#3b82f633' : '#ef444433',
+                                                        color: entry.action === 'close' ? '#22c55e' : entry.action === 'edit' ? '#3b82f6' : '#ef4444',
+                                                        textTransform: 'uppercase'
+                                                    }}>{entry.action}</span>
+                                                </td>
+                                                <td style={{ padding: '10px 8px', color: '#e2e8f0', textAlign: 'right' }}>{entry.quantity || '-'}</td>
+                                                <td style={{ padding: '10px 8px', color: '#94a3b8', textAlign: 'right' }}>{entry.entryPrice ? `$${entry.entryPrice.toFixed(2)}` : '-'}</td>
+                                                <td style={{ padding: '10px 8px', color: '#fff', textAlign: 'right' }}>{entry.exitPrice ? `$${entry.exitPrice.toFixed(2)}` : '-'}</td>
+                                                <td style={{ padding: '10px 8px', textAlign: 'right', fontWeight: '600', color: (entry.realizedPnL || 0) >= 0 ? '#22c55e' : '#ef4444' }}>
+                                                    {entry.realizedPnL !== undefined ? (
+                                                        <>{entry.realizedPnL >= 0 ? '+' : ''}${entry.realizedPnL.toFixed(2)}</>
+                                                    ) : '-'}
+                                                </td>
+                                                <td style={{ padding: '10px 8px', color: '#64748b', fontSize: '12px', maxWidth: '200px' }}>
+                                                    {entry.changes ? entry.changes.map((c, i) => (
+                                                        <span key={i} style={{ display: 'block' }}>{c.field}: {c.oldValue} → {c.newValue}</span>
+                                                    )) : (entry.notes || '-')}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             {/* AI Import Modal */}
             {showUploadModal && (
