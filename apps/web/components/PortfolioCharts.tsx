@@ -168,7 +168,7 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                     </div>
                 </div>
 
-                <div style={{ height: '220px' }}>
+                <div style={{ height: '180px' }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
@@ -212,6 +212,54 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
+
+                {/* Daily P&L Summary */}
+                {performanceData.length > 1 && (() => {
+                    const today = new Date();
+                    const todayData = performanceData[performanceData.length - 1];
+                    const yesterdayData = performanceData[performanceData.length - 2];
+                    const dailyChange = todayData.value - yesterdayData.value;
+                    const dailyPct = yesterdayData.value > 0 ? (dailyChange / yesterdayData.value) * 100 : 0;
+                    const isPositive = dailyChange >= 0;
+
+                    return (
+                        <div style={{
+                            marginTop: '12px',
+                            padding: '10px 14px',
+                            background: 'linear-gradient(135deg, #0d1f3c 0%, #1e3a5f 50%)',
+                            borderRadius: '8px',
+                            border: `1px solid ${isPositive ? '#22c55e33' : '#ef444433'}`,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '16px' }}>{isPositive ? '📈' : '📉'}</span>
+                                <div>
+                                    <div style={{ fontSize: '11px', color: '#64748b' }}>
+                                        Today • {today.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </div>
+                                    <div style={{ fontSize: '14px', fontWeight: '600', color: isPositive ? '#22c55e' : '#ef4444' }}>
+                                        {isPositive ? '+' : ''}${Math.abs(dailyChange).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '2px' }}>Daily Change</div>
+                                <div style={{
+                                    padding: '4px 10px',
+                                    borderRadius: '6px',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    backgroundColor: isPositive ? '#22c55e22' : '#ef444422',
+                                    color: isPositive ? '#22c55e' : '#ef4444'
+                                }}>
+                                    {isPositive ? '↑' : '↓'} {Math.abs(dailyPct).toFixed(2)}%
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* P/L by Asset Class Bar Chart */}
