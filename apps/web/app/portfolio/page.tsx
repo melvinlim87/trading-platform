@@ -12,6 +12,7 @@ import { PortfolioPerformanceChart, AnimatedValue, Sparkline, generateSparklineD
 import { PortfolioChatbox } from '@/components/PortfolioChatbox';
 import { DraggableDashboard, CardData } from '@/components/DraggableDashboard';
 import { DraggablePanels, PanelConfig } from '@/components/DraggablePanels';
+import { AIPortfolioAnalyst } from '@/components/AIPortfolioAnalyst';
 import Link from 'next/link';
 
 interface Position {
@@ -1004,113 +1005,25 @@ export default function PortfolioPage() {
                     );
                 })()}
 
-                {/* Draggable AI Tools Section */}
+                {/* Full-Width AI Portfolio Analyst with Robot Animation */}
+                <AIPortfolioAnalyst
+                    positions={positions.map(p => ({
+                        symbol: p.symbol,
+                        name: p.name || p.symbol,
+                        avgPrice: p.avgPrice,
+                        currentPrice: p.currentPrice,
+                        quantity: p.quantity,
+                        assetClass: p.assetClass || 'other'
+                    }))}
+                    onAnalysisComplete={(report) => setAnalysisReport(report)}
+                />
+
+                {/* Draggable Tools Section - Chat and History */}
                 <div style={{ marginBottom: '24px' }}>
                     <DraggablePanels
-                        storageKey="portfolio-ai-panels"
+                        storageKey="portfolio-tools-panels"
+                        columns={2}
                         panels={[
-                            {
-                                id: 'ai-analyst',
-                                title: 'AI Portfolio Analyst' + (analysisReport ? ` (Score: ${analysisReport.overallScore})` : ''),
-                                icon: '🤖',
-                                defaultExpanded: true,
-                                render: () => (
-                                    <div style={{ marginTop: '16px' }}>
-                                        {/* Generate Button */}
-                                        <div style={{ marginBottom: '16px' }}>
-                                            <button
-                                                onClick={runAnalysis}
-                                                disabled={isAnalyzing || positions.length === 0}
-                                                style={{
-                                                    padding: '12px 24px',
-                                                    borderRadius: '8px',
-                                                    backgroundColor: isAnalyzing ? '#3f4f66' : '#3b82f6',
-                                                    color: '#fff',
-                                                    border: 'none',
-                                                    cursor: isAnalyzing || positions.length === 0 ? 'not-allowed' : 'pointer',
-                                                    fontWeight: '600',
-                                                    fontSize: '14px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '8px'
-                                                }}
-                                            >
-                                                {isAnalyzing ? (<><span>⏳</span> Analyzing...</>) : (<>🔍 Analyze Portfolio</>)}
-                                            </button>
-                                        </div>
-
-                                        {/* Error Display */}
-                                        {analysisError && (
-                                            <div style={{ padding: '12px', backgroundColor: '#ef444422', borderRadius: '8px', color: '#ef4444', marginBottom: '16px' }}>⚠️ {analysisError}</div>
-                                        )}
-
-                                        {/* Analysis Report */}
-                                        {analysisReport && (
-                                            <div style={{ display: 'grid', gap: '16px' }}>
-                                                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '16px', alignItems: 'center' }}>
-                                                    <div style={{
-                                                        width: '100px', height: '100px', borderRadius: '50%',
-                                                        border: `6px solid ${analysisReport.overallScore >= 70 ? '#22c55e' : analysisReport.overallScore >= 50 ? '#eab308' : '#ef4444'}`,
-                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0a1628'
-                                                    }}>
-                                                        <span style={{ fontSize: '28px', fontWeight: '700', color: '#fff' }}>{analysisReport.overallScore}</span>
-                                                        <span style={{ fontSize: '11px', color: '#64748b' }}>{analysisReport.scoreLabel}</span>
-                                                    </div>
-                                                    <div>
-                                                        <div style={{ fontSize: '14px', color: '#94a3b8', lineHeight: '1.5' }}>{analysisReport.summary}</div>
-                                                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '8px' }}>Generated: {new Date(analysisReport.generatedAt).toLocaleString()}</div>
-                                                    </div>
-                                                </div>
-                                                {analysisReport.riskAlerts.length > 0 && (
-                                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>⚠️ Risk Alerts ({analysisReport.riskAlerts.length})</div>
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                            {analysisReport.riskAlerts.map((alert, i) => (
-                                                                <div key={i} style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: alert.level === 'critical' ? '#ef444422' : '#f9731622', borderLeft: `3px solid ${alert.level === 'critical' ? '#ef4444' : '#f97316'}` }}>
-                                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{alert.symbol}</div>
-                                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{alert.reason}</div>
-                                                                    {alert.suggestion && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>💡 {alert.suggestion}</div>}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {analysisReport.newsAlerts.length > 0 && (
-                                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>📰 News to Watch ({analysisReport.newsAlerts.length})</div>
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                            {analysisReport.newsAlerts.map((news, i) => (
-                                                                <div key={i} style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#3b82f622', borderLeft: `3px solid ${news.impact === 'high' ? '#ef4444' : '#3b82f6'}` }}>
-                                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{news.symbol}</div>
-                                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{news.headline}</div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {analysisReport.recommendations.length > 0 && (
-                                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>💡 Recommendations</div>
-                                                        <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                            {analysisReport.recommendations.map((rec, i) => (
-                                                                <li key={i} style={{ fontSize: '12px', color: '#94a3b8' }}>{rec}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Empty State */}
-                                        {!analysisReport && !isAnalyzing && !analysisError && (
-                                            <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
-                                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🤖</div>
-                                                <div style={{ fontSize: '14px' }}>Click "Analyze Portfolio" to get AI-powered insights</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )
-                            },
                             {
                                 id: 'ai-chat',
                                 title: 'Portfolio Chat',
@@ -1436,12 +1349,7 @@ export default function PortfolioPage() {
                                                                 </td>
                                                                 <td style={{ textAlign: 'right', padding: '8px 4px' }}>
                                                                     {pos.assetClass === 'forex' && pos.lotSize !== undefined ? (
-                                                                        <div>
-                                                                            <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{formatLotSize(pos.lotSize)}</span>
-                                                                            <span style={{ display: 'block', fontSize: '10px', color: '#64748b' }}>
-                                                                                {getForexPips(pos) >= 0 ? '+' : ''}{getForexPips(pos).toFixed(1)} pips
-                                                                            </span>
-                                                                        </div>
+                                                                        <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{formatLotSize(pos.lotSize)}</span>
                                                                     ) : (
                                                                         <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{pos.quantity}</span>
                                                                     )}
@@ -1464,6 +1372,11 @@ export default function PortfolioPage() {
                                                                     <div style={{ fontSize: '10px', color: pnl >= 0 ? '#22c55e99' : '#ef444499' }}>
                                                                         {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(1)}%
                                                                     </div>
+                                                                    {pos.assetClass === 'forex' && (
+                                                                        <div style={{ fontSize: '10px', color: getForexPips(pos) >= 0 ? '#22c55e99' : '#ef444499', marginTop: '2px' }}>
+                                                                            {getForexPips(pos) >= 0 ? '+' : ''}{getForexPips(pos).toFixed(1)} pips
+                                                                        </div>
+                                                                    )}
                                                                 </td>
                                                                 <td style={{ textAlign: 'center', padding: '8px 4px' }}>
                                                                     <span style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: '#3b82f633', color: '#fff' }}>
