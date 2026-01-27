@@ -13,9 +13,10 @@ export interface PanelConfig {
 interface DraggablePanelsProps {
     panels: PanelConfig[];
     storageKey: string;
+    columns?: 1 | 2 | 3;  // Number of columns for grid layout
 }
 
-export function DraggablePanels({ panels: initialPanels, storageKey }: DraggablePanelsProps) {
+export function DraggablePanels({ panels: initialPanels, storageKey, columns = 2 }: DraggablePanelsProps) {
     const [panelOrder, setPanelOrder] = useState<string[]>(initialPanels.map(p => p.id));
     const [expandedPanels, setExpandedPanels] = useState<Record<string, boolean>>({});
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -132,71 +133,78 @@ export function DraggablePanels({ panels: initialPanels, storageKey }: Draggable
                 </button>
             </div>
 
-            {/* Panels */}
-            {orderedPanels.map((panel, index) => {
-                const isExpanded = expandedPanels[panel.id] ?? true;
-                const isDragging = draggedIndex === index;
+            {/* Panels Grid */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                gap: '16px',
+                alignItems: 'start'
+            }}>
+                {orderedPanels.map((panel, index) => {
+                    const isExpanded = expandedPanels[panel.id] ?? true;
+                    const isDragging = draggedIndex === index;
 
-                return (
-                    <div
-                        key={panel.id}
-                        draggable
-                        onDragStart={() => handleDragStart(index)}
-                        onDragOver={(e) => handleDragOver(e, index)}
-                        onDragEnd={handleDragEnd}
-                        style={{
-                            backgroundColor: '#0d1f3c',
-                            borderRadius: '12px',
-                            border: `1px solid ${isDragging ? '#f59e0b' : '#1e3a5f'}`,
-                            overflow: 'hidden',
-                            transition: 'all 0.2s ease',
-                            transform: isDragging ? 'scale(1.01)' : 'scale(1)',
-                            opacity: isDragging ? 0.9 : 1,
-                            boxShadow: isDragging ? '0 8px 30px rgba(245, 158, 11, 0.2)' : 'none'
-                        }}
-                    >
-                        {/* Panel Header */}
+                    return (
                         <div
+                            key={panel.id}
+                            draggable
+                            onDragStart={() => handleDragStart(index)}
+                            onDragOver={(e) => handleDragOver(e, index)}
+                            onDragEnd={handleDragEnd}
                             style={{
-                                padding: '16px 20px',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                cursor: 'grab',
                                 backgroundColor: '#0d1f3c',
-                                borderBottom: isExpanded ? '1px solid #1e3a5f33' : 'none'
+                                borderRadius: '12px',
+                                border: `1px solid ${isDragging ? '#f59e0b' : '#1e3a5f'}`,
+                                overflow: 'hidden',
+                                transition: 'all 0.2s ease',
+                                transform: isDragging ? 'scale(1.01)' : 'scale(1)',
+                                opacity: isDragging ? 0.9 : 1,
+                                boxShadow: isDragging ? '0 8px 30px rgba(245, 158, 11, 0.2)' : 'none'
                             }}
                         >
+                            {/* Panel Header */}
                             <div
-                                style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, cursor: 'pointer' }}
-                                onClick={() => togglePanel(panel.id)}
+                                style={{
+                                    padding: '16px 20px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    cursor: 'grab',
+                                    backgroundColor: '#0d1f3c',
+                                    borderBottom: isExpanded ? '1px solid #1e3a5f33' : 'none'
+                                }}
                             >
-                                <span style={{ fontSize: '18px' }}>{panel.icon}</span>
-                                <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>{panel.title}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>⋮⋮</span>
-                                <span
+                                <div
+                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, cursor: 'pointer' }}
                                     onClick={() => togglePanel(panel.id)}
-                                    style={{
-                                        color: '#64748b',
-                                        transition: 'transform 0.2s',
-                                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                                        cursor: 'pointer'
-                                    }}
-                                >▼</span>
+                                >
+                                    <span style={{ fontSize: '18px' }}>{panel.icon}</span>
+                                    <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>{panel.title}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span style={{ fontSize: '12px', color: '#64748b' }}>⋮⋮</span>
+                                    <span
+                                        onClick={() => togglePanel(panel.id)}
+                                        style={{
+                                            color: '#64748b',
+                                            transition: 'transform 0.2s',
+                                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                            cursor: 'pointer'
+                                        }}
+                                    >▼</span>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Panel Content */}
-                        {isExpanded && (
-                            <div style={{ padding: '0 20px 20px' }}>
-                                {panel.render()}
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
+                            {/* Panel Content */}
+                            {isExpanded && (
+                                <div style={{ padding: '0 20px 20px' }}>
+                                    {panel.render()}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }
