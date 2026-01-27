@@ -129,9 +129,7 @@ const getForexPnL = (pos: Position): number => {
 
 // Format lot size for display
 const formatLotSize = (lots: number): string => {
-    if (lots >= 1) return `${lots.toFixed(2)} lot${lots !== 1 ? 's' : ''}`;
-    if (lots >= 0.1) return `${(lots * 10).toFixed(1)} mini lot${lots !== 0.1 ? 's' : ''}`;
-    return `${(lots * 100).toFixed(0)} micro lot${lots !== 0.01 ? 's' : ''}`;
+    return `${lots.toFixed(2)} lot${lots !== 1 ? 's' : ''}`;
 };
 
 // Get pips for forex display
