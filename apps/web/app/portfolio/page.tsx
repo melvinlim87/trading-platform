@@ -4,7 +4,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { accountsAPI, portfolioImportAPI } from '@/lib/api';
+import { accountsAPI, portfolioImportAPI, portfolioAnalystAPI, PortfolioAnalysisReport } from '@/lib/api';
 import { fetchAllPrices } from '@/lib/priceService';
 import { classifySymbol, assetClassOptions, AssetClass } from '@/lib/symbolClassifier';
 import { searchAssets, getAssetBySymbol, AssetInfo } from '@/lib/assetLibrary';
@@ -353,6 +353,12 @@ export default function PortfolioPage() {
     const [showTradeHistory, setShowTradeHistory] = useState(false);
     const [historyFilter, setHistoryFilter] = useState<'all' | 'close' | 'edit' | 'delete'>('all');
 
+    // AI Portfolio Analyst state
+    const [showAnalyst, setShowAnalyst] = useState(true);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisReport, setAnalysisReport] = useState<PortfolioAnalysisReport | null>(null);
+    const [analysisError, setAnalysisError] = useState<string | null>(null);
+
     // Fetch real prices on mount and every 30 seconds
     const fetchPrices = useCallback(async () => {
         try {
@@ -616,6 +622,42 @@ export default function PortfolioPage() {
         a.download = `trade_history_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
+    };
+
+    // AI Portfolio Analyst handler
+    const runAnalysis = async () => {
+        setIsAnalyzing(true);
+        setAnalysisError(null);
+
+        try {
+            const analysisPositions = positions.map(p => {
+                const pnl = p.assetClass === 'forex' && p.lotSize !== undefined
+                    ? getForexPnL(p)
+                    : (p.currentPrice - p.avgPrice) * p.quantity;
+                const pnlPct = ((p.currentPrice - p.avgPrice) / p.avgPrice) * 100;
+
+                return {
+                    symbol: p.symbol,
+                    name: p.name,
+                    quantity: p.quantity,
+                    avgPrice: p.avgPrice,
+                    currentPrice: p.currentPrice,
+                    assetClass: p.assetClass,
+                    leverage: p.leverage,
+                    broker: p.broker,
+                    pnl,
+                    pnlPercent: pnlPct,
+                };
+            });
+
+            const response = await portfolioAnalystAPI.analyze(analysisPositions);
+            setAnalysisReport(response.data);
+        } catch (error: any) {
+            console.error('Analysis failed:', error);
+            setAnalysisError(error.response?.data?.message || error.message || 'Analysis failed');
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     // Manual position entry handlers
@@ -1672,6 +1714,194 @@ export default function PortfolioPage() {
                     </div>
                 </div>
             )}
+
+            {/* AI Portfolio Analyst Panel */}
+            <div style={{ marginTop: '24px', backgroundColor: '#0d1f3c', borderRadius: '12px', border: '1px solid #1e3a5f', overflow: 'hidden' }}>
+                <div
+                    onClick={() => setShowAnalyst(!showAnalyst)}
+                    style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', backgroundColor: '#0d1f3c' }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '18px' }}>🤖</span>
+                        <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>AI Portfolio Analyst</span>
+                        {analysisReport && (
+                            <span style={{
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                backgroundColor: analysisReport.overallScore >= 70 ? '#22c55e33' : analysisReport.overallScore >= 50 ? '#eab30833' : '#ef444433',
+                                color: analysisReport.overallScore >= 70 ? '#22c55e' : analysisReport.overallScore >= 50 ? '#eab308' : '#ef4444'
+                            }}>
+                                Score: {analysisReport.overallScore}
+                            </span>
+                        )}
+                    </div>
+                    <span style={{ color: '#64748b', transition: 'transform 0.2s', transform: showAnalyst ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+                </div>
+
+                {showAnalyst && (
+                    <div style={{ padding: '0 20px 20px', borderTop: '1px solid #1e3a5f33' }}>
+                        {/* Generate Button */}
+                        <div style={{ marginTop: '16px', marginBottom: '16px' }}>
+                            <button
+                                onClick={runAnalysis}
+                                disabled={isAnalyzing || positions.length === 0}
+                                style={{
+                                    padding: '12px 24px',
+                                    borderRadius: '8px',
+                                    backgroundColor: isAnalyzing ? '#3f4f66' : '#3b82f6',
+                                    color: '#fff',
+                                    border: 'none',
+                                    cursor: isAnalyzing || positions.length === 0 ? 'not-allowed' : 'pointer',
+                                    fontWeight: '600',
+                                    fontSize: '14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                {isAnalyzing ? (
+                                    <>
+                                        <span style={{ animation: 'spin 1s linear infinite' }}>⏳</span>
+                                        Analyzing...
+                                    </>
+                                ) : (
+                                    <>🔍 Analyze Portfolio</>
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Error Display */}
+                        {analysisError && (
+                            <div style={{ padding: '12px', backgroundColor: '#ef444422', borderRadius: '8px', color: '#ef4444', marginBottom: '16px' }}>
+                                ⚠️ {analysisError}
+                            </div>
+                        )}
+
+                        {/* Analysis Report */}
+                        {analysisReport && (
+                            <div style={{ display: 'grid', gap: '16px' }}>
+                                {/* Score & Summary */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '16px', alignItems: 'center' }}>
+                                    <div style={{
+                                        width: '100px',
+                                        height: '100px',
+                                        borderRadius: '50%',
+                                        border: `6px solid ${analysisReport.overallScore >= 70 ? '#22c55e' : analysisReport.overallScore >= 50 ? '#eab308' : '#ef4444'}`,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: '#0a1628'
+                                    }}>
+                                        <span style={{ fontSize: '28px', fontWeight: '700', color: '#fff' }}>{analysisReport.overallScore}</span>
+                                        <span style={{ fontSize: '11px', color: '#64748b' }}>{analysisReport.scoreLabel}</span>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '14px', color: '#94a3b8', lineHeight: '1.5' }}>{analysisReport.summary}</div>
+                                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '8px' }}>
+                                            Generated: {new Date(analysisReport.generatedAt).toLocaleString()}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Risk Alerts */}
+                                {analysisReport.riskAlerts.length > 0 && (
+                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
+                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            ⚠️ Risk Alerts ({analysisReport.riskAlerts.length})
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {analysisReport.riskAlerts.map((alert, i) => (
+                                                <div key={i} style={{
+                                                    padding: '8px 12px',
+                                                    borderRadius: '6px',
+                                                    backgroundColor: alert.level === 'critical' ? '#ef444422' : alert.level === 'high' ? '#f9731622' : '#eab30822',
+                                                    borderLeft: `3px solid ${alert.level === 'critical' ? '#ef4444' : alert.level === 'high' ? '#f97316' : '#eab308'}`
+                                                }}>
+                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{alert.symbol}</div>
+                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{alert.reason}</div>
+                                                    {alert.suggestion && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>💡 {alert.suggestion}</div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* News Alerts */}
+                                {analysisReport.newsAlerts.length > 0 && (
+                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
+                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            📰 News to Watch ({analysisReport.newsAlerts.length})
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {analysisReport.newsAlerts.map((news, i) => (
+                                                <div key={i} style={{
+                                                    padding: '8px 12px',
+                                                    borderRadius: '6px',
+                                                    backgroundColor: '#3b82f622',
+                                                    borderLeft: `3px solid ${news.impact === 'high' ? '#ef4444' : news.impact === 'medium' ? '#eab308' : '#3b82f6'}`
+                                                }}>
+                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{news.symbol}</div>
+                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{news.headline}</div>
+                                                    {news.timeframe && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>🕐 {news.timeframe}</div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Overtrading Warnings */}
+                                {analysisReport.overtradingWarnings.length > 0 && (
+                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
+                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            🔄 Overtrading Warnings ({analysisReport.overtradingWarnings.length})
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {analysisReport.overtradingWarnings.map((warn, i) => (
+                                                <div key={i} style={{
+                                                    padding: '8px 12px',
+                                                    borderRadius: '6px',
+                                                    backgroundColor: '#8b5cf622',
+                                                    borderLeft: '3px solid #8b5cf6'
+                                                }}>
+                                                    {warn.symbol && <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{warn.symbol}</div>}
+                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{warn.warning}</div>
+                                                    <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>💡 {warn.suggestion}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Recommendations */}
+                                {analysisReport.recommendations.length > 0 && (
+                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
+                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            💡 Recommendations
+                                        </div>
+                                        <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            {analysisReport.recommendations.map((rec, i) => (
+                                                <li key={i} style={{ fontSize: '12px', color: '#94a3b8' }}>{rec}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Empty State */}
+                        {!analysisReport && !isAnalyzing && !analysisError && (
+                            <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
+                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🤖</div>
+                                <div style={{ fontSize: '14px' }}>Click "Analyze Portfolio" to get AI-powered insights</div>
+                                <div style={{ fontSize: '12px', marginTop: '4px' }}>Risk assessment • News alerts • Trading recommendations</div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             {/* Trade History Panel */}
             <div style={{ marginTop: '24px', backgroundColor: '#0d1f3c', borderRadius: '12px', border: '1px solid #1e3a5f', overflow: 'hidden' }}>

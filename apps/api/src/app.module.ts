@@ -15,6 +15,7 @@ import { OrdersModule } from './orders/orders.module';
 import { MarketDataModule } from './market-data/market-data.module';
 import { PortfolioImportModule } from './portfolio-import/portfolio-import.module';
 import { PortfolioChatModule } from './portfolio-chat/portfolio-chat.module';
+import { PortfolioAnalystModule } from './portfolio-analyst/portfolio-analyst.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { PortfolioChatModule } from './portfolio-chat/portfolio-chat.module';
     MarketDataModule,
     PortfolioImportModule,
     PortfolioChatModule,
+    PortfolioAnalystModule,
   ],
   controllers: [AppController],
   providers: [AppService],

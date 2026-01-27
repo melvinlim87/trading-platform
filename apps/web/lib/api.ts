@@ -81,3 +81,52 @@ export const portfolioChatAPI = {
         api.post<{ response: string }>('/portfolio-chat', request),
 };
 
+// Portfolio Analyst API
+export interface AnalysisPosition {
+    symbol: string;
+    name: string;
+    quantity: number;
+    avgPrice: number;
+    currentPrice: number;
+    assetClass: string;
+    leverage?: number;
+    broker?: string;
+    pnl?: number;
+    pnlPercent?: number;
+}
+
+export interface RiskAlert {
+    symbol: string;
+    level: 'low' | 'medium' | 'high' | 'critical';
+    reason: string;
+    suggestion?: string;
+}
+
+export interface NewsAlert {
+    symbol: string;
+    headline: string;
+    impact: 'low' | 'medium' | 'high';
+    timeframe?: string;
+}
+
+export interface OvertradingWarning {
+    symbol?: string;
+    warning: string;
+    suggestion: string;
+}
+
+export interface PortfolioAnalysisReport {
+    overallScore: number;
+    scoreLabel: 'Poor' | 'Fair' | 'Good' | 'Excellent';
+    riskAlerts: RiskAlert[];
+    newsAlerts: NewsAlert[];
+    overtradingWarnings: OvertradingWarning[];
+    recommendations: string[];
+    summary: string;
+    generatedAt: string;
+}
+
+export const portfolioAnalystAPI = {
+    analyze: (positions: AnalysisPosition[]) =>
+        api.post<PortfolioAnalysisReport>('/portfolio-analyst/analyze', { positions }),
+};
