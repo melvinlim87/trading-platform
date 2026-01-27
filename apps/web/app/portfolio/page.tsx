@@ -1157,17 +1157,17 @@ export default function PortfolioPage() {
                                             <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                                                 <thead>
                                                     <tr style={{ color: '#64748b', fontSize: '11px' }}>
-                                                        <th style={{ width: '22%', textAlign: 'left', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
-                                                        <th style={{ width: '8%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
-                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
-                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
-                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
-                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
-                                                        <th style={{ width: '10%', textAlign: 'right', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
-                                                        <th style={{ width: '8%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
-                                                        <th style={{ width: '8%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
-                                                        <th style={{ width: '8%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>RISK</th>
-                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 2px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ACTIONS</th>
+                                                        <th style={{ width: '14%', textAlign: 'left', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
+                                                        <th style={{ width: '6%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
+                                                        <th style={{ width: '9%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
+                                                        <th style={{ width: '9%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
+                                                        <th style={{ width: '9%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
+                                                        <th style={{ width: '9%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
+                                                        <th style={{ width: '9%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
+                                                        <th style={{ width: '8%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
+                                                        <th style={{ width: '8%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
+                                                        <th style={{ width: '7%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>RISK</th>
+                                                        <th style={{ width: '12%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ACTIONS</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1181,7 +1181,7 @@ export default function PortfolioPage() {
 
                                                         return (
                                                             <tr key={pos.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
-                                                                <td style={{ padding: '8px 2px' }}>
+                                                                <td style={{ padding: '8px 4px' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                                         <div style={{
                                                                             width: '26px', height: '26px', borderRadius: '50%',
@@ -1255,7 +1255,7 @@ export default function PortfolioPage() {
                                                                         </div>
                                                                     </div>
                                                                 </td>
-                                                                <td style={{ textAlign: 'right', padding: '8px 2px' }}>
+                                                                <td style={{ textAlign: 'right', padding: '8px 4px' }}>
                                                                     {pos.assetClass === 'forex' && pos.lotSize !== undefined ? (
                                                                         <div>
                                                                             <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{formatLotSize(pos.lotSize)}</span>
@@ -1270,15 +1270,15 @@ export default function PortfolioPage() {
                                                                         <span style={{ marginLeft: '2px', padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#3b82f622', color: '#3b82f6' }}>{pos.leverage}x</span>
                                                                     )}
                                                                 </td>
-                                                                <td style={{ textAlign: 'right', padding: '8px 2px', color: '#94a3b8', fontSize: '13px' }}>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                                <td style={{ textAlign: 'right', padding: '8px 2px', fontWeight: '600', color: '#fff', fontSize: '13px' }}>${pos.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                                <td style={{ textAlign: 'right', padding: '8px 2px', color: '#94a3b8', fontSize: '13px' }}>
+                                                                <td style={{ textAlign: 'right', padding: '8px 4px', color: '#94a3b8', fontSize: '13px' }}>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                <td style={{ textAlign: 'right', padding: '8px 4px', fontWeight: '600', color: '#fff', fontSize: '13px' }}>${pos.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                                <td style={{ textAlign: 'right', padding: '8px 4px', color: '#94a3b8', fontSize: '13px' }}>
                                                                     ${initialValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                                 </td>
-                                                                <td style={{ textAlign: 'right', padding: '8px 2px', fontWeight: '600', color: '#fff', fontSize: '13px' }}>
+                                                                <td style={{ textAlign: 'right', padding: '8px 4px', fontWeight: '600', color: '#fff', fontSize: '13px' }}>
                                                                     ${notional.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                                 </td>
-                                                                <td style={{ textAlign: 'right', padding: '8px 2px' }}>
+                                                                <td style={{ textAlign: 'right', padding: '8px 4px' }}>
                                                                     <div style={{ color: pnl >= 0 ? '#22c55e' : '#ef4444', fontWeight: '600', fontSize: '13px' }}>
                                                                         {pnl >= 0 ? '+' : ''}${pnl.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                                     </div>
@@ -1286,17 +1286,17 @@ export default function PortfolioPage() {
                                                                         {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(1)}%
                                                                     </div>
                                                                 </td>
-                                                                <td style={{ textAlign: 'center', padding: '8px 2px' }}>
+                                                                <td style={{ textAlign: 'center', padding: '8px 4px' }}>
                                                                     <span style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: '#3b82f633', color: '#fff' }}>
                                                                         {pos.broker || '—'}
                                                                     </span>
                                                                 </td>
-                                                                <td style={{ textAlign: 'center', padding: '8px 2px' }}>
+                                                                <td style={{ textAlign: 'center', padding: '8px 4px' }}>
                                                                     <span style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: '#a855f733', color: '#fff' }}>
                                                                         {pos.platform || '—'}
                                                                     </span>
                                                                 </td>
-                                                                <td style={{ textAlign: 'center', padding: '8px 2px' }}>
+                                                                <td style={{ textAlign: 'center', padding: '8px 4px' }}>
                                                                     <select
                                                                         value={pos.riskOverride || 'auto'}
                                                                         onChange={(e) => {
@@ -1330,7 +1330,7 @@ export default function PortfolioPage() {
                                                                         <option value="critical">CRITICAL</option>
                                                                     </select>
                                                                 </td>
-                                                                <td style={{ textAlign: 'center', padding: '8px 2px' }}>
+                                                                <td style={{ textAlign: 'center', padding: '8px 4px' }}>
                                                                     <div style={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
                                                                         {/* Edit Button */}
                                                                         <button
