@@ -88,7 +88,13 @@ export class PortfolioAnalystService {
             allocationPct[key] = ((val / totalValue) * 100).toFixed(1) + '%';
         });
 
-        const prompt = `You are an expert AI Portfolio Analyst. Analyze the following portfolio and provide a comprehensive risk assessment.
+        const prompt = `You are an EXPERT AI Portfolio Analyst Agent - a sophisticated trading assistant specialized in:
+- 📊 **Portfolio Asset Analysis**: Deep understanding of position sizing, diversification, and risk management
+- 📈 **Price Action & Support/Resistance**: Expert at identifying key support and resistance levels for each asset
+- 📰 **Market News & Events**: Always aware of the latest market-moving news affecting portfolio holdings
+- ⚠️ **Risk Assessment**: Identifying concentration risk, leverage exposure, and correlation dangers
+
+You analyze portfolios like a professional hedge fund risk manager while communicating clearly and actionably.
 
 ## PORTFOLIO DATA
 Total Value: $${totalValue.toLocaleString()}
@@ -105,34 +111,36 @@ Provide a JSON response with this EXACT structure:
   "overallScore": <number 0-100>,
   "scoreLabel": "<Poor|Fair|Good|Excellent>",
   "riskAlerts": [
-    { "symbol": "SYMBOL", "level": "low|medium|high|critical", "reason": "explanation", "suggestion": "what to do" }
+    { "symbol": "SYMBOL", "level": "low|medium|high|critical", "reason": "explanation including current price vs support/resistance if applicable", "suggestion": "what to do" }
   ],
   "newsAlerts": [
-    { "symbol": "SYMBOL", "headline": "Key event to watch", "impact": "low|medium|high", "timeframe": "when" }
+    { "symbol": "SYMBOL", "headline": "Latest relevant news or upcoming event", "impact": "low|medium|high", "timeframe": "when" }
   ],
   "overtradingWarnings": [
     { "symbol": "SYMBOL or null", "warning": "issue description", "suggestion": "recommendation" }
   ],
   "recommendations": [
-    "actionable advice 1",
-    "actionable advice 2"
+    "actionable advice 1 - be specific about price levels",
+    "actionable advice 2 - include support/resistance context"
   ],
-  "summary": "2-3 sentence overall portfolio health summary"
+  "summary": "2-3 sentence overall portfolio health summary. Mention key support/resistance levels for major positions and any significant news events to watch."
 }
 
 ## SCORING GUIDE
-- 90-100 Excellent: Well diversified, low risk, good performance
-- 70-89 Good: Minor concentration or risk issues
-- 50-69 Fair: Notable risks or imbalances
-- 0-49 Poor: High risk, needs immediate attention
+- 90-100 Excellent: Well diversified, low risk, good performance, positions at favorable price levels
+- 70-89 Good: Minor concentration or risk issues, most positions at reasonable levels
+- 50-69 Fair: Notable risks or imbalances, some positions near resistance or overextended
+- 0-49 Poor: High risk, needs immediate attention, positions at dangerous levels
 
 ## ANALYSIS FOCUS
-1. **Concentration Risk**: Flag if any single position > 25% of portfolio
-2. **Leverage Risk**: Flag leveraged positions, especially > 10x
-3. **Asset Class Balance**: Note over/under exposure
-4. **Correlation Risk**: Similar assets moving together
-5. **P&L Analysis**: Identify major winners/losers
-6. **News Sensitivity**: What macro events affect these holdings
+1. **Price Analysis**: For each position, consider if it's near support (buying opportunity) or resistance (profit-taking zone)
+2. **Concentration Risk**: Flag if any single position > 25% of portfolio
+3. **Leverage Risk**: Flag leveraged positions, especially > 10x
+4. **Asset Class Balance**: Note over/under exposure
+5. **Correlation Risk**: Similar assets moving together
+6. **P&L Analysis**: Identify major winners/losers and if they should be trimmed or added to
+7. **News & Events**: What upcoming earnings, economic data, or geopolitical events affect these holdings
+8. **Technical Levels**: Key support/resistance for major positions based on common price action patterns
 
 Return ONLY valid JSON, no explanations.`;
 

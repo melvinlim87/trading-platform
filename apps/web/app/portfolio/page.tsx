@@ -361,6 +361,7 @@ export default function PortfolioPage() {
 
     // Import history state
     const [importHistory, setImportHistory] = useState<{ id: string; timestamp: Date; positions: number }[]>([]);
+    const [showImportHistory, setShowImportHistory] = useState(false);
 
     // Fetch real prices on mount and every 30 seconds
     const fetchPrices = useCallback(async () => {
@@ -905,6 +906,24 @@ export default function PortfolioPage() {
                         >
                             📸 AI Import
                         </button>
+                        <button
+                            onClick={() => setShowImportHistory(prev => !prev)}
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                backgroundColor: showImportHistory ? '#3b82f622' : '#1e3a5f',
+                                color: showImportHistory ? '#3b82f6' : '#94a3b8',
+                                border: showImportHistory ? '1px solid #3b82f6' : '1px solid #3f4f66',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                            }}
+                        >
+                            📤 History {importHistory.length > 0 && <span style={{ backgroundColor: '#3b82f6', color: '#fff', padding: '1px 6px', borderRadius: '10px', fontSize: '11px' }}>{importHistory.length}</span>}
+                        </button>
                         <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <span style={{ fontWeight: 'bold', color: '#000' }}>{displayUser.email?.[0]?.toUpperCase()}</span>
                         </div>
@@ -1018,11 +1037,60 @@ export default function PortfolioPage() {
                     onAnalysisComplete={(report) => setAnalysisReport(report)}
                 />
 
-                {/* Draggable Tools Section - Chat and History */}
+                {/* Import History Panel - shows when header button clicked */}
+                {showImportHistory && (
+                    <div style={{
+                        marginBottom: '24px',
+                        backgroundColor: '#0d1f3c',
+                        borderRadius: '12px',
+                        border: '1px solid #1e3a5f',
+                        padding: '16px',
+                        animation: 'slideDown 0.2s ease-out'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '18px' }}>📤</span>
+                                <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>Import History</span>
+                            </div>
+                            <button
+                                onClick={() => setShowImportHistory(false)}
+                                style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '18px' }}
+                            >✕</button>
+                        </div>
+                        {importHistory.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                                <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.5 }}>📤</div>
+                                <div style={{ fontSize: '14px', fontWeight: '500' }}>No import history yet</div>
+                                <div style={{ fontSize: '12px', marginTop: '4px' }}>Use AI Import to upload portfolio screenshots</div>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {importHistory.map((item, i) => (
+                                    <div key={item.id} style={{
+                                        padding: '12px',
+                                        backgroundColor: '#0a1628',
+                                        borderRadius: '8px',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <div>
+                                            <div style={{ fontSize: '13px', color: '#fff' }}>Import #{i + 1}</div>
+                                            <div style={{ fontSize: '11px', color: '#64748b' }}>{new Date(item.timestamp).toLocaleString()}</div>
+                                        </div>
+                                        <div style={{ fontSize: '13px', color: '#3b82f6' }}>{item.positions} positions</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Portfolio Chat Section */}
                 <div style={{ marginBottom: '24px' }}>
                     <DraggablePanels
                         storageKey="portfolio-tools-panels"
-                        columns={2}
+                        columns={1}
                         panels={[
                             {
                                 id: 'ai-chat',
@@ -1046,27 +1114,6 @@ export default function PortfolioPage() {
                                             riskProfile="Moderate"
                                             cashBalance={0}
                                         />
-                                    </div>
-                                )
-                            },
-                            {
-                                id: 'import-history',
-                                title: 'Import History',
-                                icon: '📤',
-                                defaultExpanded: false,
-                                render: () => (
-                                    <div style={{ marginTop: '16px' }}>
-                                        {importHistory.length === 0 ? (
-                                            <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
-                                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📤</div>
-                                                <div style={{ fontSize: '14px' }}>No import history yet</div>
-                                                <div style={{ fontSize: '12px', marginTop: '4px' }}>Use AI Import to upload portfolio screenshots</div>
-                                            </div>
-                                        ) : (
-                                            <div style={{ fontSize: '13px', color: '#94a3b8' }}>
-                                                {importHistory.length} imports recorded
-                                            </div>
-                                        )}
                                     </div>
                                 )
                             }
