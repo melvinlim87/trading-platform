@@ -32,40 +32,57 @@ export function AIPortfolioAnalyst({ positions, onAnalysisComplete }: AIPortfoli
         setDisplayedText('');
         setIsTyping(true);
 
-        try {
-            // Simulate typing effect while waiting
-            const thinkingMessages = [
-                "Analyzing your portfolio...",
-                "Checking position concentrations...",
-                "Evaluating risk levels...",
-                "Generating insights..."
-            ];
-            let msgIndex = 0;
-            const typingInterval = setInterval(() => {
-                setDisplayedText(thinkingMessages[msgIndex % thinkingMessages.length]);
-                msgIndex++;
-            }, 800);
+        // Simulate typing effect while waiting
+        const thinkingMessages = [
+            "Analyzing your portfolio...",
+            "Checking position concentrations...",
+            "Evaluating risk levels...",
+            "Generating insights..."
+        ];
+        let msgIndex = 0;
+        const typingInterval = setInterval(() => {
+            setDisplayedText(thinkingMessages[msgIndex % thinkingMessages.length]);
+            msgIndex++;
+        }, 800);
 
+        // Set a timeout to prevent infinite analyzing
+        const timeoutId = setTimeout(() => {
+            clearInterval(typingInterval);
+            setIsAnalyzing(false);
+            setIsTyping(false);
+            setError('Analysis timed out. Please try again.');
+            setDisplayedText('The analysis took too long. The AI service may be busy. Please click refresh to try again.');
+        }, 60000); // 60 second timeout
+
+        try {
+            console.log('[AIAnalyst] Starting analysis with positions:', positions.length);
             const response = await portfolioAnalystAPI.analyze(positions);
 
+            clearTimeout(timeoutId);
             clearInterval(typingInterval);
 
+            console.log('[AIAnalyst] Analysis complete:', response.data);
             const data = response.data;
             setReport(data);
             onAnalysisComplete?.(data);
 
             // Type out the summary with animation
             setDisplayedText('');
-            const fullText = data.summary;
+            const fullText = data.summary || 'Analysis complete.';
             for (let i = 0; i <= fullText.length; i++) {
                 await new Promise(resolve => setTimeout(resolve, 15));
                 setDisplayedText(fullText.substring(0, i));
             }
             setIsTyping(false);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Analysis failed');
+        } catch (err: any) {
+            clearTimeout(timeoutId);
+            clearInterval(typingInterval);
+
+            console.error('[AIAnalyst] Analysis failed:', err);
+            const errorMessage = err?.response?.data?.message || err?.message || 'Analysis failed';
+            setError(errorMessage);
             setIsTyping(false);
-            setDisplayedText('Sorry, I encountered an error analyzing your portfolio. Please try again.');
+            setDisplayedText(`Sorry, I encountered an error: ${errorMessage}. Please click refresh to try again.`);
         } finally {
             setIsAnalyzing(false);
         }

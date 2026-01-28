@@ -1086,39 +1086,117 @@ export default function PortfolioPage() {
                     </div>
                 )}
 
-                {/* Portfolio Chat Section */}
-                <div style={{ marginBottom: '24px' }}>
-                    <DraggablePanels
-                        storageKey="portfolio-tools-panels"
-                        columns={1}
-                        panels={[
-                            {
-                                id: 'ai-chat',
-                                title: 'Portfolio Chat',
-                                icon: '💬',
-                                defaultExpanded: true,
-                                render: () => (
-                                    <div style={{ marginTop: '16px' }}>
-                                        <PortfolioChatbox
-                                            positions={positions.map(p => ({
-                                                symbol: p.symbol,
-                                                name: p.name || p.symbol,
-                                                quantity: p.quantity,
-                                                avgPrice: p.avgPrice,
-                                                currentPrice: p.currentPrice || p.avgPrice,
-                                                assetClass: p.assetClass || 'other',
-                                                positionType: p.positionType,
-                                                leverage: p.leverage
-                                            }))}
-                                            userName="Trader"
-                                            riskProfile="Moderate"
-                                            cashBalance={0}
-                                        />
+                {/* Portfolio Chat & Broker Accounts - 2 Column Layout */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '24px',
+                    marginBottom: '24px'
+                }}>
+                    {/* Chat Column */}
+                    <div style={{
+                        backgroundColor: '#0d1f3c',
+                        borderRadius: '12px',
+                        border: '1px solid #1e3a5f',
+                        padding: '16px'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                            <span style={{ fontSize: '18px' }}>💬</span>
+                            <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>Portfolio Chat</span>
+                        </div>
+                        <PortfolioChatbox
+                            positions={positions.map(p => ({
+                                symbol: p.symbol,
+                                name: p.name || p.symbol,
+                                quantity: p.quantity,
+                                avgPrice: p.avgPrice,
+                                currentPrice: p.currentPrice || p.avgPrice,
+                                assetClass: p.assetClass || 'other',
+                                positionType: p.positionType,
+                                leverage: p.leverage
+                            }))}
+                            userName="Trader"
+                            riskProfile="Moderate"
+                            cashBalance={0}
+                        />
+                    </div>
+
+                    {/* Broker Accounts Column */}
+                    <div style={{
+                        backgroundColor: '#0d1f3c',
+                        borderRadius: '12px',
+                        border: '1px solid #1e3a5f',
+                        padding: '16px'
+                    }}>
+                        <div
+                            onClick={() => setShowAccountsSection(!showAccountsSection)}
+                            style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                cursor: 'pointer', marginBottom: showAccountsSection ? '12px' : '0'
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '18px' }}>🏦</span>
+                                <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>Broker Accounts</span>
+                                <span style={{ fontSize: '14px', color: '#64748b' }}>({brokerAccounts.length})</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontSize: '13px', color: '#94a3b8' }}>
+                                    Total: <span style={{ fontWeight: '600', color: '#fff' }}>${brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0).toLocaleString()}</span>
+                                </span>
+                                <span style={{ color: '#64748b', transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+                            </div>
+                        </div>
+                        {showAccountsSection && (
+                            <div style={{ marginTop: '8px' }}>
+                                {brokerAccounts.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                                        <div style={{ fontSize: '32px', marginBottom: '8px', opacity: 0.5 }}>🏦</div>
+                                        <div style={{ fontSize: '14px' }}>No broker accounts yet</div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setShowAccountModal(true); }}
+                                            style={{ marginTop: '12px', padding: '8px 16px', borderRadius: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '13px' }}
+                                        >
+                                            + Add Account
+                                        </button>
                                     </div>
-                                )
-                            }
-                        ]}
-                    />
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {brokerAccounts.map(account => {
+                                            const brokerPositions = positions.filter(p => p.broker === account.brokerName);
+                                            const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
+                                            const idleCash = Math.max(0, account.totalBalance - activeValue);
+                                            return (
+                                                <div key={account.id} style={{
+                                                    padding: '12px',
+                                                    backgroundColor: '#0a1628',
+                                                    borderRadius: '8px',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>{account.brokerName}</div>
+                                                        <div style={{ fontSize: '11px', color: '#64748b' }}>{account.platform || 'Manual'}</div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>${account.totalBalance.toLocaleString()}</div>
+                                                        <div style={{ fontSize: '11px', color: '#f59e0b' }}>Idle: ${idleCash.toLocaleString()}</div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        <button
+                                            onClick={() => setShowAccountModal(true)}
+                                            style={{ marginTop: '8px', padding: '8px 16px', borderRadius: '8px', backgroundColor: '#1e3a5f', color: '#94a3b8', border: '1px solid #3f4f66', cursor: 'pointer', fontSize: '13px' }}
+                                        >
+                                            + Add Account
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Performance Charts Section - 2 Column Layout */}
@@ -1135,113 +1213,6 @@ export default function PortfolioPage() {
                             };
                         }).filter(item => Math.abs(item.pnl) > 0)}
                     />
-                </div>
-
-                {/* Broker Accounts Section */}
-                <div style={{ marginBottom: '24px' }}>
-                    <div
-                        onClick={() => setShowAccountsSection(!showAccountsSection)}
-                        style={{
-                            display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '16px 20px', backgroundColor: '#0d1f3c', borderRadius: '8px',
-                            cursor: 'pointer', marginBottom: showAccountsSection ? '12px' : '0',
-                            boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11', gap: '16px'
-                        }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '17px', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap' }}>🏦 Broker Accounts</span>
-                            <span style={{ fontSize: '14px', color: '#64748b', whiteSpace: 'nowrap' }}>({brokerAccounts.length})</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                                Total: <span style={{ fontWeight: '600', color: '#fff' }}>${brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0).toLocaleString()}</span>
-                            </span>
-                            <span style={{ fontSize: '14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                                Idle: <span style={{ fontWeight: '600', color: '#f59e0b' }}>
-                                    ${(() => {
-                                        return brokerAccounts.reduce((totalIdle, account) => {
-                                            const brokerPositions = positions.filter(p => p.broker === account.brokerName);
-                                            const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
-                                            const idleCash = Math.max(0, account.totalBalance - activeValue);
-                                            return totalIdle + idleCash;
-                                        }, 0).toLocaleString();
-                                    })()}
-                                </span>
-                            </span>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setEditingAccount(null); setShowAccountModal(true); }}
-                                style={{
-                                    padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: '600',
-                                    background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
-                                    color: '#fff', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap'
-                                }}
-                            >
-                                + Add
-                            </button>
-                            <span style={{ transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '12px' }}>▼</span>
-                        </div>
-                    </div>
-
-                    {showAccountsSection && (
-                        <div style={{ backgroundColor: '#0d1f3c', borderRadius: '8px', padding: '12px', boxShadow: '0 0 15px #f59e0b15' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                                <thead>
-                                    <tr style={{ color: '#64748b', fontSize: '11px' }}>
-                                        <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>BROKER</th>
-                                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>TOTAL BALANCE</th>
-                                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>ACTIVE POSITIONS</th>
-                                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>IDLE CASH</th>
-                                        <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>SOURCE</th>
-                                        <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>UPDATED</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {brokerAccounts.map(account => {
-                                        const brokerPositions = positions.filter(p => p.broker === account.brokerName);
-                                        const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
-                                        const idleCash = Math.max(0, account.totalBalance - activeValue);
-                                        const idlePercent = account.totalBalance > 0 ? (idleCash / account.totalBalance * 100) : 0;
-
-                                        return (
-                                            <tr key={account.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
-                                                <td style={{ padding: '10px 8px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <span style={{ fontWeight: '600', color: '#fff' }}>{account.brokerName}</span>
-                                                        {account.platform && <span style={{ fontSize: '11px', color: '#64748b' }}>({account.platform})</span>}
-                                                    </div>
-                                                </td>
-                                                <td style={{ textAlign: 'right', padding: '10px 8px', fontWeight: '600', color: '#fff' }}>
-                                                    ${account.totalBalance.toLocaleString()}
-                                                </td>
-                                                <td style={{ textAlign: 'right', padding: '10px 8px', color: '#22c55e' }}>
-                                                    ${activeValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                                    <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>({brokerPositions.length} pos)</span>
-                                                </td>
-                                                <td style={{ textAlign: 'right', padding: '10px 8px' }}>
-                                                    <span style={{ color: idleCash > 0 ? '#f59e0b' : '#64748b', fontWeight: '600' }}>
-                                                        ${idleCash.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                                    </span>
-                                                    <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>({idlePercent.toFixed(0)}%)</span>
-                                                </td>
-                                                <td style={{ textAlign: 'center', padding: '10px 8px' }}>
-                                                    {account.verificationSource === 'api_linked' ? (
-                                                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#f59e0b22', color: '#f59e0b' }}>✓ API</span>
-                                                    ) : account.verificationSource === 'ai_import' ? (
-                                                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#22c55e22', color: '#22c55e' }}>✓ AI</span>
-                                                    ) : (
-                                                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#64748b22', color: '#94a3b8' }}>✎ Manual</span>
-                                                    )}
-                                                </td>
-                                                <td style={{ textAlign: 'center', padding: '10px 8px', fontSize: '11px', color: '#64748b' }}>
-                                                    {new Date(account.lastUpdated).toLocaleDateString()}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
                 </div>
 
                 <div className="portfolio-main-grid">
