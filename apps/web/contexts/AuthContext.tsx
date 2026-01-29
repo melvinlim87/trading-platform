@@ -31,8 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (storedToken) {
             setToken(storedToken);
 
+            // Sync cookie for middleware
+            document.cookie = `auth_token=${storedToken}; path=/; max-age=86400; SameSite=Strict`;
+
             // Mock auth bypass
             if (storedToken.startsWith('mock_')) {
+                document.cookie = `auth_token=${storedToken}; path=/; max-age=86400; SameSite=Strict`;
+
                 setUser({
                     id: 'mock-user-id',
                     email: localStorage.getItem('user_email') || 'demo@example.com',
@@ -47,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .then((res) => setUser(res.data))
                 .catch(() => {
                     localStorage.removeItem('token');
+                    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
                     setToken(null);
                 })
                 .finally(() => setIsLoading(false));
@@ -72,6 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const response = await authAPI.login(email, password);
         const { access_token, user: userData } = response.data;
         localStorage.setItem('token', access_token);
+        // Set cookie for middleware
+        document.cookie = `auth_token=${access_token}; path=/; max-age=86400; SameSite=Strict`;
         setToken(access_token);
         setUser(userData);
     };
@@ -93,12 +101,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const response = await authAPI.register(email, password);
         const { access_token, user: userData } = response.data;
         localStorage.setItem('token', access_token);
+        // Set cookie for middleware
+        document.cookie = `auth_token=${access_token}; path=/; max-age=86400; SameSite=Strict`;
         setToken(access_token);
         setUser(userData);
     };
 
     const logout = () => {
         localStorage.removeItem('token');
+        // Remove cookie
+        document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         setToken(null);
         setUser(null);
     };

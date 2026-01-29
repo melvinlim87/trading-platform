@@ -89,6 +89,7 @@ export function PortfolioChatbox({
                 cashBalance,
                 conversationHistory: messages
             });
+            console.log(response)
             setMessages([...newMessages, { role: 'assistant', content: response.data.response }]);
         } catch (error: any) {
             console.error('Chat error:', error);
@@ -246,13 +247,13 @@ export function PortfolioChatbox({
                     }}>
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
                             {[
-                                { icon: '📊', text: "Why am I up/down today?", color: '#10b981' },
-                                { icon: '🏆', text: "Best performer?", color: '#10b981' },
-                                { icon: '📉', text: "Biggest loser?", color: '#10b981' },
-                                { icon: '🎯', text: "Am I diversified?", color: '#f59e0b' },
-                                { icon: '⚠️', text: "Risk analysis", color: '#f59e0b' },
-                                { icon: '📝', text: "Portfolio summary", color: '#8b5cf6' },
-                                { icon: '💰', text: "Total P&L", color: '#3b82f6' },
+                                { icon: '📊', text: "Why am I up/down today?", color: '#10b981', textColor: 'black' },
+                                { icon: '🏆', text: "Best performer?", color: '#10b981', textColor: 'black' },
+                                { icon: '📉', text: "Biggest loser?", color: '#10b981', textColor: 'black' },
+                                { icon: '🎯', text: "Am I diversified?", color: '#f59e0b', textColor: 'black' },
+                                { icon: '⚠️', text: "Risk analysis", color: '#f59e0b', textColor: 'black' },
+                                { icon: '📝', text: "Portfolio summary", color: '#8b5cf6', textColor: 'black' },
+                                { icon: '💰', text: "Total P&L", color: '#3b82f6', textColor: 'black' },
                             ].map((q, idx) => (
                                 <button
                                     key={idx}
@@ -277,11 +278,14 @@ export function PortfolioChatbox({
                                         if (!isLoading) {
                                             e.currentTarget.style.backgroundColor = q.color;
                                             e.currentTarget.style.borderColor = q.color;
+                                            e.currentTarget.style.color = q.textColor;
                                         }
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundColor = '#1e3a5f';
+                                        // e.currentTarget.style.backgroundColor = '#1e3a5f';
+                                        e.currentTarget.style.backgroundColor = '#0A0A0A';
                                         e.currentTarget.style.borderColor = '#3f4f66';
+                                        e.currentTarget.style.color = '#9ca3af';
                                     }}
                                 >
                                     <span>{q.icon}</span> {q.text}

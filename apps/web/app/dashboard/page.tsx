@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { accountsAPI } from '@/lib/api';
 import Link from 'next/link';
+import Header from '@/components/Header';
 
 export default function DashboardPage() {
     const { user, logout, isLoading: authLoading } = useAuth();
@@ -50,21 +51,7 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen">
             {/* Header */}
-            <header className="bg-black border-b border-yellow-900/30">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex justify-between items-center">
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-accentPrimary via-yellow-100 to-accentSecondary bg-clip-text text-transparent">
-                            Trading Platform
-                        </h1>
-                        <div className="flex items-center gap-4">
-                            <span className="text-textSecondary">{user.email}</span>
-                            <button onClick={logout} className="btn-secondary">
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <Header />
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -131,11 +118,11 @@ export default function DashboardPage() {
                         <p className="text-textSecondary">Track your favorite assets</p>
                     </Link>
 
-                    <div className="card opacity-60 cursor-not-allowed">
+                    <Link href="/market" className="card hover:shadow-accentPrimary/20 transition-all cursor-pointer">
                         <div className="text-4xl mb-3">🏪</div>
                         <h3 className="text-xl font-semibold mb-2">Markets</h3>
-                        <p className="text-textSecondary">Coming soon</p>
-                    </div>
+                        <p className="text-textSecondary">View real-time market data</p>
+                    </Link>
 
                     <div className="card opacity-60 cursor-not-allowed">
                         <div className="text-4xl mb-3">👥</div>

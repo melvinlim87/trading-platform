@@ -100,7 +100,7 @@ export const assetClassOptions: { value: AssetClass; label: string; icon: string
     { value: 'crypto', label: 'Cryptocurrency', icon: '₿', color: '#f59e0b' },
     { value: 'forex', label: 'Forex', icon: '💱', color: '#10b981' },
     { value: 'stock', label: 'Stocks', icon: '📈', color: '#3b82f6' },
-    { value: 'etf', label: 'ETFs', icon: '📊', color: '#f97316' },
+    { value: 'etf', label: 'ETFs', icon: '📊', color: '#ed6bff' },
     { value: 'commodity', label: 'Commodities', icon: '🥇', color: '#84cc16' },
     { value: 'unit_trust', label: 'Unit Trusts', icon: '🏦', color: '#a855f7' },
 ];

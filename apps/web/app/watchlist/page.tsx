@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import Header from '@/components/Header';
 import { getCryptoPrices, getStockPrices, getForexPrices, getCommodityPrices, PriceData } from '@/lib/priceService';
 import { searchAssets, AssetInfo } from '@/lib/assetLibrary';
 
@@ -151,8 +152,8 @@ const PriceTicker = ({ items }: { items: WatchlistItem[] }) => {
     return (
         <div style={{
             overflow: 'hidden',
-            backgroundColor: '#0d1929',
-            borderBottom: '1px solid #1e3a5f',
+            backgroundColor: '#050505',
+            borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
             padding: '8px 0'
         }}>
             <div ref={tickerRef} style={{ display: 'flex', gap: '40px', whiteSpace: 'nowrap' }}>
@@ -187,14 +188,14 @@ const WatchlistCard = ({ item, onRemove }: { item: WatchlistItem; onRemove: (sym
 
     return (
         <div style={{
-            backgroundColor: '#0f1a2e',
+            backgroundColor: '#111111',
             borderRadius: '12px',
             padding: '16px',
-            border: '1px solid #1e3a5f',
+            border: '1px solid rgba(212, 175, 55, 0.2)',
             position: 'relative',
             transition: 'all 0.2s ease',
             cursor: 'pointer',
-            boxShadow: `0 0 20px ${glowColor}22, inset 0 1px 0 ${glowColor}11`
+            boxShadow: `0 0 20px ${glowColor}11, inset 0 1px 0 ${glowColor}05`
         }}
             onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = glowColor;
@@ -202,8 +203,8 @@ const WatchlistCard = ({ item, onRemove }: { item: WatchlistItem; onRemove: (sym
                 e.currentTarget.style.transform = 'translateY(-2px)';
             }}
             onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#1e3a5f';
-                e.currentTarget.style.boxShadow = `0 0 20px ${glowColor}22, inset 0 1px 0 ${glowColor}11`;
+                e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.2)';
+                e.currentTarget.style.boxShadow = `0 0 20px ${glowColor}11, inset 0 1px 0 ${glowColor}05`;
                 e.currentTarget.style.transform = 'translateY(0)';
             }}
         >
@@ -402,7 +403,7 @@ export default function WatchlistPage() {
 
     if (isLoading) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0a1628' }}>
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' }}>
                 <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '32px', marginBottom: '16px' }}>📊</div>
                     <div style={{ fontSize: '18px', color: '#e2e8f0' }}>Loading market data...</div>
@@ -414,32 +415,9 @@ export default function WatchlistPage() {
     const displayUser = user || { email: 'trader@demo.com' };
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#0a1628', color: '#e2e8f0' }}>
+        <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#e2e8f0' }}>
             {/* Header - matches portfolio */}
-            <header style={{ backgroundColor: '#0d1929', borderBottom: '1px solid #1e3a5f' }}>
-                <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-                        <h1 style={{ fontSize: '24px', fontWeight: '700', background: 'linear-gradient(to right, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            Trading Platform
-                        </h1>
-                        <nav style={{ display: 'flex', gap: '20px' }}>
-                            <Link href="/portfolio" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>Portfolio</Link>
-                            <Link href="/watchlist" style={{ color: '#00d4ff', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>Watchlist</Link>
-                            <Link href="/dashboard" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>Dashboard</Link>
-                        </nav>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        {lastUpdate && (
-                            <span style={{ fontSize: '11px', color: '#64748b' }}>
-                                Updated {lastUpdate.toLocaleTimeString()}
-                            </span>
-                        )}
-                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontWeight: 'bold', color: '#000' }}>{displayUser.email?.[0]?.toUpperCase()}</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <Header />
 
             {/* Floating Price Ticker */}
             <PriceTicker items={watchlist} />
@@ -460,15 +438,15 @@ export default function WatchlistPage() {
                             padding: '12px 24px',
                             borderRadius: '8px',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                            color: '#fff',
-                            fontWeight: '600',
+                            background: 'linear-gradient(135deg, #D4AF37, #B8860B)',
+                            color: '#000',
+                            fontWeight: '700',
                             fontSize: '14px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',
-                            boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)'
+                            boxShadow: '0 4px 15px rgba(212, 175, 55, 0.3)'
                         }}
                     >
                         + Add Symbol
@@ -488,7 +466,7 @@ export default function WatchlistPage() {
                         <p style={{ fontSize: '16px', marginBottom: '16px' }}>Your watchlist is empty</p>
                         <button
                             onClick={() => setShowAddModal(true)}
-                            style={{ padding: '12px 24px', borderRadius: '8px', border: '1px solid #3b82f6', backgroundColor: 'transparent', color: '#3b82f6', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
+                            style={{ padding: '12px 24px', borderRadius: '8px', border: '1px solid #D4AF37', backgroundColor: 'transparent', color: '#D4AF37', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}
                         >
                             Add your first symbol
                         </button>
@@ -508,12 +486,12 @@ export default function WatchlistPage() {
                     zIndex: 1000
                 }}>
                     <div style={{
-                        backgroundColor: '#0f1a2e',
+                        backgroundColor: '#111111',
                         borderRadius: '16px',
                         padding: '24px',
                         width: '450px',
                         maxHeight: '550px',
-                        border: '1px solid #1e3a5f',
+                        border: '1px solid rgba(212, 175, 55, 0.2)',
                         boxShadow: '0 0 40px rgba(245, 158, 11, 0.15)'
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -530,8 +508,8 @@ export default function WatchlistPage() {
                                 width: '100%',
                                 padding: '14px 16px',
                                 borderRadius: '8px',
-                                border: '1px solid #1e3a5f',
-                                backgroundColor: '#0a1628',
+                                border: '1px solid rgba(212, 175, 55, 0.2)',
+                                backgroundColor: '#050505',
                                 color: '#fff',
                                 fontSize: '14px',
                                 marginBottom: '16px',

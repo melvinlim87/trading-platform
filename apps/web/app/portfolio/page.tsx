@@ -4,14 +4,15 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { accountsAPI, portfolioImportAPI } from '@/lib/api';
+import { accountsAPI, portfolioImportAPI, positionsAPI } from '@/lib/api';
 import { fetchAllPrices } from '@/lib/priceService';
 import { classifySymbol, assetClassOptions, AssetClass } from '@/lib/symbolClassifier';
 import { searchAssets, getAssetBySymbol, AssetInfo } from '@/lib/assetLibrary';
-import { PortfolioPerformanceChart, AnimatedValue, Sparkline, generateSparklineData } from '@/components/PortfolioCharts';
+import { PortfolioPerformanceChart, AnimatedValue, PerformanceDataPoint, AssetClassPnL } from '@/components/PortfolioCharts';
 import { PortfolioChatbox } from '@/components/PortfolioChatbox';
 import { DraggableDashboard, CardData } from '@/components/DraggableDashboard';
 import Link from 'next/link';
+import Header from '@/components/Header';
 
 interface Position {
     id: string;
@@ -42,46 +43,28 @@ interface Account {
     positions: Position[];
 }
 
-// Extended mock positions with BALANCED notional values (~$15-20k each asset class for clear pie chart)
-const mockPositions: Position[] = [
-    // Cryptocurrency (~$20k notional)
-    { id: '1', symbol: 'BTCUSD', name: 'Bitcoin', quantity: 0.25, avgPrice: 42500.00, currentPrice: 68000.00, assetClass: 'crypto', positionType: 'long', broker: 'Binance', platform: 'Binance App', verificationSource: 'api_linked', verifiedAt: '2026-01-15T10:30:00Z' },
-    { id: '2', symbol: 'ETHUSDT', name: 'Ethereum', quantity: 1.5, avgPrice: 2200.00, currentPrice: 3500.00, assetClass: 'crypto', positionType: 'long', broker: 'Coinbase', platform: 'Coinbase Pro', verificationSource: 'ai_import', verifiedAt: '2026-01-18T14:20:00Z' },
-    // Forex (~$18k notional)
-    { id: '3', symbol: 'EURUSD', name: 'Euro / US Dollar', quantity: 15000, avgPrice: 1.09, currentPrice: 1.10, assetClass: 'forex', positionType: 'long', broker: 'OANDA', platform: 'MT5', verificationSource: 'ai_import', verifiedAt: '2026-01-17T09:15:00Z' },
-    { id: '9', symbol: 'GBPJPY', name: 'GBP/JPY', quantity: 100, avgPrice: 185.50, currentPrice: 188.20, assetClass: 'forex', positionType: 'long', broker: 'IG', platform: 'MT4', verificationSource: 'manual' },
-    // Stocks (~$20k notional)
-    { id: '4', symbol: 'TSLA', name: 'Tesla Inc', quantity: 15, avgPrice: 250.00, currentPrice: 438.50, assetClass: 'stock', positionType: 'long', broker: 'IBKR', platform: 'TWS', verificationSource: 'api_linked', verifiedAt: '2026-01-19T08:00:00Z' },
-    { id: '5', symbol: 'AAPL', name: 'Apple Inc', quantity: 40, avgPrice: 150.00, currentPrice: 185.20, assetClass: 'stock', positionType: 'long', broker: 'Fidelity', platform: 'Web', verificationSource: 'ai_import', verifiedAt: '2026-01-16T11:45:00Z' },
-    { id: '10', symbol: 'NVDA', name: 'NVIDIA Corp', quantity: 8, avgPrice: 450.00, currentPrice: 875.50, assetClass: 'stock', positionType: 'long', broker: 'TD Ameritrade', platform: 'thinkorSwim', verificationSource: 'manual' },
-    // Unit Trusts (~$18k notional)
-    { id: '6', symbol: 'VWRA', name: 'Vanguard FTSE All-World', quantity: 90, avgPrice: 98.50, currentPrice: 105.60, assetClass: 'unit_trust', positionType: 'long', broker: 'IBKR', platform: 'TWS', verificationSource: 'api_linked', verifiedAt: '2026-01-19T08:00:00Z' },
-    { id: '11', symbol: 'SWDA', name: 'iShares MSCI World', quantity: 80, avgPrice: 75.00, currentPrice: 82.50, assetClass: 'unit_trust', positionType: 'long', broker: 'Saxo', platform: 'SaxoTraderGO', verificationSource: 'ai_import', verifiedAt: '2026-01-14T16:30:00Z' },
-    // ETFs (~$20k notional)
-    { id: '7', symbol: 'SPY', name: 'S&P 500 ETF', quantity: 25, avgPrice: 450.00, currentPrice: 505.80, assetClass: 'etf', positionType: 'long', broker: 'Schwab', platform: 'Web', verificationSource: 'ai_import', verifiedAt: '2026-01-18T10:00:00Z' },
-    { id: '12', symbol: 'QQQ', name: 'Invesco QQQ', quantity: 20, avgPrice: 380.00, currentPrice: 445.20, assetClass: 'etf', positionType: 'long', broker: 'Robinhood', platform: 'Mobile App', verificationSource: 'manual' },
-    // Commodities (~$18k notional)
-    { id: '8', symbol: 'XAUUSD', name: 'Gold', quantity: 6, avgPrice: 1950.00, currentPrice: 2350.50, assetClass: 'commodity', positionType: 'long', broker: 'IG', platform: 'MT5', verificationSource: 'api_linked', verifiedAt: '2026-01-20T07:00:00Z' },
-    { id: '13', symbol: 'XAGUSD', name: 'Silver', quantity: 150, avgPrice: 23.50, currentPrice: 28.75, assetClass: 'commodity', positionType: 'long', broker: 'OANDA', platform: 'TradingView', verificationSource: 'manual' },
-];
+
 
 // Use distinct colors for each asset class - ensure high contrast between all
 const assetClassConfig: Record<string, { bg: string; text: string; label: string; icon: string; borderColor: string }> = {
     'crypto': { bg: '#f59e0b', text: '#000', label: 'Cryptocurrency', icon: '₿', borderColor: '#f59e0b' },  // Orange/Amber
     'forex': { bg: '#10b981', text: '#fff', label: 'Forex', icon: '💱', borderColor: '#10b981' },           // Emerald Green
-    'stock': { bg: '#F59E0B', text: '#000', label: 'Stocks', icon: '📈', borderColor: '#F59E0B' },          // Amber/Gold
+    'stock': { bg: '#00aeea', text: '#fff', label: 'Stocks', icon: '📈', borderColor: '#00aeea' },          // Blue
     'unit_trust': { bg: '#a855f7', text: '#fff', label: 'Unit Trusts', icon: '🏦', borderColor: '#a855f7' },// Purple
     'etf': { bg: '#ec4899', text: '#fff', label: 'ETFs', icon: '📊', borderColor: '#ec4899' },              // Pink
     'commodity': { bg: '#eab308', text: '#000', label: 'Commodities', icon: '🥇', borderColor: '#eab308' }, // Yellow/Gold
 };
 
 export default function PortfolioPage() {
-    const { user, isLoading: authLoading } = useAuth();
+    const { user, logout, isLoading: authLoading } = useAuth();
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const router = useRouter();
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [selectedAccountId, setSelectedAccountId] = useState<string>('');
-    const [positions, setPositions] = useState<Position[]>(mockPositions);
+    const [positions, setPositions] = useState<Position[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [performanceHistory, setPerformanceHistory] = useState<PerformanceDataPoint[]>([]);
+    const [currentTimeRange, setCurrentTimeRange] = useState<'1W' | '1M' | '3M' | '1Y'>('1M');
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         crypto: true, forex: true, stock: true, unit_trust: true, etf: true, commodity: true
     });
@@ -156,13 +139,41 @@ export default function PortfolioPage() {
 
     const loadAccounts = async () => {
         try {
-            const response = await accountsAPI.getAccounts();
-            setAccounts(response.data);
-            if (response.data.length > 0) {
-                setSelectedAccountId(response.data[0].id);
+            const [accountsRes, positionsRes] = await Promise.all([
+                accountsAPI.getAccounts(),
+                positionsAPI.getPositions()
+            ]);
+
+            setAccounts(accountsRes.data);
+            if (accountsRes.data.length > 0) {
+                setSelectedAccountId(accountsRes.data[0].id);
+            }
+
+            // Map backend positions to frontend format
+            const backendPositions = positionsRes.data.map((p: any) => ({
+                id: p.id,
+                symbol: p.symbol,
+                name: p.symbol, // Backend currently doesn't store name, use symbol
+                quantity: parseFloat(p.quantity),
+                avgPrice: parseFloat(p.avgPrice),
+                currentPrice: parseFloat(p.avgPrice), // Default to avgPrice until currentPrice is fetched
+                assetClass: p.assetClass || 'stock',
+                positionType: p.positionType || 'long',
+                broker: p.broker,
+                platform: p.platform,
+                expiry: p.expiry,
+                verificationSource: p.verificationSource,
+                verifiedAt: p.verifiedAt
+            }));
+
+            if (backendPositions.length > 0) {
+                setPositions(backendPositions);
+            } else {
+                setPositions([]); // No positions found in database
             }
         } catch (error) {
-            console.log('API not available, using demo mode');
+            console.log('API fetch failed');
+            setPositions([]);
         } finally {
             setIsLoading(false);
         }
@@ -300,28 +311,64 @@ export default function PortfolioPage() {
         setSymbolSuggestions([]);
     };
 
-    const handleManualSubmit = () => {
+    const handleManualSubmit = async () => {
         if (!manualPosition.symbol || !manualPosition.quantity || !manualPosition.avgPrice) {
             alert('Please fill in Symbol, Quantity, and Entry Price');
             return;
         }
 
-        const newPosition: Position = {
-            id: `manual-${Date.now()}`,
+        const positionData = {
             symbol: manualPosition.symbol.toUpperCase(),
-            name: manualPosition.name || manualPosition.symbol.toUpperCase(),
             quantity: parseFloat(manualPosition.quantity) || 0,
             avgPrice: parseFloat(manualPosition.avgPrice) || 0,
-            currentPrice: parseFloat(manualPosition.currentPrice) || parseFloat(manualPosition.avgPrice) || 0,
             assetClass: manualPosition.assetClass,
-            positionType: manualPosition.positionType as Position['positionType'],
-            broker: manualPosition.broker || undefined,
-            platform: manualPosition.platform || undefined,
-            expiry: manualPosition.expiry || undefined
+            positionType: manualPosition.positionType,
+            broker: manualPosition.broker,
+            platform: manualPosition.platform,
+            expiry: manualPosition.expiry,
+            accountId: selectedAccountId // Use the currently selected account
         };
 
-        setPositions(prev => [...prev, newPosition]);
-        resetManualPosition();
+        try {
+            const response = await positionsAPI.savePosition(positionData);
+            
+            // Map the new/updated position from backend back to frontend format
+            const savedPos = {
+                id: response.data.id,
+                symbol: response.data.symbol,
+                name: response.data.symbol,
+                quantity: parseFloat(response.data.quantity),
+                avgPrice: parseFloat(response.data.avgPrice),
+                currentPrice: parseFloat(response.data.avgPrice),
+                assetClass: response.data.assetClass,
+                positionType: response.data.positionType,
+                broker: response.data.broker,
+                platform: response.data.platform,
+                expiry: response.data.expiry,
+                verificationSource: response.data.verificationSource,
+                verifiedAt: response.data.verifiedAt
+            };
+
+            // Update local state: if update, replace; if new, add
+            setPositions(prev => {
+                const index = prev.findIndex(p => p.symbol === savedPos.symbol && p.id === savedPos.id);
+                if (index !== -1) {
+                    const next = [...prev];
+                    next[index] = savedPos;
+                    return next;
+                }
+                return [...prev, savedPos];
+            });
+
+            resetManualPosition();
+            
+            // Trigger price update for the new position
+            fetchPrices();
+        } catch (error: any) {
+            console.error('Failed to save position:', error);
+            const message = error.response?.data?.message || 'Failed to save position to backend';
+            alert(`Error: ${Array.isArray(message) ? message.join(', ') : message}`);
+        }
     };
 
     const resetManualPosition = () => {
@@ -429,42 +476,10 @@ export default function PortfolioPage() {
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#e2e8f0', fontFamily: 'Inter, system-ui, sans-serif' }}>
             {/* Header */}
-            <header style={{ backgroundColor: '#000000', borderBottom: '1px solid rgba(212, 175, 55, 0.3)', padding: '12px 0' }}>
-                <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#D4AF37', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#000000' }}>D</span>
-                        </div>
-                        <div>
-                            <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>Decyphers</h1>
-                            <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>AI Trading Mentor</p>
-                        </div>
-                    </div>
-                    <nav style={{ display: 'flex', gap: '32px' }}>
-                        <Link href="/portfolio" style={{ fontWeight: '500', color: '#D4AF37', textDecoration: 'none' }}>Portfolio</Link>
-                        <Link href="/watchlist" style={{ fontWeight: '500', color: '#9ca3af', textDecoration: 'none' }}>Watchlist</Link>
-                        <Link href="/analysis" style={{ fontWeight: '500', color: '#9ca3af', textDecoration: 'none' }}>Analysis</Link>
-                        <Link href="/ai-mentor" style={{ fontWeight: '500', color: '#9ca3af', textDecoration: 'none' }}>AI Mentor</Link>
-                    </nav>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <button
-                            onClick={() => setShowManualModal(true)}
-                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', backgroundColor: '#171717', color: '#fff', border: '1px solid #333', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                            ➕ Add Position
-                        </button>
-                        <button
-                            onClick={() => setShowUploadModal(true)}
-                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', backgroundColor: '#D4AF37', color: '#000000', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                            📸 AI Import
-                        </button>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontWeight: 'bold', color: '#000' }}>{displayUser.email?.[0]?.toUpperCase()}</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <Header
+                onAddPosition={() => setShowManualModal(true)}
+                onImport={() => setShowUploadModal(true)}
+            />
 
             <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
                 {/* Portfolio Summary Cards - Draggable Dashboard */}
@@ -537,6 +552,9 @@ export default function PortfolioPage() {
                 <div style={{ marginBottom: '24px' }}>
                     <PortfolioPerformanceChart
                         totalValue={totalNotional}
+                        performanceHistory={performanceHistory}
+                        currentTimeRange={currentTimeRange}
+                        onTimeRangeChange={(range) => setCurrentTimeRange(range)}
                         assetClassPnL={Object.entries(groupedPositions).map(([assetClass, classPositions]) => {
                             const config = assetClassConfig[assetClass];
                             const sectionPnL = classPositions.reduce((sum, p) => sum + calculatePnL(p), 0);
@@ -731,12 +749,12 @@ export default function PortfolioPage() {
                                                                 </td>
                                                                 <td style={{ textAlign: 'center', padding: '8px 2px' }}>
                                                                     <span style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: '#3b82f633', color: '#fff' }}>
-                                                                        {pos.broker || '—'}
+                                                                        {(pos?.broker?.toUpperCase() || '—')}
                                                                     </span>
                                                                 </td>
                                                                 <td style={{ textAlign: 'center', padding: '8px 2px' }}>
                                                                     <span style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: '#a855f733', color: '#fff' }}>
-                                                                        {pos.platform || '—'}
+                                                                        {(pos?.platform?.toUpperCase() || '—')}
                                                                     </span>
                                                                 </td>
                                                             </tr>
@@ -767,6 +785,7 @@ export default function PortfolioPage() {
                                 }}></div>
                             </div>
                             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', fontSize: '11px' }}>
+                                {console.log(exposure)}
                                 {exposure.map((item, idx) => (
                                     <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '4px', backgroundColor: '#171717' }}>
                                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: item.bg }}></div>

@@ -32,6 +32,12 @@ export const accountsAPI = {
     getAccounts: () => api.get('/accounts'),
 };
 
+// Positions API
+export const positionsAPI = {
+    getPositions: () => api.get('/positions'),
+    savePosition: (data: any) => api.post('/positions', data),
+};
+
 
 // Portfolio Import API
 export const portfolioImportAPI = {

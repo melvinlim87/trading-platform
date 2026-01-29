@@ -15,50 +15,25 @@ import {
     Legend,
 } from 'recharts';
 
-interface PerformanceDataPoint {
+// History data point interface matches backend potential history tracking
+export interface PerformanceDataPoint {
     date: string;
     value: number;
     pnl: number;
 }
 
-interface AssetClassPnL {
+export interface AssetClassPnL {
     name: string;
     pnl: number;
     color: string;
 }
 
-// Generate realistic mock performance data
-const generatePerformanceData = (days: number, currentValue: number): PerformanceDataPoint[] => {
-    const data: PerformanceDataPoint[] = [];
-    const today = new Date();
-    let value = currentValue * 0.85; // Start at 85% of current value
-
-    for (let i = days; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-
-        // Add some realistic volatility
-        const dailyChange = (Math.random() - 0.45) * 0.03; // Slight upward bias
-        value = value * (1 + dailyChange);
-
-        // Ensure we end close to current value
-        if (i === 0) value = currentValue;
-
-        data.push({
-            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            value: Math.round(value * 100) / 100,
-            pnl: Math.round((value - currentValue * 0.85) * 100) / 100,
-        });
-    }
-
-    return data;
-};
-
 // Custom tooltip for the area chart
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         const value = payload[0].value;
-        const isPositive = payload[0].payload.pnl >= 0;
+        const pnl = payload[0].payload.pnl || 0;
+        const isPositive = pnl >= 0;
         return (
             <div style={{
                 backgroundColor: '#0A0A0A',
@@ -76,7 +51,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                     fontSize: '12px',
                     marginTop: '4px'
                 }}>
-                    {isPositive ? '+' : ''}{payload[0].payload.pnl.toLocaleString()} P/L
+                    {isPositive ? '+' : ''}{pnl.toLocaleString()} P/L
                 </p>
             </div>
         );
@@ -114,23 +89,32 @@ const BarTooltip = ({ active, payload, label }: any) => {
 interface PortfolioChartsProps {
     totalValue: number;
     assetClassPnL: AssetClassPnL[];
+    performanceHistory?: PerformanceDataPoint[];
+    onTimeRangeChange?: (range: '1W' | '1M' | '3M' | '1Y') => void;
+    currentTimeRange?: '1W' | '1M' | '3M' | '1Y';
 }
 
-export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: PortfolioChartsProps) {
-    const [performanceData, setPerformanceData] = useState<PerformanceDataPoint[]>([]);
-    const [timeRange, setTimeRange] = useState<'1W' | '1M' | '3M' | '1Y'>('1M');
+export function PortfolioPerformanceChart({ 
+    totalValue, 
+    assetClassPnL, 
+    performanceHistory = [],
+    onTimeRangeChange,
+    currentTimeRange = '1M'
+}: PortfolioChartsProps) {
     const [isAnimating, setIsAnimating] = useState(true);
 
     useEffect(() => {
-        const days = timeRange === '1W' ? 7 : timeRange === '1M' ? 30 : timeRange === '3M' ? 90 : 365;
-        setPerformanceData(generatePerformanceData(days, totalValue));
         setIsAnimating(true);
         const timer = setTimeout(() => setIsAnimating(false), 2000);
         return () => clearTimeout(timer);
-    }, [totalValue, timeRange]);
+    }, [performanceHistory]);
 
-    const minValue = Math.min(...performanceData.map(d => d.value)) * 0.98;
-    const maxValue = Math.max(...performanceData.map(d => d.value)) * 1.02;
+    const displayData = performanceHistory.length > 0 
+        ? performanceHistory 
+        : [{ date: 'Today', value: totalValue, pnl: 0 }];
+
+    const minValue = Math.min(...displayData.map(d => d.value)) * 0.98;
+    const maxValue = Math.max(...displayData.map(d => d.value)) * 1.02;
 
     return (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
@@ -149,7 +133,7 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                         {(['1W', '1M', '3M', '1Y'] as const).map((range) => (
                             <button
                                 key={range}
-                                onClick={() => setTimeRange(range)}
+                                onClick={() => onTimeRangeChange?.(range)}
                                 style={{
                                     padding: '4px 10px',
                                     borderRadius: '6px',
@@ -157,8 +141,8 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                                     fontWeight: '500',
                                     border: 'none',
                                     cursor: 'pointer',
-                                    backgroundColor: timeRange === range ? '#D4AF37' : '#171717',
-                                    color: timeRange === range ? '#000000' : '#9ca3af',
+                                    backgroundColor: currentTimeRange === range ? '#D4AF37' : '#171717',
+                                    color: currentTimeRange === range ? '#000000' : '#9ca3af',
                                     transition: 'all 0.2s',
                                 }}
                             >
@@ -170,7 +154,7 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
 
                 <div style={{ height: '220px' }}>
                     <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <AreaChart data={displayData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor="#D4AF37" stopOpacity={0.4} />
@@ -234,7 +218,12 @@ export function PortfolioPerformanceChart({ totalValue, assetClassPnL }: Portfol
                                 tick={{ fill: '#9ca3af', fontSize: 10 }}
                                 axisLine={{ stroke: '#333' }}
                                 tickLine={false}
-                                tickFormatter={(value) => `$${(value / 1000).toFixed(1)}k`}
+                                tickFormatter={(value) => {
+                                    if (Math.abs(value) >= 1000) {
+                                        return `$${(value / 1000).toFixed(1)}k`;
+                                    }
+                                    return `$${value.toFixed(0)}`;
+                                }}
                             />
                             <YAxis
                                 type="category"
