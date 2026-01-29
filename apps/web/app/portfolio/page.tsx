@@ -13,6 +13,7 @@ import { PortfolioChatbox } from '@/components/PortfolioChatbox';
 import { DraggableDashboard, CardData } from '@/components/DraggableDashboard';
 import { DraggablePanels, PanelConfig } from '@/components/DraggablePanels';
 import { AIPortfolioAnalyst } from '@/components/AIPortfolioAnalyst';
+import Header from '@/components/Header';
 import Link from 'next/link';
 
 interface Position {
@@ -889,60 +890,14 @@ export default function PortfolioPage() {
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#0a1628', color: '#e2e8f0', fontFamily: 'Inter, system-ui, sans-serif' }}>
             {/* Header */}
-            <header style={{ backgroundColor: '#0d1f3c', borderBottom: '1px solid #1e3a5f', padding: '12px 0' }}>
-                <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: '#00d4ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#0a1628' }}>D</span>
-                        </div>
-                        <div>
-                            <h1 style={{ fontSize: '18px', fontWeight: 'bold', margin: 0, color: '#fff' }}>Decyphers</h1>
-                            <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>AI Trading Mentor</p>
-                        </div>
-                    </div>
-                    <nav style={{ display: 'flex', gap: '32px' }}>
-                        <Link href="/portfolio" style={{ fontWeight: '500', color: '#00d4ff', textDecoration: 'none' }}>Portfolio</Link>
-                        <Link href="/watchlist" style={{ fontWeight: '500', color: '#64748b', textDecoration: 'none' }}>Watchlist</Link>
-                        <Link href="/analysis" style={{ fontWeight: '500', color: '#64748b', textDecoration: 'none' }}>Analysis</Link>
-                        <Link href="/ai-mentor" style={{ fontWeight: '500', color: '#64748b', textDecoration: 'none' }}>AI Mentor</Link>
-                    </nav>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <button
-                            onClick={() => setShowManualModal(true)}
-                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', backgroundColor: '#1e3a5f', color: '#fff', border: '1px solid #3f4f66', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                            ➕ Add Position
-                        </button>
-                        <button
-                            onClick={() => setShowUploadModal(true)}
-                            style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '500', backgroundColor: '#00d4ff', color: '#0a1628', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                            📸 AI Import
-                        </button>
-                        <button
-                            onClick={() => setShowImportHistory(prev => !prev)}
-                            style={{
-                                padding: '8px 16px',
-                                borderRadius: '8px',
-                                fontSize: '14px',
-                                fontWeight: '500',
-                                backgroundColor: showImportHistory ? '#3b82f622' : '#1e3a5f',
-                                color: showImportHistory ? '#3b82f6' : '#94a3b8',
-                                border: showImportHistory ? '1px solid #3b82f6' : '1px solid #3f4f66',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                            }}
-                        >
-                            📤 History {importHistory.length > 0 && <span style={{ backgroundColor: '#3b82f6', color: '#fff', padding: '1px 6px', borderRadius: '10px', fontSize: '11px' }}>{importHistory.length}</span>}
-                        </button>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontWeight: 'bold', color: '#000' }}>{displayUser.email?.[0]?.toUpperCase()}</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <Header 
+                userEmail={displayUser.email}
+                onAddPosition={() => setShowManualModal(true)}
+                onAIImport={() => setShowUploadModal(true)}
+                onToggleHistory={() => setShowImportHistory(prev => !prev)}
+                importHistoryCount={importHistory.length}
+                showImportHistory={showImportHistory}
+            />
 
             <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
                 {/* Portfolio Summary Cards - Draggable Dashboard */}

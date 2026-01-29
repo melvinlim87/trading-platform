@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { getCryptoPrices, getStockPrices, getForexPrices, getCommodityPrices, PriceData } from '@/lib/priceService';
 import { searchAssets, AssetInfo } from '@/lib/assetLibrary';
+import Header from '@/components/Header';
 
 interface WatchlistItem {
     symbol: string;
@@ -415,31 +416,10 @@ export default function WatchlistPage() {
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#0a1628', color: '#e2e8f0' }}>
-            {/* Header - matches portfolio */}
-            <header style={{ backgroundColor: '#0d1929', borderBottom: '1px solid #1e3a5f' }}>
-                <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-                        <h1 style={{ fontSize: '24px', fontWeight: '700', background: 'linear-gradient(to right, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                            Trading Platform
-                        </h1>
-                        <nav style={{ display: 'flex', gap: '20px' }}>
-                            <Link href="/portfolio" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>Portfolio</Link>
-                            <Link href="/watchlist" style={{ color: '#00d4ff', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }}>Watchlist</Link>
-                            <Link href="/dashboard" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '14px', fontWeight: '500' }}>Dashboard</Link>
-                        </nav>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        {lastUpdate && (
-                            <span style={{ fontSize: '11px', color: '#64748b' }}>
-                                Updated {lastUpdate.toLocaleTimeString()}
-                            </span>
-                        )}
-                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontWeight: 'bold', color: '#000' }}>{displayUser.email?.[0]?.toUpperCase()}</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            {/* Header */}
+            <Header 
+                userEmail={displayUser.email}
+            />
 
             {/* Floating Price Ticker */}
             <PriceTicker items={watchlist} />

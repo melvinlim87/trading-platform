@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { accountsAPI } from '@/lib/api';
 import Link from 'next/link';
+import Header from '@/components/Header';
 
 export default function DashboardPage() {
     const { user, logout, isLoading: authLoading } = useAuth();
@@ -44,23 +45,11 @@ export default function DashboardPage() {
     const displayUser = user || { email: 'demo@preview.com' };
 
     return (
-        <div className="min-h-screen">
-            {/* Header */}
-            <header className="bg-bgSecondary border-b border-gray-800">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex justify-between items-center">
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-accentPrimary to-accentSecondary bg-clip-text text-transparent">
-                            Trading Platform
-                        </h1>
-                        <div className="flex items-center gap-4">
-                            <span className="text-textSecondary">{displayUser.email}</span>
-                            <button onClick={logout} className="btn-secondary">
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </header>
+        <div className="min-h-screen" style={{ backgroundColor: '#0a1628', color: '#e2e8f0' }}>
+            <Header 
+                userEmail={displayUser.email}
+                onLogout={logout}
+            />
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
