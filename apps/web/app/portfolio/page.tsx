@@ -12,6 +12,7 @@ import { PortfolioPerformanceChart, AnimatedValue, Sparkline, generateSparklineD
 import { PortfolioChatbox } from '@/components/PortfolioChatbox';
 import { DraggableDashboard, CardData } from '@/components/DraggableDashboard';
 import { DraggablePanels, PanelConfig } from '@/components/DraggablePanels';
+import { AIPortfolioAnalyst } from '@/components/AIPortfolioAnalyst';
 import Link from 'next/link';
 
 interface Position {
@@ -129,9 +130,7 @@ const getForexPnL = (pos: Position): number => {
 
 // Format lot size for display
 const formatLotSize = (lots: number): string => {
-    if (lots >= 1) return `${lots.toFixed(2)}`;
-    if (lots >= 0.1) return `${(lots).toFixed(1)}`;
-    return `${(lots * 100).toFixed(0)} micro lot${lots !== 0.01 ? 's' : ''}`;
+    return `${lots.toFixed(2)} lot${lots !== 1 ? 's' : ''}`;
 };
 
 // Get pips for forex display
@@ -308,6 +307,7 @@ export default function PortfolioPage() {
     const [editingAccount, setEditingAccount] = useState<BrokerAccount | null>(null);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
     const [summaryPosition, setSummaryPosition] = useState<Position | null>(null);
+    const [analyzerFocusedPosition, setAnalyzerFocusedPosition] = useState<Position | null>(null);
 
     // Upload state
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -364,6 +364,7 @@ export default function PortfolioPage() {
 
     // Import history state
     const [importHistory, setImportHistory] = useState<{ id: string; timestamp: Date; positions: number }[]>([]);
+    const [showImportHistory, setShowImportHistory] = useState(false);
 
     // Fetch real prices on mount and every 30 seconds
     const fetchPrices = useCallback(async () => {
@@ -599,6 +600,16 @@ export default function PortfolioPage() {
         // Remove from active positions
         setPositions(prev => prev.filter(p => p.id !== positionId));
         setShowConfirmDelete(null);
+    };
+
+    const handleAIPositionAnalysis = (position: Position) => {
+        setAnalyzerFocusedPosition(position);
+        setShowSummaryModal(false);
+        // Scroll to the AI Analyst component
+        const element = document.getElementById('ai-portfolio-analyst');
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     };
 
     const filteredHistory = tradeHistory.filter(entry =>
@@ -908,6 +919,24 @@ export default function PortfolioPage() {
                         >
                             📸 AI Import
                         </button>
+                        <button
+                            onClick={() => setShowImportHistory(prev => !prev)}
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                backgroundColor: showImportHistory ? '#3b82f622' : '#1e3a5f',
+                                color: showImportHistory ? '#3b82f6' : '#94a3b8',
+                                border: showImportHistory ? '1px solid #3b82f6' : '1px solid #3f4f66',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px'
+                            }}
+                        >
+                            📤 History {importHistory.length > 0 && <span style={{ backgroundColor: '#3b82f6', color: '#fff', padding: '1px 6px', borderRadius: '10px', fontSize: '11px' }}>{importHistory.length}</span>}
+                        </button>
                         <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <span style={{ fontWeight: 'bold', color: '#000' }}>{displayUser.email?.[0]?.toUpperCase()}</span>
                         </div>
@@ -1008,161 +1037,188 @@ export default function PortfolioPage() {
                     );
                 })()}
 
-                {/* Draggable AI Tools Section */}
-                <div style={{ marginBottom: '24px' }}>
-                    <DraggablePanels
-                        storageKey="portfolio-ai-panels"
-                        panels={[
-                            {
-                                id: 'ai-analyst',
-                                title: 'AI Portfolio Analyst' + (analysisReport ? ` (Score: ${analysisReport.overallScore})` : ''),
-                                icon: '🤖',
-                                defaultExpanded: true,
-                                render: () => (
-                                    <div style={{ marginTop: '16px' }}>
-                                        {/* Generate Button */}
-                                        <div style={{ marginBottom: '16px' }}>
-                                            <button
-                                                onClick={runAnalysis}
-                                                disabled={isAnalyzing || positions.length === 0}
-                                                style={{
-                                                    padding: '12px 24px',
-                                                    borderRadius: '8px',
-                                                    backgroundColor: isAnalyzing ? '#3f4f66' : '#3b82f6',
-                                                    color: '#fff',
-                                                    border: 'none',
-                                                    cursor: isAnalyzing || positions.length === 0 ? 'not-allowed' : 'pointer',
-                                                    fontWeight: '600',
-                                                    fontSize: '14px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '8px'
-                                                }}
-                                            >
-                                                {isAnalyzing ? (<><span>⏳</span> Analyzing...</>) : (<>🔍 Analyze Portfolio</>)}
-                                            </button>
+                {/* Full-Width AI Portfolio Analyst with Robot Animation */}
+                <AIPortfolioAnalyst
+                    id="ai-portfolio-analyst"
+                    positions={positions.map(p => ({
+                        symbol: p.symbol,
+                        name: p.name || p.symbol,
+                        avgPrice: p.avgPrice,
+                        currentPrice: p.currentPrice,
+                        quantity: p.quantity,
+                        assetClass: p.assetClass || 'other'
+                    }))}
+                    focusedPosition={analyzerFocusedPosition ? {
+                        symbol: analyzerFocusedPosition.symbol,
+                        name: analyzerFocusedPosition.name || analyzerFocusedPosition.symbol,
+                        avgPrice: analyzerFocusedPosition.avgPrice,
+                        currentPrice: analyzerFocusedPosition.currentPrice,
+                        quantity: analyzerFocusedPosition.quantity,
+                        assetClass: analyzerFocusedPosition.assetClass || 'other'
+                    } : null}
+                    onAnalysisComplete={(report) => setAnalysisReport(report)}
+                />
+
+                {/* Import History Panel - shows when header button clicked */}
+                {showImportHistory && (
+                    <div style={{
+                        marginBottom: '24px',
+                        backgroundColor: '#0d1f3c',
+                        borderRadius: '12px',
+                        border: '1px solid #1e3a5f',
+                        padding: '16px',
+                        animation: 'slideDown 0.2s ease-out'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '18px' }}>📤</span>
+                                <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>Import History</span>
+                            </div>
+                            <button
+                                onClick={() => setShowImportHistory(false)}
+                                style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '18px' }}
+                            >✕</button>
+                        </div>
+                        {importHistory.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                                <div style={{ fontSize: '40px', marginBottom: '12px', opacity: 0.5 }}>📤</div>
+                                <div style={{ fontSize: '14px', fontWeight: '500' }}>No import history yet</div>
+                                <div style={{ fontSize: '12px', marginTop: '4px' }}>Use AI Import to upload portfolio screenshots</div>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {importHistory.map((item, i) => (
+                                    <div key={item.id} style={{
+                                        padding: '12px',
+                                        backgroundColor: '#0a1628',
+                                        borderRadius: '8px',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <div>
+                                            <div style={{ fontSize: '13px', color: '#fff' }}>Import #{i + 1}</div>
+                                            <div style={{ fontSize: '11px', color: '#64748b' }}>{new Date(item.timestamp).toLocaleString()}</div>
                                         </div>
+                                        <div style={{ fontSize: '13px', color: '#3b82f6' }}>{item.positions} positions</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                                        {/* Error Display */}
-                                        {analysisError && (
-                                            <div style={{ padding: '12px', backgroundColor: '#ef444422', borderRadius: '8px', color: '#ef4444', marginBottom: '16px' }}>⚠️ {analysisError}</div>
-                                        )}
+                {/* Portfolio Chat & Broker Accounts - 2 Column Layout */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '24px',
+                    marginBottom: '24px'
+                }}>
+                    {/* Chat Column */}
+                    <div style={{
+                        backgroundColor: '#0d1f3c',
+                        borderRadius: '12px',
+                        border: '1px solid #1e3a5f',
+                        padding: '16px'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                            <span style={{ fontSize: '18px' }}>💬</span>
+                            <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>Portfolio Chat</span>
+                        </div>
+                        <PortfolioChatbox
+                            positions={positions.map(p => ({
+                                symbol: p.symbol,
+                                name: p.name || p.symbol,
+                                quantity: p.quantity,
+                                avgPrice: p.avgPrice,
+                                currentPrice: p.currentPrice || p.avgPrice,
+                                assetClass: p.assetClass || 'other',
+                                positionType: p.positionType,
+                                leverage: p.leverage
+                            }))}
+                            userName="Trader"
+                            riskProfile="Moderate"
+                            cashBalance={0}
+                        />
+                    </div>
 
-                                        {/* Analysis Report */}
-                                        {analysisReport && (
-                                            <div style={{ display: 'grid', gap: '16px' }}>
-                                                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '16px', alignItems: 'center' }}>
-                                                    <div style={{
-                                                        width: '100px', height: '100px', borderRadius: '50%',
-                                                        border: `6px solid ${analysisReport.overallScore >= 70 ? '#22c55e' : analysisReport.overallScore >= 50 ? '#eab308' : '#ef4444'}`,
-                                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0a1628'
-                                                    }}>
-                                                        <span style={{ fontSize: '28px', fontWeight: '700', color: '#fff' }}>{analysisReport.overallScore}</span>
-                                                        <span style={{ fontSize: '11px', color: '#64748b' }}>{analysisReport.scoreLabel}</span>
-                                                    </div>
+                    {/* Broker Accounts Column */}
+                    <div style={{
+                        backgroundColor: '#0d1f3c',
+                        borderRadius: '12px',
+                        border: '1px solid #1e3a5f',
+                        padding: '16px'
+                    }}>
+                        <div
+                            onClick={() => setShowAccountsSection(!showAccountsSection)}
+                            style={{
+                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                cursor: 'pointer', marginBottom: showAccountsSection ? '12px' : '0'
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '18px' }}>🏦</span>
+                                <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>Broker Accounts</span>
+                                <span style={{ fontSize: '14px', color: '#64748b' }}>({brokerAccounts.length})</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{ fontSize: '13px', color: '#94a3b8' }}>
+                                    Total: <span style={{ fontWeight: '600', color: '#fff' }}>${brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0).toLocaleString()}</span>
+                                </span>
+                                <span style={{ color: '#64748b', transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+                            </div>
+                        </div>
+                        {showAccountsSection && (
+                            <div style={{ marginTop: '8px' }}>
+                                {brokerAccounts.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>
+                                        <div style={{ fontSize: '32px', marginBottom: '8px', opacity: 0.5 }}>🏦</div>
+                                        <div style={{ fontSize: '14px' }}>No broker accounts yet</div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setShowAccountModal(true); }}
+                                            style={{ marginTop: '12px', padding: '8px 16px', borderRadius: '8px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '13px' }}
+                                        >
+                                            + Add Account
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {brokerAccounts.map(account => {
+                                            const brokerPositions = positions.filter(p => p.broker === account.brokerName);
+                                            const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
+                                            const idleCash = Math.max(0, account.totalBalance - activeValue);
+                                            return (
+                                                <div key={account.id} style={{
+                                                    padding: '12px',
+                                                    backgroundColor: '#0a1628',
+                                                    borderRadius: '8px',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}>
                                                     <div>
-                                                        <div style={{ fontSize: '14px', color: '#94a3b8', lineHeight: '1.5' }}>{analysisReport.summary}</div>
-                                                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '8px' }}>Generated: {new Date(analysisReport.generatedAt).toLocaleString()}</div>
+                                                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>{account.brokerName}</div>
+                                                        <div style={{ fontSize: '11px', color: '#64748b' }}>{account.platform || 'Manual'}</div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff' }}>${account.totalBalance.toLocaleString()}</div>
+                                                        <div style={{ fontSize: '11px', color: '#f59e0b' }}>Idle: ${idleCash.toLocaleString()}</div>
                                                     </div>
                                                 </div>
-                                                {analysisReport.riskAlerts.length > 0 && (
-                                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>⚠️ Risk Alerts ({analysisReport.riskAlerts.length})</div>
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                            {analysisReport.riskAlerts.map((alert, i) => (
-                                                                <div key={i} style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: alert.level === 'critical' ? '#ef444422' : '#f9731622', borderLeft: `3px solid ${alert.level === 'critical' ? '#ef4444' : '#f97316'}` }}>
-                                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{alert.symbol}</div>
-                                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{alert.reason}</div>
-                                                                    {alert.suggestion && <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>💡 {alert.suggestion}</div>}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {analysisReport.newsAlerts.length > 0 && (
-                                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>📰 News to Watch ({analysisReport.newsAlerts.length})</div>
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                            {analysisReport.newsAlerts.map((news, i) => (
-                                                                <div key={i} style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: '#3b82f622', borderLeft: `3px solid ${news.impact === 'high' ? '#ef4444' : '#3b82f6'}` }}>
-                                                                    <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{news.symbol}</div>
-                                                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{news.headline}</div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {analysisReport.recommendations.length > 0 && (
-                                                    <div style={{ backgroundColor: '#0a1628', borderRadius: '8px', padding: '12px' }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>💡 Recommendations</div>
-                                                        <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                                            {analysisReport.recommendations.map((rec, i) => (
-                                                                <li key={i} style={{ fontSize: '12px', color: '#94a3b8' }}>{rec}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Empty State */}
-                                        {!analysisReport && !isAnalyzing && !analysisError && (
-                                            <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
-                                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>🤖</div>
-                                                <div style={{ fontSize: '14px' }}>Click "Analyze Portfolio" to get AI-powered insights</div>
-                                            </div>
-                                        )}
+                                            );
+                                        })}
+                                        <button
+                                            onClick={() => setShowAccountModal(true)}
+                                            style={{ marginTop: '8px', padding: '8px 16px', borderRadius: '8px', backgroundColor: '#1e3a5f', color: '#94a3b8', border: '1px solid #3f4f66', cursor: 'pointer', fontSize: '13px' }}
+                                        >
+                                            + Add Account
+                                        </button>
                                     </div>
-                                )
-                            },
-                            {
-                                id: 'ai-chat',
-                                title: 'Portfolio Chat',
-                                icon: '💬',
-                                defaultExpanded: true,
-                                render: () => (
-                                    <div style={{ marginTop: '16px' }}>
-                                        <PortfolioChatbox
-                                            positions={positions.map(p => ({
-                                                symbol: p.symbol,
-                                                name: p.name || p.symbol,
-                                                quantity: p.quantity,
-                                                avgPrice: p.avgPrice,
-                                                currentPrice: p.currentPrice || p.avgPrice,
-                                                assetClass: p.assetClass || 'other',
-                                                positionType: p.positionType,
-                                                leverage: p.leverage
-                                            }))}
-                                            userName="Trader"
-                                            riskProfile="Moderate"
-                                            cashBalance={0}
-                                        />
-                                    </div>
-                                )
-                            },
-                            {
-                                id: 'import-history',
-                                title: 'Import History',
-                                icon: '📤',
-                                defaultExpanded: false,
-                                render: () => (
-                                    <div style={{ marginTop: '16px' }}>
-                                        {importHistory.length === 0 ? (
-                                            <div style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>
-                                                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📤</div>
-                                                <div style={{ fontSize: '14px' }}>No import history yet</div>
-                                                <div style={{ fontSize: '12px', marginTop: '4px' }}>Use AI Import to upload portfolio screenshots</div>
-                                            </div>
-                                        ) : (
-                                            <div style={{ fontSize: '13px', color: '#94a3b8' }}>
-                                                {importHistory.length} imports recorded
-                                            </div>
-                                        )}
-                                    </div>
-                                )
-                            }
-                        ]}
-                    />
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Performance Charts Section - 2 Column Layout */}
@@ -1179,113 +1235,6 @@ export default function PortfolioPage() {
                             };
                         }).filter(item => Math.abs(item.pnl) > 0)}
                     />
-                </div>
-
-                {/* Broker Accounts Section */}
-                <div style={{ marginBottom: '24px' }}>
-                    <div
-                        onClick={() => setShowAccountsSection(!showAccountsSection)}
-                        style={{
-                            display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center',
-                            padding: '16px 20px', backgroundColor: '#0d1f3c', borderRadius: '8px',
-                            cursor: 'pointer', marginBottom: showAccountsSection ? '12px' : '0',
-                            boxShadow: '0 0 20px #f59e0b22, inset 0 1px 0 #f59e0b11', gap: '16px'
-                        }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ fontSize: '17px', fontWeight: '600', color: '#fff', whiteSpace: 'nowrap' }}>🏦 Broker Accounts</span>
-                            <span style={{ fontSize: '14px', color: '#64748b', whiteSpace: 'nowrap' }}>({brokerAccounts.length})</span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                                Total: <span style={{ fontWeight: '600', color: '#fff' }}>${brokerAccounts.reduce((sum, a) => sum + a.totalBalance, 0).toLocaleString()}</span>
-                            </span>
-                            <span style={{ fontSize: '14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                                Idle: <span style={{ fontWeight: '600', color: '#f59e0b' }}>
-                                    ${(() => {
-                                        return brokerAccounts.reduce((totalIdle, account) => {
-                                            const brokerPositions = positions.filter(p => p.broker === account.brokerName);
-                                            const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
-                                            const idleCash = Math.max(0, account.totalBalance - activeValue);
-                                            return totalIdle + idleCash;
-                                        }, 0).toLocaleString();
-                                    })()}
-                                </span>
-                            </span>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setEditingAccount(null); setShowAccountModal(true); }}
-                                style={{
-                                    padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: '600',
-                                    background: 'linear-gradient(135deg, #0ea5e9 0%, #22d3ee 100%)',
-                                    color: '#fff', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap'
-                                }}
-                            >
-                                + Add
-                            </button>
-                            <span style={{ transform: showAccountsSection ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', fontSize: '12px' }}>▼</span>
-                        </div>
-                    </div>
-
-                    {showAccountsSection && (
-                        <div style={{ backgroundColor: '#0d1f3c', borderRadius: '8px', padding: '12px', boxShadow: '0 0 15px #f59e0b15' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                                <thead>
-                                    <tr style={{ color: '#64748b', fontSize: '11px' }}>
-                                        <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>BROKER</th>
-                                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>TOTAL BALANCE</th>
-                                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>ACTIVE POSITIONS</th>
-                                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>IDLE CASH</th>
-                                        <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>SOURCE</th>
-                                        <th style={{ textAlign: 'center', padding: '8px', borderBottom: '1px solid #1e3a5f33', fontWeight: '600' }}>UPDATED</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {brokerAccounts.map(account => {
-                                        const brokerPositions = positions.filter(p => p.broker === account.brokerName);
-                                        const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
-                                        const idleCash = Math.max(0, account.totalBalance - activeValue);
-                                        const idlePercent = account.totalBalance > 0 ? (idleCash / account.totalBalance * 100) : 0;
-
-                                        return (
-                                            <tr key={account.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
-                                                <td style={{ padding: '10px 8px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <span style={{ fontWeight: '600', color: '#fff' }}>{account.brokerName}</span>
-                                                        {account.platform && <span style={{ fontSize: '11px', color: '#64748b' }}>({account.platform})</span>}
-                                                    </div>
-                                                </td>
-                                                <td style={{ textAlign: 'right', padding: '10px 8px', fontWeight: '600', color: '#fff' }}>
-                                                    ${account.totalBalance.toLocaleString()}
-                                                </td>
-                                                <td style={{ textAlign: 'right', padding: '10px 8px', color: '#22c55e' }}>
-                                                    ${activeValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                                    <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>({brokerPositions.length} pos)</span>
-                                                </td>
-                                                <td style={{ textAlign: 'right', padding: '10px 8px' }}>
-                                                    <span style={{ color: idleCash > 0 ? '#f59e0b' : '#64748b', fontWeight: '600' }}>
-                                                        ${idleCash.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                                    </span>
-                                                    <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '4px' }}>({idlePercent.toFixed(0)}%)</span>
-                                                </td>
-                                                <td style={{ textAlign: 'center', padding: '10px 8px' }}>
-                                                    {account.verificationSource === 'api_linked' ? (
-                                                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#f59e0b22', color: '#f59e0b' }}>✓ API</span>
-                                                    ) : account.verificationSource === 'ai_import' ? (
-                                                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#22c55e22', color: '#22c55e' }}>✓ AI</span>
-                                                    ) : (
-                                                        <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600', backgroundColor: '#64748b22', color: '#94a3b8' }}>✎ Manual</span>
-                                                    )}
-                                                </td>
-                                                <td style={{ textAlign: 'center', padding: '10px 8px', fontSize: '11px', color: '#64748b' }}>
-                                                    {new Date(account.lastUpdated).toLocaleDateString()}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
                 </div>
 
                 <div className="portfolio-main-grid">
@@ -1339,19 +1288,19 @@ export default function PortfolioPage() {
                                         <div style={{ padding: '0 8px 12px', overflowX: 'auto' }}>
                                             <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                                                 <thead>
-                                                        <tr style={{ color: '#64748b', fontSize: '11px' }}>
-                                                            <th style={{ width: '12%', textAlign: 'left', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
-                                                            <th style={{ width: '5%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
-                                                            <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
-                                                            <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
-                                                            <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
-                                                            <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
-                                                            <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
-                                                            <th style={{ width: '7%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
-                                                            <th style={{ width: '9%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
-                                                            <th style={{ width: '12%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>RISK</th>
-                                                            <th style={{ width: '15%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ACTIONS</th>
-                                                        </tr>
+                                                    <tr style={{ color: '#64748b', fontSize: '11px' }}>
+                                                        <th style={{ width: '12%', textAlign: 'left', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
+                                                        <th style={{ width: '5%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
+                                                        <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
+                                                        <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
+                                                        <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
+                                                        <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
+                                                        <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
+                                                        <th style={{ width: '7%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
+                                                        <th style={{ width: '10%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
+                                                        <th style={{ width: '11%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>RISK</th>
+                                                        <th style={{ width: '15%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ACTIONS</th>
+                                                    </tr>
                                                 </thead>
                                                 <tbody>
                                                     {classPositions.map(pos => {
@@ -1444,11 +1393,12 @@ export default function PortfolioPage() {
                                                                 </td>
                                                                 <td style={{ textAlign: 'right', padding: '8px 4px' }}>
                                                                     {pos.assetClass === 'forex' && pos.lotSize !== undefined ? (
-                                                                        <div>
-                                                                            <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{formatLotSize(pos.lotSize)}</span>
-                                                                        </div>
+                                                                        <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{formatLotSize(pos.lotSize)}</span>
                                                                     ) : (
                                                                         <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{pos.quantity}</span>
+                                                                    )}
+                                                                    {pos.leverage && pos.leverage > 1 && (
+                                                                        <span style={{ marginLeft: '2px', padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#3b82f622', color: '#3b82f6' }}>{pos.leverage}x</span>
                                                                     )}
                                                                 </td>
                                                                 <td style={{ textAlign: 'right', padding: '8px 4px', color: '#94a3b8', fontSize: '13px' }}>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -1466,6 +1416,11 @@ export default function PortfolioPage() {
                                                                     <div style={{ fontSize: '10px', color: pnl >= 0 ? '#22c55e99' : '#ef444499' }}>
                                                                         {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(1)}%
                                                                     </div>
+                                                                    {pos.assetClass === 'forex' && (
+                                                                        <div style={{ fontSize: '10px', color: getForexPips(pos) >= 0 ? '#22c55e99' : '#ef444499', marginTop: '2px' }}>
+                                                                            {getForexPips(pos) >= 0 ? '+' : ''}{getForexPips(pos).toFixed(1)} pips
+                                                                        </div>
+                                                                    )}
                                                                 </td>
                                                                 <td style={{ textAlign: 'center', padding: '8px 4px' }}>
                                                                     <span style={{ padding: '3px 6px', borderRadius: '4px', fontSize: '12px', fontWeight: '500', backgroundColor: '#3b82f633', color: '#fff' }}>
@@ -2469,7 +2424,8 @@ export default function PortfolioPage() {
                             </div>
                         </div>
                     </div>
-                )}
+                )
+            }
 
             {/* Position Summary Modal */}
             {showSummaryModal && summaryPosition && (
@@ -2645,6 +2601,22 @@ export default function PortfolioPage() {
 
                         {/* Footer */}
                         <div style={{ padding: '20px', borderTop: '1px solid #1e3a5f', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                            <button
+                                onClick={() => handleAIPositionAnalysis(summaryPosition)}
+                                style={{ 
+                                    padding: '10px 20px', 
+                                    borderRadius: '8px', 
+                                    fontSize: '14px', 
+                                    fontWeight: '600', 
+                                    backgroundColor: 'transparent', 
+                                    color: '#00d4ff', 
+                                    border: '1px solid #00d4ff', 
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}
+                            ><span>🤖</span> AI Deep Analysis</button>
                             <button
                                 onClick={() => { setShowSummaryModal(false); handleEditPosition(summaryPosition); }}
                                 style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', backgroundColor: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer' }}
