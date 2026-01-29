@@ -129,8 +129,8 @@ const getForexPnL = (pos: Position): number => {
 
 // Format lot size for display
 const formatLotSize = (lots: number): string => {
-    if (lots >= 1) return `${lots.toFixed(2)} lot${lots !== 1 ? 's' : ''}`;
-    if (lots >= 0.1) return `${(lots * 10).toFixed(1)} mini lot${lots !== 0.1 ? 's' : ''}`;
+    if (lots >= 1) return `${lots.toFixed(2)}`;
+    if (lots >= 0.1) return `${(lots).toFixed(1)}`;
     return `${(lots * 100).toFixed(0)} micro lot${lots !== 0.01 ? 's' : ''}`;
 };
 
@@ -306,6 +306,8 @@ export default function PortfolioPage() {
     const [showAccountsSection, setShowAccountsSection] = useState(true);
     const [showAccountModal, setShowAccountModal] = useState(false);
     const [editingAccount, setEditingAccount] = useState<BrokerAccount | null>(null);
+    const [showSummaryModal, setShowSummaryModal] = useState(false);
+    const [summaryPosition, setSummaryPosition] = useState<Position | null>(null);
 
     // Upload state
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -1337,19 +1339,19 @@ export default function PortfolioPage() {
                                         <div style={{ padding: '0 8px 12px', overflowX: 'auto' }}>
                                             <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                                                 <thead>
-                                                    <tr style={{ color: '#64748b', fontSize: '11px' }}>
-                                                        <th style={{ width: '14%', textAlign: 'left', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
-                                                        <th style={{ width: '6%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
-                                                        <th style={{ width: '9%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
-                                                        <th style={{ width: '9%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
-                                                        <th style={{ width: '9%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
-                                                        <th style={{ width: '9%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
-                                                        <th style={{ width: '9%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
-                                                        <th style={{ width: '8%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
-                                                        <th style={{ width: '8%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
-                                                        <th style={{ width: '7%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>RISK</th>
-                                                        <th style={{ width: '12%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ACTIONS</th>
-                                                    </tr>
+                                                        <tr style={{ color: '#64748b', fontSize: '11px' }}>
+                                                            <th style={{ width: '12%', textAlign: 'left', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>POSITION</th>
+                                                            <th style={{ width: '5%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>QTY</th>
+                                                            <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ENTRY</th>
+                                                            <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>CURRENT</th>
+                                                            <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>COST</th>
+                                                            <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>VALUE</th>
+                                                            <th style={{ width: '8%', textAlign: 'right', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>P&L</th>
+                                                            <th style={{ width: '7%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>BROKER</th>
+                                                            <th style={{ width: '9%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>PLATFORM</th>
+                                                            <th style={{ width: '12%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>RISK</th>
+                                                            <th style={{ width: '15%', textAlign: 'center', padding: '6px 4px', fontWeight: '600', borderBottom: '1px solid #1e3a5f33' }}>ACTIONS</th>
+                                                        </tr>
                                                 </thead>
                                                 <tbody>
                                                     {classPositions.map(pos => {
@@ -1361,7 +1363,11 @@ export default function PortfolioPage() {
                                                         const risk = calculatePositionRisk(pos, totalMarginUsed, assetClass);
 
                                                         return (
-                                                            <tr key={pos.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
+                                                            <tr 
+                                                                key={pos.id} 
+                                                                onClick={() => { setSummaryPosition(pos); setShowSummaryModal(true); }}
+                                                                style={{ borderBottom: '1px solid #1e3a5f22', cursor: 'pointer' }}
+                                                            >
                                                                 <td style={{ padding: '8px 4px' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                                         <div style={{
@@ -1440,15 +1446,9 @@ export default function PortfolioPage() {
                                                                     {pos.assetClass === 'forex' && pos.lotSize !== undefined ? (
                                                                         <div>
                                                                             <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{formatLotSize(pos.lotSize)}</span>
-                                                                            <span style={{ display: 'block', fontSize: '10px', color: '#64748b' }}>
-                                                                                {getForexPips(pos) >= 0 ? '+' : ''}{getForexPips(pos).toFixed(1)} pips
-                                                                            </span>
                                                                         </div>
                                                                     ) : (
                                                                         <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{pos.quantity}</span>
-                                                                    )}
-                                                                    {pos.leverage && pos.leverage > 1 && (
-                                                                        <span style={{ marginLeft: '2px', padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#3b82f622', color: '#3b82f6' }}>{pos.leverage}x</span>
                                                                     )}
                                                                 </td>
                                                                 <td style={{ textAlign: 'right', padding: '8px 4px', color: '#94a3b8', fontSize: '13px' }}>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -1480,6 +1480,7 @@ export default function PortfolioPage() {
                                                                 <td style={{ textAlign: 'center', padding: '8px 4px' }}>
                                                                     <select
                                                                         value={pos.riskOverride || 'auto'}
+                                                                        onClick={(e) => e.stopPropagation()}
                                                                         onChange={(e) => {
                                                                             const newValue = e.target.value as Position['riskOverride'];
                                                                             setPositions(prev => prev.map(p =>
@@ -1515,7 +1516,7 @@ export default function PortfolioPage() {
                                                                     <div style={{ display: 'flex', justifyContent: 'center', gap: '4px' }}>
                                                                         {/* Edit Button */}
                                                                         <button
-                                                                            onClick={() => handleEditPosition(pos)}
+                                                                            onClick={(e) => { e.stopPropagation(); handleEditPosition(pos); }}
                                                                             title="Edit position"
                                                                             style={{
                                                                                 padding: '4px 8px',
@@ -1532,7 +1533,7 @@ export default function PortfolioPage() {
                                                                         >✏️</button>
                                                                         {/* Close Button */}
                                                                         <button
-                                                                            onClick={() => setShowConfirmClose(pos.id)}
+                                                                            onClick={(e) => { e.stopPropagation(); setShowConfirmClose(pos.id); }}
                                                                             title="Close position"
                                                                             style={{
                                                                                 padding: '4px 8px',
@@ -1549,7 +1550,7 @@ export default function PortfolioPage() {
                                                                         >✓</button>
                                                                         {/* Delete Button */}
                                                                         <button
-                                                                            onClick={() => setShowConfirmDelete(pos.id)}
+                                                                            onClick={(e) => { e.stopPropagation(); setShowConfirmDelete(pos.id); }}
                                                                             title="Delete position"
                                                                             style={{
                                                                                 padding: '4px 8px',
@@ -2468,8 +2469,194 @@ export default function PortfolioPage() {
                             </div>
                         </div>
                     </div>
-                )
-            }
+                )}
+
+            {/* Position Summary Modal */}
+            {showSummaryModal && summaryPosition && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(8px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 2000, padding: '20px'
+                }}>
+                    <div style={{
+                        backgroundColor: '#0f172a', borderRadius: '16px', border: '1px solid #1e3a5f',
+                        width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto'
+                    }}>
+                        {/* Header */}
+                        <div style={{ padding: '20px', borderBottom: '1px solid #1e3a5f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <div style={{
+                                    width: '40px', height: '40px', borderRadius: '50%',
+                                    backgroundColor: getPositionBadge(summaryPosition, assetClassConfig[summaryPosition.assetClass as keyof typeof assetClassConfig]).bg,
+                                    color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '18px', fontWeight: 'bold'
+                                }}>
+                                    {getPositionBadge(summaryPosition, assetClassConfig[summaryPosition.assetClass as keyof typeof assetClassConfig]).letter}
+                                </div>
+                                <div>
+                                    <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', margin: 0 }}>{summaryPosition.symbol} Summary</h3>
+                                    <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>{summaryPosition.name}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowSummaryModal(false)}
+                                style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#1e3a5f', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >✕</button>
+                        </div>
+
+                        {/* Content */}
+                        <div style={{ padding: '24px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
+                                {/* Left Side: Status & Risk */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em' }}>Verification & Status</div>
+                                        <div style={{ backgroundColor: '#1e3a5f33', borderRadius: '12px', padding: '16px', border: '1px solid #1e3a5f66' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                {summaryPosition.verificationSource === 'api_linked' ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#eab308', fontWeight: '600' }}>
+                                                        <span style={{ fontSize: '18px' }}>✓</span>
+                                                        <span>API Linked (High Trust)</span>
+                                                    </div>
+                                                ) : summaryPosition.verificationSource === 'ai_import' ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#22c55e', fontWeight: '600' }}>
+                                                        <span style={{ fontSize: '18px' }}>✓</span>
+                                                        <span>AI Extracted from Screenshot</span>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontWeight: '600' }}>
+                                                        <span style={{ fontSize: '18px' }}>✎</span>
+                                                        <span>Manual Entry</span>
+                                                    </div>
+                                                )}
+                                                {summaryPosition.verifiedAt && (
+                                                    <div style={{ fontSize: '12px', color: '#64748b' }}>Last verified: {new Date(summaryPosition.verifiedAt).toLocaleString()}</div>
+                                                )}
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '4px' }}>
+                                                    <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700', backgroundColor: '#3b82f622', color: '#3b82f6', border: '1px solid #3b82f633' }}>
+                                                        {summaryPosition.assetClass.toUpperCase()}
+                                                    </span>
+                                                    {summaryPosition.positionType === 'perpetual' && (
+                                                        <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700', backgroundColor: '#00d4ff22', color: '#00d4ff', border: '1px solid #00d4ff33' }}>PERPETUAL</span>
+                                                    )}
+                                                    {summaryPosition.leverage && summaryPosition.leverage > 1 && (
+                                                        <span style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700', backgroundColor: '#8b5cf622', color: '#8b5cf6', border: '1px solid #8b5cf633' }}>{summaryPosition.leverage}x LEVERAGE</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em' }}>Risk Assessment</div>
+                                        <div style={{ backgroundColor: '#1e3a5f33', borderRadius: '12px', padding: '16px', border: '1px solid #1e3a5f66' }}>
+                                            {(() => {
+                                                const risk = calculatePositionRisk(summaryPosition, totalMarginUsed, summaryPosition.assetClass);
+                                                return (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <div style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '800', backgroundColor: risk.bgColor, color: risk.color }}>
+                                                                {risk.label}
+                                                            </div>
+                                                            <div style={{ fontSize: '14px', fontWeight: '700', color: risk.color }}>Score: {risk.score}/100</div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                            {risk.reasons.map((reason, i) => (
+                                                                <div key={i} style={{ fontSize: '13px', color: '#e2e8f0', display: 'flex', gap: '8px' }}>
+                                                                    <span style={{ color: risk.color }}>•</span>
+                                                                    <span>{reason}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right Side: Financials */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em' }}>Performance Analysis</div>
+                                        <div style={{ backgroundColor: '#1e3a5f33', borderRadius: '12px', padding: '20px', border: '1px solid #1e3a5f66' }}>
+                                            {(() => {
+                                                const pnl = calculatePnL(summaryPosition);
+                                                const pnlPct = calculatePnLPercent(summaryPosition);
+                                                const notional = calculateNotional(summaryPosition);
+                                                const initialValue = summaryPosition.avgPrice * summaryPosition.quantity * (summaryPosition.leverage || 1);
+                                                
+                                                return (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                                            <div>
+                                                                <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>Total Cost</div>
+                                                                <div style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>${initialValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '4px' }}>Market Value</div>
+                                                                <div style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>${notional.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ padding: '16px', borderRadius: '10px', backgroundColor: pnl >= 0 ? '#22c55e11' : '#ef444411', border: `1px solid ${pnl >= 0 ? '#22c55e33' : '#ef444433'}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <div>
+                                                                <div style={{ fontSize: '11px', color: pnl >= 0 ? '#22c55e' : '#ef4444', marginBottom: '2px', fontWeight: '600' }}>UNREALIZED P&L</div>
+                                                                <div style={{ fontSize: '24px', fontWeight: '800', color: pnl >= 0 ? '#22c55e' : '#ef4444' }}>
+                                                                    {pnl >= 0 ? '+' : ''}${pnl.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <div style={{ fontSize: '18px', fontWeight: '700', color: pnl >= 0 ? '#22c55e' : '#ef4444' }}>
+                                                                    {pnlPct >= 0 ? '+' : ''}{pnlPct.toFixed(2)}%
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', justifyContent: 'space-between' }}>
+                                                            <span>Entry Price: ${summaryPosition.avgPrice.toLocaleString()}</span>
+                                                            <span>Current Price: ${summaryPosition.currentPrice.toLocaleString()}</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {summaryPosition.assetClass === 'forex' && (
+                                        <div>
+                                            <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em' }}>Forex Technicals</div>
+                                            <div style={{ backgroundColor: '#1e3a5f33', borderRadius: '12px', padding: '16px', border: '1px solid #1e3a5f66', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                                <div>
+                                                    <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px' }}>Pip Movement</div>
+                                                    <div style={{ fontSize: '16px', fontWeight: '700', color: getForexPips(summaryPosition) >= 0 ? '#22c55e' : '#ef4444' }}>
+                                                        {getForexPips(summaryPosition).toFixed(1)} Pips
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '2px' }}>Pip Value</div>
+                                                    <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>${summaryPosition.pipValue || 10.00}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div style={{ padding: '20px', borderTop: '1px solid #1e3a5f', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                            <button
+                                onClick={() => { setShowSummaryModal(false); handleEditPosition(summaryPosition); }}
+                                style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', backgroundColor: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer' }}
+                            >✏️ Edit Position</button>
+                            <button
+                                onClick={() => setShowSummaryModal(false)}
+                                style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', backgroundColor: '#1e3a5f', color: '#fff', border: 'none', cursor: 'pointer' }}
+                            >Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style jsx>{`
                 @keyframes spin {
