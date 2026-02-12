@@ -101,6 +101,7 @@ const assetClassConfig: Record<string, { bg: string; text: string; label: string
     'unit_trust': { bg: '#a855f7', text: '#fff', label: 'Unit Trusts', icon: '🏦', borderColor: '#a855f7' },// Purple
     'etf': { bg: '#ec4899', text: '#fff', label: 'ETFs', icon: '📊', borderColor: '#ec4899' },              // Pink (was orange, now distinct)
     'commodity': { bg: '#eab308', text: '#000', label: 'Commodities', icon: '🥇', borderColor: '#eab308' }, // Yellow/Gold
+    'other': { bg: '#64748b', text: '#fff', label: 'Other Asset', icon: '📦', borderColor: '#64748b' },      // Slate/Gray
 };
 
 // Forex/CFD Helper Functions
@@ -308,7 +309,21 @@ export default function PortfolioPage() {
     const [editingAccount, setEditingAccount] = useState<BrokerAccount | null>(null);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
     const [summaryPosition, setSummaryPosition] = useState<Position | null>(null);
+    const [selectedPlatform, setSelectedPlatform] = useState<string>('all');
+    const [selectedBroker, setSelectedBroker] = useState<string>('all');
     const [analyzerFocusedPosition, setAnalyzerFocusedPosition] = useState<Position | null>(null);
+
+    const platforms = [
+        { label: 'All Platforms', value: 'all' },
+        { label: 'TWS', value: 'tws' },
+        { label: 'thinkorSwim', value: 'thinkorswim' },
+        { label: 'MT4', value: 'mt4' },
+        { label: 'MT5', value: 'mt5' },
+        { label: 'TradingView', value: 'tradingview' },
+        { label: 'Mobile App', value: 'mobile' },
+        { label: 'Web', value: 'web' },
+        { label: 'Other', value: 'other' }
+    ];
 
     // Upload state
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -648,7 +663,7 @@ export default function PortfolioPage() {
         setAnalysisError(null);
 
         try {
-            const analysisPositions = positions.map(p => {
+            const analysisPositions = filteredPositions.map(p => {
                 const pnl = p.assetClass === 'forex' && p.lotSize !== undefined
                     ? getForexPnL(p)
                     : (p.currentPrice - p.avgPrice) * p.quantity;
@@ -790,8 +805,40 @@ export default function PortfolioPage() {
         setExtractedPositions(updated);
     };
 
+    // Filtering logic
+    const filteredPositions = React.useMemo(() => {
+        return positions.filter(p => {
+            // Platform Filter
+            let passPlatform = true;
+            if (selectedPlatform !== 'all') {
+                const platform = p.platform?.toLowerCase() || '';
+                if (selectedPlatform === 'mobile') {
+                    passPlatform = platform.includes('mobile');
+                } else if (selectedPlatform === 'thinkorswim') {
+                    passPlatform = platform.includes('thinkorswim');
+                } else {
+                    passPlatform = platform === selectedPlatform.toLowerCase();
+                }
+            }
+
+            // Broker Filter
+            let passBroker = true;
+            if (selectedBroker !== 'all') {
+                passBroker = p.broker === selectedBroker;
+            }
+
+            return passPlatform && passBroker;
+        });
+    }, [positions, selectedPlatform, selectedBroker]);
+
+    const brokersList = React.useMemo(() => {
+        const fromPositions = positions.map(p => p.broker).filter(Boolean) as string[];
+        const fromAccounts = brokerAccounts.map(a => a.brokerName);
+        return ['all', ...Array.from(new Set([...fromPositions, ...fromAccounts]))];
+    }, [positions, brokerAccounts]);
+
     // Calculations
-    const groupedPositions = positions.reduce((acc, pos) => {
+    const groupedPositions = filteredPositions.reduce((acc, pos) => {
         if (!acc[pos.assetClass]) acc[pos.assetClass] = [];
         acc[pos.assetClass].push(pos);
         return acc;
@@ -838,10 +885,10 @@ export default function PortfolioPage() {
     };
     const calculatePnLPercent = (pos: Position) => ((pos.currentPrice - pos.avgPrice) / pos.avgPrice) * 100;
 
-    const totalNotional = positions.reduce((sum, p) => sum + calculateNotional(p), 0);
-    const totalPnL = positions.reduce((sum, p) => sum + calculatePnL(p), 0);
-    const totalInvested = positions.reduce((sum, p) => sum + (p.avgPrice * p.quantity), 0);
-    const totalMarginUsed = positions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
+    const totalNotional = filteredPositions.reduce((sum, p) => sum + calculateNotional(p), 0);
+    const totalPnL = filteredPositions.reduce((sum, p) => sum + calculatePnL(p), 0);
+    const totalInvested = filteredPositions.reduce((sum, p) => sum + (p.avgPrice * p.quantity), 0);
+    const totalMarginUsed = filteredPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
 
     // Use margin (capital at risk) for portfolio allocation pie chart instead of notional
     // This gives accurate allocation view for leveraged positions
@@ -900,10 +947,70 @@ export default function PortfolioPage() {
             />
 
             <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px' }}>
+                {/* Filters Hub */}
+                <div style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#0d1f3c', padding: '20px', borderRadius: '12px', border: '1px solid #1e3a5f' }}>
+                    {/* Platform Filter */}
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        <div style={{ fontSize: '13px', minWidth: '80px', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Platform:</div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {platforms.map(p => (
+                                <button
+                                    key={p.value}
+                                    onClick={() => setSelectedPlatform(p.value)}
+                                    style={{
+                                        padding: '6px 14px',
+                                        borderRadius: '8px',
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                        backgroundColor: selectedPlatform === p.value ? '#3b82f6' : '#1e3a5f33',
+                                        color: selectedPlatform === p.value ? '#fff' : '#94a3b8',
+                                        border: selectedPlatform === p.value ? '1px solid #3b82f6' : '1px solid #1e3a5f',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        boxShadow: selectedPlatform === p.value ? '0 0 15px rgba(59, 130, 246, 0.3)' : 'none'
+                                    }}
+                                >
+                                    {p.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Broker Filter */}
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid #1e3a5f66' }}>
+                        <div style={{ fontSize: '13px', minWidth: '80px', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Broker:</div>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {brokersList.map(b => (
+                                <button
+                                    key={b}
+                                    onClick={() => setSelectedBroker(b)}
+                                    style={{
+                                        padding: '6px 14px',
+                                        borderRadius: '8px',
+                                        fontSize: '12px',
+                                        fontWeight: '600',
+                                        backgroundColor: selectedBroker === b ? '#f59e0b' : '#1e3a5f33',
+                                        color: selectedBroker === b ? '#000' : '#94a3b8',
+                                        border: selectedBroker === b ? '1px solid #f59e0b' : '1px solid #1e3a5f',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        boxShadow: selectedBroker === b ? '0 0 15px rgba(245, 158, 11, 0.3)' : 'none'
+                                    }}
+                                >
+                                    {b === 'all' ? 'All Brokers' : b}
+                                </button>
+                            ))}
+                        </div>
+                        <div style={{ marginLeft: 'auto', fontSize: '12px', color: '#64748b' }}>
+                            Showing <span style={{ color: '#fff', fontWeight: 'bold' }}>{filteredPositions.length}</span> of {positions.length} positions
+                        </div>
+                    </div>
+                </div>
+
                 {/* Portfolio Summary Cards - Draggable Dashboard */}
                 {(() => {
-                    const totalInitialValue = positions.reduce((sum, p) => sum + (p.avgPrice * p.quantity), 0);
-                    const totalCurrentValue = positions.reduce((sum, p) => sum + (p.currentPrice * p.quantity), 0);
+                    const totalInitialValue = filteredPositions.reduce((sum, p) => sum + (p.avgPrice * p.quantity), 0);
+                    const totalCurrentValue = filteredPositions.reduce((sum, p) => sum + (p.currentPrice * p.quantity), 0);
                     const unrealizedPnL = totalPnL;
                     const totalReturnPercent = totalInitialValue > 0 ? ((unrealizedPnL / totalInitialValue) * 100) : 0;
                     // Simulate daily change (in real app, would come from yesterday's close)
@@ -919,7 +1026,7 @@ export default function PortfolioPage() {
 
                     // Calculate total idle cash across all broker accounts
                     const totalIdleCash = brokerAccounts.reduce((totalIdle, account) => {
-                        const brokerPositions = positions.filter(p => p.broker === account.brokerName);
+                        const brokerPositions = filteredPositions.filter(p => p.broker === account.brokerName);
                         const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
                         const idleCash = Math.max(0, account.totalBalance - activeValue);
                         return totalIdle + idleCash;
@@ -931,7 +1038,7 @@ export default function PortfolioPage() {
                             id: 'portfolio-value',
                             label: 'Portfolio Value',
                             value: `$${totalMarginUsed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                            subValue: `${investedPercentage.toFixed(1)}% invested • ${positions.length} positions`,
+                            subValue: `${investedPercentage.toFixed(1)}% invested • ${filteredPositions.length} positions`,
                             icon: '💎',
                             color: '#00d4ff'
                         },
@@ -995,7 +1102,7 @@ export default function PortfolioPage() {
                 {/* Full-Width AI Portfolio Analyst with Robot Animation */}
                 <AIPortfolioAnalyst
                     id="ai-portfolio-analyst"
-                    positions={positions.map(p => ({
+                    positions={filteredPositions.map(p => ({
                         symbol: p.symbol,
                         name: p.name || p.symbol,
                         avgPrice: p.avgPrice,
@@ -1082,7 +1189,7 @@ export default function PortfolioPage() {
                             <span style={{ fontSize: '16px', fontWeight: '600', color: '#fff' }}>Portfolio Chat</span>
                         </div>
                         <PortfolioChatbox
-                            positions={positions.map(p => ({
+                            positions={filteredPositions.map(p => ({
                                 symbol: p.symbol,
                                 name: p.name || p.symbol,
                                 quantity: p.quantity,
@@ -1140,7 +1247,7 @@ export default function PortfolioPage() {
                                 ) : (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         {brokerAccounts.map(account => {
-                                            const brokerPositions = positions.filter(p => p.broker === account.brokerName);
+                                            const brokerPositions = filteredPositions.filter(p => p.broker === account.brokerName);
                                             const activeValue = brokerPositions.reduce((sum, p) => sum + calculateMarginUsed(p), 0);
                                             const idleCash = Math.max(0, account.totalBalance - activeValue);
                                             return (
@@ -1352,9 +1459,9 @@ export default function PortfolioPage() {
                                                                     ) : (
                                                                         <span style={{ color: '#e2e8f0', fontSize: '13px' }}>{pos.quantity}</span>
                                                                     )}
-                                                                    {pos.leverage && pos.leverage > 1 && (
+                                                                    {/* {pos.leverage && pos.leverage > 1 && (
                                                                         <span style={{ marginLeft: '2px', padding: '1px 3px', borderRadius: '3px', fontSize: '9px', fontWeight: '600', backgroundColor: '#3b82f622', color: '#3b82f6' }}>{pos.leverage}x</span>
-                                                                    )}
+                                                                    )} */}
                                                                 </td>
                                                                 <td style={{ textAlign: 'right', padding: '8px 4px', color: '#94a3b8', fontSize: '13px' }}>${pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                                 <td style={{ textAlign: 'right', padding: '8px 4px', fontWeight: '600', color: '#fff', fontSize: '13px' }}>${pos.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -2399,11 +2506,11 @@ export default function PortfolioPage() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <div style={{
                                     width: '40px', height: '40px', borderRadius: '50%',
-                                    backgroundColor: getPositionBadge(summaryPosition, assetClassConfig[summaryPosition.assetClass as keyof typeof assetClassConfig]).bg,
+                                    backgroundColor: getPositionBadge(summaryPosition, assetClassConfig[summaryPosition.assetClass] || assetClassConfig['other']).bg,
                                     color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: '18px', fontWeight: 'bold'
                                 }}>
-                                    {getPositionBadge(summaryPosition, assetClassConfig[summaryPosition.assetClass as keyof typeof assetClassConfig]).letter}
+                                    {getPositionBadge(summaryPosition, assetClassConfig[summaryPosition.assetClass] || assetClassConfig['other']).letter}
                                 </div>
                                 <div>
                                     <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#fff', margin: 0 }}>{summaryPosition.symbol} Summary</h3>

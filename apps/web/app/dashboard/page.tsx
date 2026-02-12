@@ -116,11 +116,11 @@ export default function DashboardPage() {
                         <p className="text-textSecondary">Track your favorite assets</p>
                     </Link>
 
-                    <div className="card opacity-60 cursor-not-allowed">
+                    <Link href="/markets" className="card hover:shadow-accentPrimary/20 transition-all cursor-pointer">
                         <div className="text-4xl mb-3">🏪</div>
                         <h3 className="text-xl font-semibold mb-2">Markets</h3>
-                        <p className="text-textSecondary">Coming soon</p>
-                    </div>
+                        <p className="text-textSecondary">Explore global markets</p>
+                    </Link>
 
                     <div className="card opacity-60 cursor-not-allowed">
                         <div className="text-4xl mb-3">👥</div>

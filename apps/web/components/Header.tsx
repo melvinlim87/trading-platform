@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface HeaderProps {
     userEmail?: string;
@@ -24,13 +24,47 @@ const Header: React.FC<HeaderProps> = ({
     showImportHistory = false
 }) => {
     const pathname = usePathname();
+    const router = useRouter();
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const navItems = [
         { label: 'Portfolio', href: '/portfolio' },
         { label: 'Watchlist', href: '/watchlist' },
+        { label: 'Markets', href: '/markets' },
         { label: 'Analysis', href: '/analysis' },
         { label: 'AI Mentor', href: '/ai-mentor' },
+        { label: 'Morning Brief', href: '/morning-brief' },
     ];
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+
+        if (showDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showDropdown]);
+
+    const handleSettingsClick = () => {
+        setShowDropdown(false);
+        router.push('/settings');
+    };
+
+    const handleLogoutClick = () => {
+        setShowDropdown(false);
+        if (onLogout) {
+            onLogout();
+        }
+    };
 
     return (
         <header style={{ backgroundColor: '#0d1f3c', borderBottom: '1px solid #1e3a5f', padding: '12px 0' }}>
@@ -100,24 +134,107 @@ const Header: React.FC<HeaderProps> = ({
                             📤 History {importHistoryCount > 0 && <span style={{ backgroundColor: '#3b82f6', color: '#fff', padding: '1px 6px', borderRadius: '10px', fontSize: '11px' }}>{importHistoryCount}</span>}
                         </button>
                     )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px', paddingLeft: '12px', borderLeft: '1px solid #1e3a5f' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ fontWeight: 'bold', color: '#000', fontSize: '12px' }}>{userEmail?.[0]?.toUpperCase() || '?'}</span>
-                        </div>
-                        {onLogout && (
-                            <button 
-                                onClick={onLogout}
-                                style={{ 
-                                    background: 'none', 
-                                    border: 'none', 
-                                    color: '#64748b', 
-                                    fontSize: '12px', 
-                                    cursor: 'pointer',
-                                    padding: '4px 8px'
-                                }}
-                            >
-                                Logout
-                            </button>
+                    
+                    {/* User Profile Dropdown */}
+                    <div ref={dropdownRef} style={{ position: 'relative', marginLeft: '12px', paddingLeft: '12px', borderLeft: '1px solid #1e3a5f' }}>
+                        <button
+                            onClick={() => setShowDropdown(!showDropdown)}
+                            style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                backgroundColor: '#f59e0b',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: 'none',
+                                cursor: 'pointer',
+                                transition: 'transform 0.2s',
+                                transform: showDropdown ? 'scale(1.1)' : 'scale(1)'
+                            }}
+                        >
+                            <span style={{ fontWeight: 'bold', color: '#000', fontSize: '12px' }}>
+                                {userEmail?.[0]?.toUpperCase() || '?'}
+                            </span>
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {showDropdown && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '45px',
+                                right: '0',
+                                backgroundColor: '#0d1f3c',
+                                border: '1px solid #1e3a5f',
+                                borderRadius: '12px',
+                                minWidth: '200px',
+                                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+                                zIndex: 1000,
+                                overflow: 'hidden'
+                            }}>
+                                {/* User Info */}
+                                <div style={{
+                                    padding: '16px',
+                                    borderBottom: '1px solid #1e3a5f',
+                                    backgroundColor: '#0a1628'
+                                }}>
+                                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
+                                        {userEmail || 'User'}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: '#64748b' }}>
+                                        Trader Account
+                                    </div>
+                                </div>
+
+                                {/* Menu Items */}
+                                <div style={{ padding: '8px 0' }}>
+                                    <button
+                                        onClick={handleSettingsClick}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            backgroundColor: 'transparent',
+                                            border: 'none',
+                                            color: '#e2e8f0',
+                                            fontSize: '14px',
+                                            textAlign: 'left',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            transition: 'background-color 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                    >
+                                        <span style={{ fontSize: '16px' }}>⚙️</span>
+                                        <span>Settings</span>
+                                    </button>
+
+                                    <button
+                                        onClick={handleLogoutClick}
+                                        style={{
+                                            width: '100%',
+                                            padding: '12px 16px',
+                                            backgroundColor: 'transparent',
+                                            border: 'none',
+                                            color: '#ef4444',
+                                            fontSize: '14px',
+                                            textAlign: 'left',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            transition: 'background-color 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1e3a5f'}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                    >
+                                        <span style={{ fontSize: '16px' }}>🚪</span>
+                                        <span>Logout</span>
+                                    </button>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>
