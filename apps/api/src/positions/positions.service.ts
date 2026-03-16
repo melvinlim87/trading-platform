@@ -53,6 +53,7 @@ export class PositionsService {
         });
 
         if (position) {
+            position.name = positionData.name || position.name;
             position.quantity = Number(positionData.quantity);
             position.avgPrice = Number(positionData.avgPrice);
             position.assetClass = positionData.assetClass;
@@ -60,10 +61,15 @@ export class PositionsService {
             position.broker = positionData.broker;
             position.platform = positionData.platform;
             position.expiry = positionData.expiry;
+            position.leverage = positionData.leverage ? Number(positionData.leverage) : null;
+            position.lotSize = positionData.lotSize ? Number(positionData.lotSize) : null;
+            position.pipValue = positionData.pipValue ? Number(positionData.pipValue) : null;
+            position.riskOverride = positionData.riskOverride || null;
         } else {
             position = this.positionsRepository.create({
                 accountId,
                 symbol: positionData.symbol.toUpperCase(),
+                name: positionData.name || positionData.symbol.toUpperCase(),
                 quantity: Number(positionData.quantity),
                 avgPrice: Number(positionData.avgPrice),
                 assetClass: positionData.assetClass,
@@ -71,6 +77,10 @@ export class PositionsService {
                 broker: positionData.broker,
                 platform: positionData.platform,
                 expiry: positionData.expiry,
+                leverage: positionData.leverage ? Number(positionData.leverage) : null,
+                lotSize: positionData.lotSize ? Number(positionData.lotSize) : null,
+                pipValue: positionData.pipValue ? Number(positionData.pipValue) : null,
+                riskOverride: positionData.riskOverride || null,
                 verificationSource: VerificationSource.MANUAL,
             });
         }

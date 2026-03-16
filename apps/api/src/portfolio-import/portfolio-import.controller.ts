@@ -53,6 +53,11 @@ export class PortfolioImportController {
         }
     }
 
+    @Get('history/:accountId')
+    async getHistory(@Param('accountId') accountId: string) {
+        return this.portfolioImportService.getImportHistory(accountId);
+    }
+
     @Get(':importId')
     async getImport(@Param('importId') importId: string) {
         return this.portfolioImportService.getImport(importId);
@@ -69,10 +74,5 @@ export class PortfolioImportController {
     @Post(':importId/confirm')
     async confirmImport(@Param('importId') importId: string) {
         return this.portfolioImportService.confirmImport(importId);
-    }
-
-    @Get('history/:accountId')
-    async getHistory(@Param('accountId') accountId: string) {
-        return this.portfolioImportService.getImportHistory(accountId);
     }
 }

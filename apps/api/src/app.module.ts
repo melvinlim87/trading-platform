@@ -12,10 +12,12 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { OrdersModule } from './orders/orders.module';
+import { PositionsModule } from './positions/positions.module';
 import { MarketDataModule } from './market-data/market-data.module';
 import { PortfolioImportModule } from './portfolio-import/portfolio-import.module';
 import { PortfolioChatModule } from './portfolio-chat/portfolio-chat.module';
 import { PortfolioAnalystModule } from './portfolio-analyst/portfolio-analyst.module';
+import { MorningBriefModule } from './morning-brief/morning-brief.module';
 
 @Module({
   imports: [
@@ -41,7 +43,7 @@ import { PortfolioAnalystModule } from './portfolio-analyst/portfolio-analyst.mo
           host: configService.get<string>('DB_HOST', 'localhost'),
           port: configService.get<number>('DB_PORT', 5432),
           username: configService.get<string>('DB_USERNAME', 'postgres'),
-          password: configService.get<string>('DB_PASSWORD', 'postgres'),
+          password: configService.get<string>('DB_PASSWORD', ''),
           database: configService.get<string>('DB_DATABASE', 'trading_platform'),
           entities: [User, Account, Order, Position, PortfolioImport],
           synchronize: true, // Set to false in production
@@ -53,10 +55,12 @@ import { PortfolioAnalystModule } from './portfolio-analyst/portfolio-analyst.mo
     AuthModule,
     AccountsModule,
     OrdersModule,
+    PositionsModule,
     MarketDataModule,
     PortfolioImportModule,
     PortfolioChatModule,
     PortfolioAnalystModule,
+    MorningBriefModule,
   ],
   controllers: [AppController],
   providers: [AppService],

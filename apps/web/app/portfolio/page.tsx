@@ -4,7 +4,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { accountsAPI, portfolioImportAPI, portfolioAnalystAPI, PortfolioAnalysisReport } from '@/lib/api';
+import { accountsAPI, positionsAPI, portfolioImportAPI, portfolioAnalystAPI, PortfolioAnalysisReport } from '@/lib/api';
 import { fetchAllPrices } from '@/lib/priceService';
 import { classifySymbol, assetClassOptions, AssetClass } from '@/lib/symbolClassifier';
 import { searchAssets, getAssetBySymbol, AssetInfo } from '@/lib/assetLibrary';
@@ -61,7 +61,7 @@ interface BrokerAccount {
     verificationSource: 'manual' | 'api_linked' | 'ai_import';
 }
 
-// Mock broker accounts for demo
+/* --- DEMO: Mock broker accounts (restore for offline demos) ---
 const mockBrokerAccounts: BrokerAccount[] = [
     { id: 'ba1', brokerName: 'Binance', platform: 'Binance App', totalBalance: 25000, currency: 'USD', lastUpdated: '2026-01-25T08:00:00Z', verificationSource: 'api_linked' },
     { id: 'ba2', brokerName: 'Coinbase', platform: 'Coinbase Pro', totalBalance: 8000, currency: 'USD', lastUpdated: '2026-01-24T15:30:00Z', verificationSource: 'ai_import' },
@@ -69,8 +69,9 @@ const mockBrokerAccounts: BrokerAccount[] = [
     { id: 'ba4', brokerName: 'IBKR', platform: 'TWS', totalBalance: 35000, currency: 'USD', lastUpdated: '2026-01-25T07:00:00Z', verificationSource: 'api_linked' },
     { id: 'ba5', brokerName: 'IG', platform: 'MT4', totalBalance: 15000, currency: 'USD', lastUpdated: '2026-01-24T20:00:00Z', verificationSource: 'manual' },
 ];
+--- END DEMO --- */
 
-// Extended mock positions with BALANCED notional values (~$15-20k each asset class for clear pie chart)
+/* --- DEMO: Mock positions with balanced notional values (restore for offline demos) ---
 const mockPositions: Position[] = [
     // Cryptocurrency (~$20k notional)
     { id: '1', symbol: 'BTCUSD', name: 'Bitcoin', quantity: 0.25, avgPrice: 42500.00, currentPrice: 68000.00, assetClass: 'crypto', positionType: 'long', broker: 'Binance', platform: 'Binance App', verificationSource: 'api_linked', verifiedAt: '2026-01-15T10:30:00Z' },
@@ -92,6 +93,7 @@ const mockPositions: Position[] = [
     { id: '8', symbol: 'XAUUSD', name: 'Gold', quantity: 6, avgPrice: 1950.00, currentPrice: 2350.50, assetClass: 'commodity', positionType: 'long', broker: 'IG', platform: 'MT5', verificationSource: 'api_linked', verifiedAt: '2026-01-20T07:00:00Z' },
     { id: '13', symbol: 'XAGUSD', name: 'Silver', quantity: 150, avgPrice: 23.50, currentPrice: 28.75, assetClass: 'commodity', positionType: 'long', broker: 'OANDA', platform: 'TradingView', verificationSource: 'manual' },
 ];
+--- END DEMO --- */
 
 // Use distinct colors for each asset class - ensure high contrast between all
 const assetClassConfig: Record<string, { bg: string; text: string; label: string; icon: string; borderColor: string }> = {
@@ -298,8 +300,8 @@ export default function PortfolioPage() {
     const router = useRouter();
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [selectedAccountId, setSelectedAccountId] = useState<string>('');
-    const [positions, setPositions] = useState<Position[]>(mockPositions);
-    const [brokerAccounts, setBrokerAccounts] = useState<BrokerAccount[]>(mockBrokerAccounts);
+    const [positions, setPositions] = useState<Position[]>([]);
+    const [brokerAccounts, setBrokerAccounts] = useState<BrokerAccount[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         crypto: true, forex: true, stock: true, unit_trust: true, etf: true, commodity: true
@@ -362,6 +364,12 @@ export default function PortfolioPage() {
     const symbolInputRef = useRef<HTMLInputElement>(null);
 
     const [priceSource, setPriceSource] = useState<string>('loading...');
+    const positionsRef = useRef<Position[]>([]);
+
+    // Keep positionsRef in sync with state
+    useEffect(() => {
+        positionsRef.current = positions;
+    }, [positions]);
 
     // Trade History & Position Actions state
     const [tradeHistory, setTradeHistory] = useState<TradeHistoryEntry[]>([]);
@@ -385,8 +393,10 @@ export default function PortfolioPage() {
     // Fetch real prices on mount and every 30 seconds
     const fetchPrices = useCallback(async () => {
         try {
+            const currentPositions = positionsRef.current;
+            if (currentPositions.length === 0) return;
             const priceData = await fetchAllPrices(
-                positions.map(p => ({ symbol: p.symbol, assetClass: p.assetClass }))
+                currentPositions.map(p => ({ symbol: p.symbol, assetClass: p.assetClass }))
             );
 
             if (Object.keys(priceData).length > 0) {
@@ -416,11 +426,22 @@ export default function PortfolioPage() {
 
     const loadAccounts = async () => {
         try {
-            const response = await accountsAPI.getAccounts();
-            setAccounts(response.data);
-            if (response.data.length > 0) {
-                setSelectedAccountId(response.data[0].id);
+            const [accountsRes, positionsRes] = await Promise.all([
+                accountsAPI.getAccounts(),
+                positionsAPI.getPositions(),
+            ]);
+            setAccounts(accountsRes.data);
+            if (accountsRes.data.length > 0) {
+                setSelectedAccountId(accountsRes.data[0].id);
             }
+            // Map API positions to frontend Position type with defaults for dynamic fields
+            const apiPositions: Position[] = (positionsRes.data || []).map((p: any) => ({
+                ...p,
+                name: p.name || p.symbol,
+                currentPrice: p.avgPrice, // will be updated by fetchPrices
+                leverage: p.leverage || 1,
+            }));
+            setPositions(apiPositions);
         } catch (error) {
             console.log('API not available, using demo mode');
         } finally {
@@ -761,6 +782,18 @@ export default function PortfolioPage() {
         };
 
         setPositions(prev => [...prev, newPosition]);
+        // Persist to API (fire-and-forget; local state already updated)
+        positionsAPI.savePosition({
+            ...newPosition,
+            accountId: selectedAccountId || undefined,
+        }).then(res => {
+            // Update the local position id with the one from the DB
+            setPositions(prev => prev.map(p =>
+                p.id === newPosition.id ? { ...p, id: res.data.id } : p
+            ));
+        }).catch(() => {
+            // Position stays in local state even if API call fails
+        });
         resetManualPosition();
     };
 

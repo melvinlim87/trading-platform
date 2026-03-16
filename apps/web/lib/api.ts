@@ -130,3 +130,25 @@ export const portfolioAnalystAPI = {
     analyze: (positions: AnalysisPosition[]) =>
         api.post<PortfolioAnalysisReport>('/portfolio-analyst/analyze', { positions }),
 };
+
+// Morning Brief API
+export const morningBriefAPI = {
+    generate: () => api.get('/morning-brief/generate'),
+    getSchedule: () => api.get('/morning-brief/schedule'),
+    updateSchedule: (enabled: boolean, time: string) =>
+        api.post('/morning-brief/schedule', { enabled, time }),
+};
+
+// Orders API (Protected)
+export const ordersAPI = {
+    placeOrder: (order: { accountId: string; symbol: string; side: 'buy' | 'sell'; quantity: number; price?: number; type: 'market' | 'limit' }) =>
+        api.post('/orders', order),
+    getOrders: (accountId: string) => api.get(`/orders/${accountId}`),
+};
+
+// Positions API (Protected)
+export const positionsAPI = {
+    getPositions: () => api.get('/positions'),
+    savePosition: (position: RawPosition & { accountId?: string }) =>
+        api.post('/positions', position),
+};

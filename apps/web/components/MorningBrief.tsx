@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { morningBriefAPI } from '@/lib/api';
 
 interface MarketSentiment {
     overall: 'bullish' | 'bearish' | 'neutral';
@@ -54,7 +55,7 @@ export const MorningBrief: React.FC<MorningBriefProps> = ({ onScheduleChange }) 
     const [scheduleTime, setScheduleTime] = useState('08:30');
     const [showSettings, setShowSettings] = useState(false);
 
-    // Mock data generator - replace with actual API call
+    /* --- DEMO DATA (commented out — restore for offline demos) ---
     const generateMockBrief = (): MorningBriefData => {
         return {
             date: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
@@ -99,24 +100,51 @@ export const MorningBrief: React.FC<MorningBriefProps> = ({ onScheduleChange }) 
             generatedAt: new Date().toISOString()
         };
     };
+    --- END DEMO DATA --- */
 
     const generateBrief = async () => {
         setIsLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setBriefData(generateMockBrief());
-        setIsLoading(false);
+        try {
+            const response = await morningBriefAPI.generate();
+            setBriefData(response.data);
+        } catch (error) {
+            console.error('Failed to generate morning brief:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleScheduleToggle = (enabled: boolean) => {
+    // Load schedule from API on mount
+    useEffect(() => {
+        morningBriefAPI.getSchedule()
+            .then(res => {
+                if (res.data?.enabled !== undefined) setScheduleEnabled(res.data.enabled);
+                if (res.data?.time) setScheduleTime(res.data.time);
+            })
+            .catch(() => {}); // silently ignore if API unavailable
+    }, []);
+
+    const handleScheduleToggle = async (enabled: boolean) => {
         setScheduleEnabled(enabled);
+        try {
+            await morningBriefAPI.updateSchedule(enabled, scheduleTime);
+        } catch (error) {
+            console.error('Failed to update schedule:', error);
+        }
         if (onScheduleChange) {
             onScheduleChange(enabled, scheduleTime);
         }
     };
 
-    const handleTimeChange = (time: string) => {
+    const handleTimeChange = async (time: string) => {
         setScheduleTime(time);
+        if (scheduleEnabled) {
+            try {
+                await morningBriefAPI.updateSchedule(true, time);
+            } catch (error) {
+                console.error('Failed to update schedule time:', error);
+            }
+        }
         if (scheduleEnabled && onScheduleChange) {
             onScheduleChange(true, time);
         }

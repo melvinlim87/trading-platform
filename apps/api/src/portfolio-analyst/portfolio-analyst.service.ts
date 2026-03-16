@@ -69,26 +69,31 @@ export class PortfolioAnalystService {
     }
 
     async analyzePortfolio(positions: AnalysisPosition[]): Promise<PortfolioAnalysisReport> {
+        if (!positions || !Array.isArray(positions) || positions.length === 0) {
+            throw new Error('positions array is required and must not be empty');
+        }
+
         this.logger.log(`Analyzing portfolio with ${positions.length} positions`);
 
-        // Calculate portfolio metrics for context
-        const totalValue = positions.reduce((sum, p) => sum + (p.currentPrice * p.quantity), 0);
-        const totalPnL = positions.reduce((sum, p) => sum + (p.pnl || 0), 0);
+        try {
+            // Calculate portfolio metrics for context
+            const totalValue = positions.reduce((sum, p) => sum + (p.currentPrice * p.quantity), 0);
+            const totalPnL = positions.reduce((sum, p) => sum + (p.pnl || 0), 0);
 
-        // Calculate asset class allocation
-        const allocation: Record<string, number> = {};
-        positions.forEach(p => {
-            const value = p.currentPrice * p.quantity;
-            allocation[p.assetClass] = (allocation[p.assetClass] || 0) + value;
-        });
+            // Calculate asset class allocation
+            const allocation: Record<string, number> = {};
+            positions.forEach(p => {
+                const value = p.currentPrice * p.quantity;
+                allocation[p.assetClass] = (allocation[p.assetClass] || 0) + value;
+            });
 
-        // Convert to percentages
-        const allocationPct: Record<string, string> = {};
-        Object.entries(allocation).forEach(([key, val]) => {
-            allocationPct[key] = ((val / totalValue) * 100).toFixed(1) + '%';
-        });
+            // Convert to percentages
+            const allocationPct: Record<string, string> = {};
+            Object.entries(allocation).forEach(([key, val]) => {
+                allocationPct[key] = ((val / totalValue) * 100).toFixed(1) + '%';
+            });
 
-        const prompt = `You are an expert AI Portfolio Analyst. Analyze the following portfolio and provide a comprehensive risk assessment.
+            const prompt = `You are an expert AI Portfolio Analyst. Analyze the following portfolio and provide a comprehensive risk assessment.
 
 ## PORTFOLIO DATA
 Total Value: $${totalValue.toLocaleString()}
@@ -136,7 +141,6 @@ Provide a JSON response with this EXACT structure:
 
 Return ONLY valid JSON, no explanations.`;
 
-        try {
             const response = await this.openrouter.chat.send({
                 model: this.model,
                 messages: [
@@ -183,7 +187,6 @@ Return ONLY valid JSON, no explanations.`;
         } catch (error: any) {
             this.logger.error(`Analysis failed: ${error.message}`, error.stack);
 
-            // Return a fallback report on error
             return {
                 overallScore: 0,
                 scoreLabel: 'Poor',

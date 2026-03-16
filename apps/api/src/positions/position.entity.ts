@@ -21,11 +21,41 @@ export class Position {
     @Column()
     symbol: string;
 
-    @Column('int')
+    @Column({ nullable: true })
+    name: string;
+
+    @Column('float', { nullable: true })
     quantity: number;
 
-    @Column('decimal', { precision: 18, scale: 2 })
+    @Column('decimal', { precision: 18, scale: 8, nullable: true })
     avgPrice: number;
+
+    @Column({ nullable: true })
+    assetClass: string;
+
+    @Column({ nullable: true })
+    positionType: string;
+
+    @Column({ nullable: true })
+    broker: string;
+
+    @Column({ nullable: true })
+    platform: string;
+
+    @Column({ nullable: true })
+    expiry: string;
+
+    @Column('float', { nullable: true })
+    leverage: number | null;
+
+    @Column('float', { nullable: true })
+    lotSize: number | null;
+
+    @Column('float', { nullable: true })
+    pipValue: number | null;
+
+    @Column({ type: 'varchar', nullable: true })
+    riskOverride: string | null;
 
     // Verification fields
     @Column({ type: 'varchar', default: VerificationSource.MANUAL })

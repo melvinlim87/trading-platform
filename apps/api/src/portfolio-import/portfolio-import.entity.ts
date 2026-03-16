@@ -22,7 +22,7 @@ export class PortfolioImport {
   @Column({ nullable: true })
   imagePath: string;
 
-  @Column('simple-json', { nullable: true })
+  @Column({ type: 'jsonb', nullable: true })
   extractedData: {
     positions: Array<{
       symbol: string;

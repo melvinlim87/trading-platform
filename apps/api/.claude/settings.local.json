@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install pg @types/pg)",
+      "Bash(npm uninstall mysql2)",
+      "Bash(node -e \"const {OpenRouter} = require\\(''@openrouter/sdk''\\); const c = new OpenRouter\\({apiKey:''x''}\\); console.log\\(Object.getOwnPropertyNames\\(Object.getPrototypeOf\\(c.chat\\)\\)\\);\")",
+      "Bash(node -e \"const {OpenRouter} = require\\(''@openrouter/sdk''\\); const c = new OpenRouter\\({apiKey:''x''}\\); const fn = c.chat.send.toString\\(\\); console.log\\(fn.substring\\(0, 500\\)\\);\")",
+      "Bash(node -e \":*)"
+    ]
+  }
+}

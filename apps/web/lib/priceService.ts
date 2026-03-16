@@ -52,7 +52,7 @@ export async function getForexPrices(pairs: string[]): Promise<Record<string, Pr
     try {
         const pairList = pairs.join(',');
         const response = await fetch(
-            `http://localhost:3001/prices/forex?pairs=${pairList}`
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/prices/forex?pairs=${pairList}`
         );
 
         if (!response.ok) throw new Error('Forex proxy API error');
@@ -83,7 +83,7 @@ export async function getStockPrices(symbols: string[]): Promise<Record<string, 
         const symbolList = symbols.join(',');
         // Use backend proxy to fetch from Yahoo Finance
         const response = await fetch(
-            `http://localhost:3001/prices/stocks?symbols=${symbolList}`
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/prices/stocks?symbols=${symbolList}`
         );
 
         if (!response.ok) throw new Error('Price proxy API error');
@@ -114,7 +114,7 @@ export async function getCommodityPrices(symbols: string[]): Promise<Record<stri
     try {
         const symbolList = symbols.join(',');
         const response = await fetch(
-            `http://localhost:3001/prices/forex?pairs=${symbolList}`
+            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/prices/forex?pairs=${symbolList}`
         );
 
         if (!response.ok) throw new Error('Commodity proxy API error');

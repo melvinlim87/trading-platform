@@ -28,6 +28,10 @@ export class AccountsService {
         });
     }
 
+    async findAll(): Promise<Account[]> {
+        return this.accountsRepository.find();
+    }
+
     async findOne(id: string): Promise<Account | null> {
         return this.accountsRepository.findOne({
             where: { id },

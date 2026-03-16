@@ -24,11 +24,12 @@ export default function DashboardPage() {
             setAccounts(response.data);
         } catch (error) {
             console.error('Failed to load accounts', error);
-            // Set demo accounts for preview
+            /* --- DEMO: Fallback accounts (restore for offline demos) ---
             setAccounts([
                 { id: 'demo-1', type: 'Trading', currency: 'USD', balance: 50000 },
                 { id: 'demo-2', type: 'Investment', currency: 'USD', balance: 25000 }
             ]);
+            --- END DEMO --- */
         } finally {
             setIsLoading(false);
         }
@@ -42,7 +43,8 @@ export default function DashboardPage() {
         );
     }
 
-    const displayUser = user || { email: 'demo@preview.com' };
+    // const displayUser = user || { email: 'demo@preview.com' }; // DEMO fallback
+    const displayUser = user || { email: '' };
 
     return (
         <div className="min-h-screen" style={{ backgroundColor: '#0a1628', color: '#e2e8f0' }}>

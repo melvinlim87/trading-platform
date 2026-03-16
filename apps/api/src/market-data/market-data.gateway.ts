@@ -24,6 +24,7 @@ export class MarketDataGateway {
     }
 
     private broadcastPriceUpdates() {
+        if (!this.server) return;
         const symbols = ['AAPL', 'TSLA', 'GOOGL'];
         symbols.forEach(symbol => {
             const price = this.marketDataService.getPrice(symbol);

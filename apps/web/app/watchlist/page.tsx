@@ -412,7 +412,8 @@ export default function WatchlistPage() {
         );
     }
 
-    const displayUser = user || { email: 'trader@demo.com' };
+    // const displayUser = user || { email: 'trader@demo.com' }; // DEMO fallback
+    const displayUser = user || { email: '' };
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#0a1628', color: '#e2e8f0' }}>
